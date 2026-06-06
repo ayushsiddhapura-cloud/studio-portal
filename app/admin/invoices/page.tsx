@@ -278,7 +278,6 @@ export default function InvoicesPage() {
                               borderRadius: '6px', padding: '4px 8px',
                               fontSize: '11px', cursor: 'pointer',
                               color: '#3B6D11', fontFamily: 'inherit',
-                              title: 'Mark as paid',
                             }}>✓ Paid</button>
                         )}
                         <button
