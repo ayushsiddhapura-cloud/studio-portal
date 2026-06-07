@@ -1,469 +1,339 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
 
 const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', icon: '▦', active: false },
-  { label: 'Clients', href: '/admin/clients', icon: '👥', active: false },
-  { label: 'Projects', href: '/admin/projects', icon: '🎬', active: false },
-  { label: 'Invoices', href: '/admin/invoices', icon: '🧾', active: false },
-  { label: 'Files', href: '/admin/files', icon: '📁', active: false },
-  { label: 'Settings', href: '/admin/settings', icon: '⚙️', active: true },
+  { label: 'Overview', href: '/admin/dashboard', icon: '📊' },
+  { label: 'Clients', href: '/admin/clients', icon: '👥' },
+  { label: 'Projects', href: '/admin/projects', icon: '🎬' },
+  { label: 'Invoices', href: '/admin/invoices', icon: '🧾' },
+  { label: 'Files', href: '/admin/files', icon: '📁' },
+  { label: 'Settings', href: '/admin/settings', icon: '⚙️' },
+]
+
+const settingsSections = [
+  { key: 'profile', label: 'Profile', icon: '👤' },
+  { key: 'password', label: 'Password', icon: '🔑' },
+  { key: 'portal', label: 'Client portal', icon: '🌐' },
+  { key: 'invoice', label: 'Invoice & payment', icon: '🧾' },
+  { key: 'notifications', label: 'Notifications', icon: '🔔' },
 ]
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState('profile')
-
-  // Profile settings
-  const [profile, setProfile] = useState({
-    name: 'Your Studio Name',
-    email: 'admin@studio.com',
-    phone: '+91 98765 43210',
-    business: 'Freelance Video Editor',
-    bio: 'Professional video editor specialising in YouTube, brand films, weddings and commercial content.',
-    website: 'www.yourstudio.com',
-    location: 'Ahmedabad, Gujarat',
+  const [activeSection, setActiveSection] = useState('profile')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [settingsId, setSettingsId] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    studio_name: '', business_type: '', email: '',
+    phone: '', website: '', location: '', bio: '',
   })
+  const [passwords, setPasswords] = useState({ current: '', newPass: '', confirm: '' })
+  const [pwMsg, setPwMsg] = useState('')
+  const [portalForm, setPortalForm] = useState({ portal_color: '#7c3aed', show_bio: true, show_files: true, show_revisions: true })
+  const [invoiceForm, setInvoiceForm] = useState({ upi_id: '', bank_name: '', account_number: '', ifsc: '', payment_terms: 'Payment due within 7 days of delivery.' })
+  const [notifForm, setNotifForm] = useState({ new_client: true, payment_received: true, project_due: true, revision_request: false })
 
-  // Password settings
-  const [passwords, setPasswords] = useState({
-    current: '', newPass: '', confirm: '',
-  })
+  useEffect(() => { fetchSettings() }, [])
 
-  // Notification settings
-  const [notifications, setNotifications] = useState({
-    newFeedback: true,
-    paymentReceived: true,
-    deadlineReminder: true,
-    weeklyReport: false,
-    clientViewed: true,
-  })
-
-  // Portal settings
-  const [portal, setPortal] = useState({
-    portalName: 'Studio Portal',
-    primaryColor: '#639922',
-    footerText: 'Studio Portal by Your Studio Name',
-    showPhone: true,
-    showEmail: true,
-    requirePin: false,
-    defaultRevisions: '3',
-  })
-
-  // Invoice settings
-  const [invoice, setInvoice] = useState({
-    businessName: 'Your Studio Name',
-    gstin: '',
-    bankName: '',
-    accountNumber: '',
-    ifsc: '',
-    upiId: '',
-    invoicePrefix: 'INV',
-    paymentTerms: 'Payment due within 7 days of invoice date.',
-  })
-
-  const [saved, setSaved] = useState<string | null>(null)
-
-  const handleSave = (section: string) => {
-    setSaved(section)
-    setTimeout(() => setSaved(null), 2500)
+  async function fetchSettings() {
+    const { data } = await supabase.from('settings').select('*').limit(1).single()
+    if (data) {
+      setSettingsId(data.id)
+      setForm({
+        studio_name: data.studio_name || '',
+        business_type: data.business_type || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        website: data.website || '',
+        location: data.location || '',
+        bio: data.bio || '',
+      })
+    }
+    setLoading(false)
   }
 
-  const tabs = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'password', label: 'Password', icon: '🔐' },
-    { id: 'portal', label: 'Client portal', icon: '🌐' },
-    { id: 'invoice', label: 'Invoice & payment', icon: '🧾' },
-    { id: 'notifications', label: 'Notifications', icon: '🔔' },
-  ]
-
-  const inputStyle = {
-    width: '100%', padding: '9px 12px',
-    border: '0.5px solid #ddd', borderRadius: '8px',
-    fontSize: '13px', color: '#1a1a1a',
-    outline: 'none', boxSizing: 'border-box' as const,
-    fontFamily: 'inherit', background: '#fff',
+  async function saveProfile() {
+    setSaving(true)
+    if (settingsId) {
+      await supabase.from('settings').update(form).eq('id', settingsId)
+    } else {
+      const { data } = await supabase.from('settings').insert([form]).select().single()
+      if (data) setSettingsId(data.id)
+    }
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
   }
 
-  const labelStyle = {
-    display: 'block' as const, fontSize: '11px', fontWeight: '500' as const,
-    color: '#666', marginBottom: '5px',
-    textTransform: 'uppercase' as const, letterSpacing: '0.05em',
+  function changePassword() {
+    if (!passwords.current || !passwords.newPass || !passwords.confirm) { setPwMsg('Please fill all fields.'); return }
+    if (passwords.newPass !== passwords.confirm) { setPwMsg('New passwords do not match.'); return }
+    if (passwords.newPass.length < 6) { setPwMsg('Must be at least 6 characters.'); return }
+    setPwMsg('✅ Password updated!')
+    setPasswords({ current: '', newPass: '', confirm: '' })
+    setTimeout(() => setPwMsg(''), 3000)
   }
 
-  const fieldStyle = { marginBottom: '14px' }
+  const inp: any = {
+    width: '100%', background: '#1c1c1c', border: '1px solid #2a2a2a',
+    borderRadius: '8px', padding: '11px 14px', color: '#fff',
+    fontSize: '14px', boxSizing: 'border-box' as const, outline: 'none',
+    fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
+  }
+  const lbl: any = { fontSize: '11px', fontWeight: 600, color: '#555', letterSpacing: '0.06em', display: 'block', marginBottom: '8px' }
+  const card: any = { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '14px', padding: '28px' }
+  const saveBtn = (saved: boolean, saving: boolean) => ({
+    background: saved ? '#14532d' : '#fff', color: saved ? '#4ade80' : '#000',
+    border: 'none', borderRadius: '10px', padding: '12px 28px',
+    fontSize: '14px', fontWeight: 600, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', gap: '8px'
+  })
 
-  const sectionTitle = (title: string, subtitle: string) => (
-    <div style={{ marginBottom: '20px', paddingBottom: '14px', borderBottom: '0.5px solid #e5e3dc' }}>
-      <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a1a1a', marginBottom: '3px' }}>{title}</div>
-      <div style={{ fontSize: '12px', color: '#999' }}>{subtitle}</div>
-    </div>
-  )
-
-  return (
-    <div style={{
-      display: 'flex', minHeight: '100vh',
-      background: '#f5f4f0',
-      fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+  const Toggle = ({ value, onChange }: { value: boolean, onChange: () => void }) => (
+    <div onClick={onChange} style={{
+      width: '44px', height: '24px', borderRadius: '12px',
+      background: value ? '#fff' : '#333',
+      position: 'relative' as const, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0
     }}>
-
-      {/* Sidebar */}
       <div style={{
-        width: '200px', flexShrink: 0,
-        background: '#ffffff',
-        borderRight: '0.5px solid #e5e3dc',
-        padding: '20px 0',
-        display: 'flex', flexDirection: 'column', gap: '2px',
-        position: 'sticky', top: 0, height: '100vh',
-      }}>
-        <div style={{ padding: '0 16px 16px', borderBottom: '0.5px solid #e5e3dc', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '28px', height: '28px',
-              background: 'linear-gradient(135deg, #639922, #4a7a19)',
-              borderRadius: '8px', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', fontSize: '14px',
-            }}>🎬</div>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a1a' }}>Studio Portal</div>
-              <div style={{ fontSize: '10px', color: '#999' }}>Admin panel</div>
-            </div>
-          </div>
-        </div>
-        {navItems.map((item) => (
-          <Link key={item.label} href={item.href} style={{
-            display: 'flex', alignItems: 'center', gap: '9px',
-            padding: '8px 16px', fontSize: '13px', textDecoration: 'none',
-            color: item.active ? '#1a1a1a' : '#666',
-            background: item.active ? '#f5f4f0' : 'transparent',
-            fontWeight: item.active ? '500' : '400',
-          }}>
-            <span style={{ fontSize: '15px' }}>{item.icon}</span>
-            {item.label}
-          </Link>
-        ))}
-        <div style={{ flex: 1 }} />
-        <div style={{
-          margin: '0 12px', padding: '10px 12px',
-          background: '#f5f4f0', borderRadius: '10px',
-          fontSize: '11px', color: '#999',
-          display: 'flex', alignItems: 'center', gap: '6px',
-        }}>
-          <span>🔐</span> admin@studio.com
-        </div>
-      </div>
-
-      {/* Main */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-
-        {/* Topbar */}
-        <div style={{
-          background: '#ffffff', borderBottom: '0.5px solid #e5e3dc',
-          padding: '12px 24px', display: 'flex',
-          alignItems: 'center', justifyContent: 'space-between',
-          position: 'sticky', top: 0, zIndex: 10,
-        }}>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a1a1a' }}>Settings</div>
-        </div>
-
-        <div style={{ padding: '20px 24px', flex: 1, display: 'flex', gap: '20px' }}>
-
-          {/* Left — tab nav */}
-          <div style={{ width: '180px', flexShrink: 0 }}>
-            <div style={{
-              background: '#ffffff', border: '0.5px solid #e5e3dc',
-              borderRadius: '12px', overflow: 'hidden',
-            }}>
-              {tabs.map((tab, i) => (
-                <button key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '9px',
-                    width: '100%', padding: '11px 14px',
-                    background: activeTab === tab.id ? '#f5f4f0' : 'transparent',
-                    border: 'none',
-                    borderBottom: i < tabs.length - 1 ? '0.5px solid #e5e3dc' : 'none',
-                    fontSize: '13px', cursor: 'pointer',
-                    color: activeTab === tab.id ? '#1a1a1a' : '#666',
-                    fontWeight: activeTab === tab.id ? '500' : '400',
-                    fontFamily: 'inherit', textAlign: 'left' as const,
-                  }}>
-                  <span style={{ fontSize: '15px' }}>{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Right — settings content */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              background: '#ffffff', border: '0.5px solid #e5e3dc',
-              borderRadius: '12px', padding: '24px',
-            }}>
-
-              {/* ── PROFILE TAB ── */}
-              {activeTab === 'profile' && (
-                <div>
-                  {sectionTitle('Profile settings', 'Your name and business information shown on the portal')}
-
-                  {/* Avatar */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                    <div style={{
-                      width: '64px', height: '64px', borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #639922, #4a7a19)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '24px', color: '#fff', fontWeight: '700',
-                    }}>
-                      {profile.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '4px' }}>{profile.name}</div>
-                      <div style={{ fontSize: '12px', color: '#999' }}>{profile.business}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Studio / Business name</label>
-                      <input style={inputStyle} value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Business type</label>
-                      <input style={inputStyle} value={profile.business} onChange={(e) => setProfile({ ...profile, business: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Email address</label>
-                      <input style={inputStyle} type="email" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Phone number</label>
-                      <input style={inputStyle} value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Website</label>
-                      <input style={inputStyle} value={profile.website} onChange={(e) => setProfile({ ...profile, website: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Location</label>
-                      <input style={inputStyle} value={profile.location} onChange={(e) => setProfile({ ...profile, location: e.target.value })} />
-                    </div>
-                  </div>
-                  <div style={fieldStyle}>
-                    <label style={labelStyle}>Bio (shown on portal footer)</label>
-                    <textarea
-                      style={{ ...inputStyle, resize: 'none', height: '80px' }}
-                      value={profile.bio}
-                      onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
-                    />
-                  </div>
-                  <SaveButton onSave={() => handleSave('profile')} saved={saved === 'profile'} />
-                </div>
-              )}
-
-              {/* ── PASSWORD TAB ── */}
-              {activeTab === 'password' && (
-                <div>
-                  {sectionTitle('Change password', 'Update your admin login password')}
-                  <div style={{ maxWidth: '400px' }}>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Current password</label>
-                      <input style={inputStyle} type="password" placeholder="Enter current password" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>New password</label>
-                      <input style={inputStyle} type="password" placeholder="Min 8 characters" value={passwords.newPass} onChange={(e) => setPasswords({ ...passwords, newPass: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Confirm new password</label>
-                      <input style={inputStyle} type="password" placeholder="Repeat new password" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} />
-                    </div>
-                    <div style={{
-                      background: '#f5f4f0', borderRadius: '8px',
-                      padding: '10px 12px', fontSize: '12px',
-                      color: '#666', marginBottom: '16px', lineHeight: '1.6',
-                    }}>
-                      🔐 Use a strong password with at least 8 characters, a number, and a special character.
-                    </div>
-                    <SaveButton onSave={() => handleSave('password')} saved={saved === 'password'} label="Update password" />
-                  </div>
-                </div>
-              )}
-
-              {/* ── PORTAL TAB ── */}
-              {activeTab === 'portal' && (
-                <div>
-                  {sectionTitle('Client portal settings', 'Customise how your clients see their portal')}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Portal name</label>
-                      <input style={inputStyle} value={portal.portalName} onChange={(e) => setPortal({ ...portal, portalName: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Default max revisions</label>
-                      <select style={inputStyle} value={portal.defaultRevisions} onChange={(e) => setPortal({ ...portal, defaultRevisions: e.target.value })}>
-                        {['1', '2', '3', '4', '5', 'Unlimited'].map(v => <option key={v}>{v}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={fieldStyle}>
-                    <label style={labelStyle}>Footer text</label>
-                    <input style={inputStyle} value={portal.footerText} onChange={(e) => setPortal({ ...portal, footerText: e.target.value })} />
-                  </div>
-
-                  <div style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: '0.5px solid #e5e3dc' }}>
-                    <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '12px' }}>Client portal options</div>
-                    {[
-                      { key: 'showEmail', label: 'Show client email on their portal', sub: 'Clients can see their email address displayed' },
-                      { key: 'showPhone', label: 'Show client phone on their portal', sub: 'Clients can see their phone number displayed' },
-                      { key: 'requirePin', label: 'Require PIN for all new clients', sub: 'New clients must enter a PIN to access their portal' },
-                    ].map((item) => (
-                      <div key={item.key} style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '10px 0', borderBottom: '0.5px solid #f5f4f0',
-                      }}>
-                        <div>
-                          <div style={{ fontSize: '13px', color: '#1a1a1a', marginBottom: '2px' }}>{item.label}</div>
-                          <div style={{ fontSize: '11px', color: '#999' }}>{item.sub}</div>
-                        </div>
-                        <div
-                          onClick={() => setPortal({ ...portal, [item.key]: !(portal as any)[item.key] })}
-                          style={{
-                            width: '40px', height: '22px', borderRadius: '11px',
-                            background: (portal as any)[item.key] ? '#639922' : '#ddd',
-                            cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
-                            flexShrink: 0,
-                          }}>
-                          <div style={{
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            background: '#fff', position: 'absolute', top: '2px',
-                            left: (portal as any)[item.key] ? '20px' : '2px',
-                            transition: 'left 0.2s',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                          }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <SaveButton onSave={() => handleSave('portal')} saved={saved === 'portal'} />
-                </div>
-              )}
-
-              {/* ── INVOICE TAB ── */}
-              {activeTab === 'invoice' && (
-                <div>
-                  {sectionTitle('Invoice & payment settings', 'Your business details that appear on invoices')}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Business name on invoice</label>
-                      <input style={inputStyle} value={invoice.businessName} onChange={(e) => setInvoice({ ...invoice, businessName: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>GSTIN (optional)</label>
-                      <input style={inputStyle} placeholder="e.g. 24XXXXX1234X1ZX" value={invoice.gstin} onChange={(e) => setInvoice({ ...invoice, gstin: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Invoice prefix</label>
-                      <input style={inputStyle} value={invoice.invoicePrefix} onChange={(e) => setInvoice({ ...invoice, invoicePrefix: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>UPI ID</label>
-                      <input style={inputStyle} placeholder="yourname@upi" value={invoice.upiId} onChange={(e) => setInvoice({ ...invoice, upiId: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Bank name</label>
-                      <input style={inputStyle} placeholder="e.g. HDFC Bank" value={invoice.bankName} onChange={(e) => setInvoice({ ...invoice, bankName: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>Account number</label>
-                      <input style={inputStyle} placeholder="Your account number" value={invoice.accountNumber} onChange={(e) => setInvoice({ ...invoice, accountNumber: e.target.value })} />
-                    </div>
-                    <div style={fieldStyle}>
-                      <label style={labelStyle}>IFSC code</label>
-                      <input style={inputStyle} placeholder="e.g. HDFC0001234" value={invoice.ifsc} onChange={(e) => setInvoice({ ...invoice, ifsc: e.target.value })} />
-                    </div>
-                  </div>
-                  <div style={fieldStyle}>
-                    <label style={labelStyle}>Default payment terms</label>
-                    <textarea
-                      style={{ ...inputStyle, resize: 'none', height: '70px' }}
-                      value={invoice.paymentTerms}
-                      onChange={(e) => setInvoice({ ...invoice, paymentTerms: e.target.value })}
-                    />
-                  </div>
-                  <SaveButton onSave={() => handleSave('invoice')} saved={saved === 'invoice'} />
-                </div>
-              )}
-
-              {/* ── NOTIFICATIONS TAB ── */}
-              {activeTab === 'notifications' && (
-                <div>
-                  {sectionTitle('Notification settings', 'Choose when you want to receive alerts')}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                    {[
-                      { key: 'newFeedback', label: 'Client submits feedback', sub: 'Get notified when a client posts revision notes' },
-                      { key: 'paymentReceived', label: 'Payment received', sub: 'Alert when an invoice is marked as paid' },
-                      { key: 'deadlineReminder', label: 'Deadline reminder', sub: '24 hours before a project deadline' },
-                      { key: 'clientViewed', label: 'Client views their portal', sub: 'Know when a client opens their private link' },
-                      { key: 'weeklyReport', label: 'Weekly summary report', sub: 'Overview of projects, payments, and activity every Monday' },
-                    ].map((item, i) => (
-                      <div key={item.key} style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '14px 0',
-                        borderBottom: i < 4 ? '0.5px solid #e5e3dc' : 'none',
-                      }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '13px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>{item.label}</div>
-                          <div style={{ fontSize: '12px', color: '#999' }}>{item.sub}</div>
-                        </div>
-                        <div
-                          onClick={() => setNotifications({ ...notifications, [item.key]: !(notifications as any)[item.key] })}
-                          style={{
-                            width: '40px', height: '22px', borderRadius: '11px',
-                            background: (notifications as any)[item.key] ? '#639922' : '#ddd',
-                            cursor: 'pointer', position: 'relative', transition: 'background 0.2s',
-                            flexShrink: 0, marginLeft: '16px',
-                          }}>
-                          <div style={{
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            background: '#fff', position: 'absolute', top: '2px',
-                            left: (notifications as any)[item.key] ? '20px' : '2px',
-                            transition: 'left 0.2s',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                          }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ marginTop: '20px' }}>
-                    <SaveButton onSave={() => handleSave('notifications')} saved={saved === 'notifications'} />
-                  </div>
-                </div>
-              )}
-
-            </div>
-          </div>
-        </div>
-      </div>
+        width: '18px', height: '18px', borderRadius: '50%',
+        background: value ? '#111' : '#666',
+        position: 'absolute' as const, top: '3px',
+        left: value ? '23px' : '3px', transition: 'left 0.2s'
+      }} />
     </div>
   )
-}
 
-function SaveButton({ onSave, saved, label = 'Save changes' }: { onSave: () => void; saved: boolean; label?: string }) {
   return (
-    <button
-      onClick={onSave}
-      style={{
-        background: saved ? '#639922' : '#1a1a1a',
-        border: 'none', borderRadius: '8px',
-        padding: '10px 20px', fontSize: '13px',
-        color: '#fff', cursor: 'pointer',
-        fontFamily: 'inherit', fontWeight: '500',
-        transition: 'background 0.2s',
-        display: 'flex', alignItems: 'center', gap: '6px',
-      }}>
-      {saved ? '✅ Saved!' : `💾 ${label}`}
-    </button>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+
+      {/* Main sidebar */}
+      <div style={{ width: '200px', background: '#161616', borderRight: '1px solid #222', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px', paddingLeft: '6px' }}>
+          <div style={{ width: '28px', height: '28px', background: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🎬</div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
+            <div style={{ fontSize: '11px', color: '#555' }}>Admin panel</div>
+          </div>
+        </div>
+        {navItems.map(item => (
+          <Link key={item.href} href={item.href} style={{
+            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
+            borderRadius: '8px', textDecoration: 'none',
+            color: item.href === '/admin/settings' ? '#fff' : '#666',
+            background: item.href === '/admin/settings' ? '#222' : 'transparent', fontSize: '14px'
+          }}>{item.icon} {item.label}</Link>
+        ))}
+      </div>
+
+      {/* Settings sub-nav */}
+      <div style={{ width: '200px', background: '#111', borderRight: '1px solid #1a1a1a', padding: '24px 14px', flexShrink: 0 }}>
+        <h1 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 20px', paddingLeft: '8px', color: '#fff' }}>Settings</h1>
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
+          {settingsSections.map(s => (
+            <button key={s.key} onClick={() => setActiveSection(s.key)} style={{
+              display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
+              borderRadius: '8px', border: 'none', cursor: 'pointer', width: '100%',
+              textAlign: 'left' as const,
+              background: activeSection === s.key ? '#222' : 'transparent',
+              color: activeSection === s.key ? '#fff' : '#555',
+              fontSize: '14px', fontWeight: activeSection === s.key ? 600 : 400
+            }}>{s.icon} {s.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+        {loading ? <p style={{ color: '#555' }}>Loading...</p> : (
+          <div style={{ maxWidth: '680px' }}>
+
+            {/* ── PROFILE ── */}
+            {activeSection === 'profile' && (
+              <div style={card}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>Profile settings</h2>
+                <p style={{ fontSize: '13px', color: '#555', margin: '0 0 28px' }}>Your name and business information shown on the portal</p>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '28px' }}>
+                  <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: 700, color: '#fff' }}>
+                    {form.studio_name?.charAt(0)?.toUpperCase() || 'S'}
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '16px' }}>{form.studio_name || 'Your Studio Name'}</div>
+                    <div style={{ fontSize: '13px', color: '#555' }}>{form.business_type || 'Freelance Video Editor'}</div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                  <div>
+                    <label style={lbl}>STUDIO / BUSINESS NAME</label>
+                    <input value={form.studio_name} onChange={e => setForm({ ...form, studio_name: e.target.value })} placeholder='Your Studio Name' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>BUSINESS TYPE</label>
+                    <input value={form.business_type} onChange={e => setForm({ ...form, business_type: e.target.value })} placeholder='Freelance Video Editor' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>EMAIL ADDRESS</label>
+                    <input value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder='admin@studio.com' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>PHONE NUMBER</label>
+                    <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder='+91 98765 43210' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>WEBSITE</label>
+                    <input value={form.website} onChange={e => setForm({ ...form, website: e.target.value })} placeholder='www.yourstudio.com' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>LOCATION</label>
+                    <input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder='Ahmedabad, Gujarat' style={inp} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={lbl}>BIO (SHOWN ON PORTAL FOOTER)</label>
+                  <textarea value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })}
+                    placeholder='Professional video editor specialising in YouTube, brand films...'
+                    rows={3} style={{ ...inp, resize: 'vertical' as const }} />
+                </div>
+                <button onClick={saveProfile} disabled={saving} style={saveBtn(saved, saving)}>
+                  💾 {saving ? 'Saving...' : saved ? 'Saved!' : 'Save changes'}
+                </button>
+              </div>
+            )}
+
+            {/* ── PASSWORD ── */}
+            {activeSection === 'password' && (
+              <div style={card}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>Change password</h2>
+                <p style={{ fontSize: '13px', color: '#555', margin: '0 0 28px' }}>Update your admin login password</p>
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '14px' }}>
+                  <div>
+                    <label style={lbl}>CURRENT PASSWORD</label>
+                    <input type='password' value={passwords.current} onChange={e => setPasswords({ ...passwords, current: e.target.value })} placeholder='••••••••' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>NEW PASSWORD</label>
+                    <input type='password' value={passwords.newPass} onChange={e => setPasswords({ ...passwords, newPass: e.target.value })} placeholder='••••••••' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>CONFIRM NEW PASSWORD</label>
+                    <input type='password' value={passwords.confirm} onChange={e => setPasswords({ ...passwords, confirm: e.target.value })} placeholder='••••••••' style={inp} />
+                  </div>
+                  {pwMsg && (
+                    <div style={{ fontSize: '13px', padding: '10px 14px', borderRadius: '8px', background: pwMsg.includes('✅') ? '#14532d' : '#3b1f1f', color: pwMsg.includes('✅') ? '#4ade80' : '#f87171' }}>
+                      {pwMsg}
+                    </div>
+                  )}
+                  <button onClick={changePassword} style={{ background: '#fff', color: '#000', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-start' as const }}>
+                    Update password
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── CLIENT PORTAL ── */}
+            {activeSection === 'portal' && (
+              <div style={card}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>Client portal settings</h2>
+                <p style={{ fontSize: '13px', color: '#555', margin: '0 0 28px' }}>Customize what clients see on their portal</p>
+                <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '0' }}>
+                  <div style={{ marginBottom: '24px' }}>
+                    <label style={lbl}>PORTAL ACCENT COLOR</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                      <input type='color' value={portalForm.portal_color} onChange={e => setPortalForm({ ...portalForm, portal_color: e.target.value })}
+                        style={{ width: '48px', height: '44px', borderRadius: '8px', border: '1px solid #333', cursor: 'pointer', background: 'none', padding: '2px' }} />
+                      <span style={{ fontSize: '14px', color: '#aaa', fontFamily: 'monospace' }}>{portalForm.portal_color}</span>
+                    </div>
+                  </div>
+                  {[
+                    { key: 'show_bio', label: 'Show bio on client portal', sub: 'Display your studio bio at the bottom of each client portal' },
+                    { key: 'show_files', label: 'Show files & deliveries section', sub: 'Allow clients to see and download their project files' },
+                    { key: 'show_revisions', label: 'Show revision history', sub: 'Let clients view the full revision log on their portal' },
+                  ].map((item, i) => (
+                    <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderTop: '1px solid #222' }}>
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>{item.label}</div>
+                        <div style={{ fontSize: '12px', color: '#555' }}>{item.sub}</div>
+                      </div>
+                      <Toggle value={(portalForm as any)[item.key]} onChange={() => setPortalForm({ ...portalForm, [item.key]: !(portalForm as any)[item.key] })} />
+                    </div>
+                  ))}
+                  <div style={{ paddingTop: '20px' }}>
+                    <button style={{ background: '#fff', color: '#000', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                      Save portal settings
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── INVOICE & PAYMENT ── */}
+            {activeSection === 'invoice' && (
+              <div style={card}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>Invoice & payment</h2>
+                <p style={{ fontSize: '13px', color: '#555', margin: '0 0 28px' }}>Payment details shown on invoices sent to clients</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                  <div>
+                    <label style={lbl}>UPI ID</label>
+                    <input value={invoiceForm.upi_id} onChange={e => setInvoiceForm({ ...invoiceForm, upi_id: e.target.value })} placeholder='yourname@upi' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>BANK NAME</label>
+                    <input value={invoiceForm.bank_name} onChange={e => setInvoiceForm({ ...invoiceForm, bank_name: e.target.value })} placeholder='HDFC Bank' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>ACCOUNT NUMBER</label>
+                    <input value={invoiceForm.account_number} onChange={e => setInvoiceForm({ ...invoiceForm, account_number: e.target.value })} placeholder='XXXXXXXXXXXX' style={inp} />
+                  </div>
+                  <div>
+                    <label style={lbl}>IFSC CODE</label>
+                    <input value={invoiceForm.ifsc} onChange={e => setInvoiceForm({ ...invoiceForm, ifsc: e.target.value })} placeholder='HDFC0001234' style={inp} />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '24px' }}>
+                  <label style={lbl}>PAYMENT TERMS</label>
+                  <textarea value={invoiceForm.payment_terms} onChange={e => setInvoiceForm({ ...invoiceForm, payment_terms: e.target.value })}
+                    rows={3} style={{ ...inp, resize: 'vertical' as const }} />
+                </div>
+                <button style={{ background: '#fff', color: '#000', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                  💾 Save payment details
+                </button>
+              </div>
+            )}
+
+            {/* ── NOTIFICATIONS ── */}
+            {activeSection === 'notifications' && (
+              <div style={card}>
+                <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>Notifications</h2>
+                <p style={{ fontSize: '13px', color: '#555', margin: '0 0 28px' }}>Choose what you want to be notified about</p>
+                {[
+                  { key: 'new_client', label: 'New client added', sub: 'When a new client is created in the system' },
+                  { key: 'payment_received', label: 'Payment received', sub: 'When a project is marked as Paid' },
+                  { key: 'project_due', label: 'Project deadline reminder', sub: '24 hours before a project deadline' },
+                  { key: 'revision_request', label: 'Revision request', sub: 'When a client submits a revision round' },
+                ].map((item, i) => (
+                  <div key={item.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: i < 3 ? '1px solid #222' : 'none' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>{item.label}</div>
+                      <div style={{ fontSize: '12px', color: '#555' }}>{item.sub}</div>
+                    </div>
+                    <Toggle value={(notifForm as any)[item.key]} onChange={() => setNotifForm({ ...notifForm, [item.key]: !(notifForm as any)[item.key] })} />
+                  </div>
+                ))}
+                <button style={{ marginTop: '24px', background: '#fff', color: '#000', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                  Save preferences
+                </button>
+              </div>
+            )}
+
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

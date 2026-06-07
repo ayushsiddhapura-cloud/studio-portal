@@ -1,524 +1,310 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
-// Sample client data — later this will come from a real database
-const clientData = {
-  name: 'Rahul Kapoor',
-  company: 'Kapoor Enterprises',
-  email: 'rahul@kapoor.com',
-  phone: '+91 98765 43210',
-  initials: 'RK',
-  activeSince: 'May 2026',
-  totalProjects: 2,
-  versionsSent: 5,
-  amountDue: 18000,
-  projects: [
-    {
-      id: 1,
-      name: 'Brand intro video',
-      subtitle: 'Standard Package · Brand Video Editing',
-      startDate: 'May 20, 2026',
-      deadline: 'Jun 7, 2026',
-      deadlineWarn: true,
-      revisionsUsed: 2,
-      revisionsMax: 3,
-      status: 'In review',
-      statusBg: '#FAEEDA',
-      statusColor: '#854F0B',
-      progress: ['Briefing', 'Editing', 'In review', 'Approved', 'Delivered'],
-      currentStep: 2,
-      versions: [
-        { label: 'v1', date: 'May 27', sent: true, latest: false },
-        { label: 'v2', date: 'Jun 2', sent: true, latest: true },
-        { label: 'v3', date: '—', sent: false, latest: false },
-      ],
-      revisions: [
-        { round: 2, note: 'Logo animation slower, music lower, new tagline font.', date: 'Jun 3', status: 'active', submittedBy: 'You' },
-        { round: 1, note: 'Warmer colour grade, 2 sec pause before CTA.', date: 'May 28', status: 'done', submittedBy: 'You' },
-      ],
-      files: [
-        { name: 'Draft v2 — Frame.io review', type: 'frameio', sub: 'Click to open & comment', url: 'https://frame.io/review/abc123' },
-        { name: 'Project brief.pdf', type: 'drive', sub: 'Google Drive · 1.2 MB', url: 'https://drive.google.com/file/d/abc' },
-      ],
-      invoice: {
-        num: 'INV-001',
-        date: 'May 22, 2026',
-        projectFee: 18000,
-        amountPaid: 0,
-        balanceDue: 18000,
-        status: 'Unpaid',
-        statusBg: '#FAEEDA',
-        statusColor: '#854F0B',
-        dueDate: 'Jun 10, 2026',
-      },
-    },
-    {
-      id: 2,
-      name: 'Product launch ad',
-      subtitle: 'Standard Package · Ad Video Editing',
-      startDate: 'May 28, 2026',
-      deadline: 'Jun 20, 2026',
-      deadlineWarn: false,
-      revisionsUsed: 0,
-      revisionsMax: 3,
-      status: 'In progress',
-      statusBg: '#E6F1FB',
-      statusColor: '#185FA5',
-      progress: ['Briefing', 'Editing', 'In review', 'Approved', 'Delivered'],
-      currentStep: 1,
-      versions: [],
-      revisions: [],
-      files: [
-        { name: 'Project brief.pdf', type: 'drive', sub: 'Google Drive · 2.1 MB', url: 'https://drive.google.com/file/d/aryan' },
-      ],
-      invoice: {
-        num: 'INV-002',
-        date: 'Jun 1, 2026',
-        projectFee: 12000,
-        amountPaid: 6000,
-        balanceDue: 6000,
-        status: 'Partial',
-        statusBg: '#FAEEDA',
-        statusColor: '#854F0B',
-        dueDate: 'Jun 25, 2026',
-      },
-    },
-  ],
-}
+export default function ClientPortalPage() {
+  const { token } = useParams()
+  const [client, setClient] = useState<any>(null)
+  const [projects, setProjects] = useState<any[]>([])
+  const [files, setFiles] = useState<any[]>([])
+  const [revisions, setRevisions] = useState<any[]>([])
+  const [versions, setVersions] = useState<any[]>([])
+  const [activeProject, setActiveProject] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
 
-const fmt = (n: number) => '₹' + n.toLocaleString('en-IN')
+  useEffect(() => { fetchClient() }, [token])
 
-export default function ClientPortal() {
-  const [activeProject, setActiveProject] = useState(0)
-  const client = clientData
+  async function fetchClient() {
+    const { data: clientData } = await supabase
+      .from('clients').select('*').eq('token', token).single()
+    if (!clientData) { setNotFound(true); setLoading(false); return }
+    setClient(clientData)
+
+    const { data: projectData } = await supabase
+      .from('projects').select('*').eq('client_id', clientData.id)
+    if (projectData) {
+      setProjects(projectData)
+      setActiveProject(projectData[0] || null)
+      const ids = projectData.map((p: any) => p.id)
+      if (ids.length > 0) {
+        const { data: fileData } = await supabase.from('files').select('*').in('project_id', ids)
+        const { data: revData } = await supabase.from('revisions').select('*').in('project_id', ids).order('created_at', { ascending: false })
+        const { data: verData } = await supabase.from('versions').select('*').in('project_id', ids).order('version_number', { ascending: true })
+        if (fileData) setFiles(fileData)
+        if (revData) setRevisions(revData)
+        if (verData) setVersions(verData)
+      }
+    }
+    setLoading(false)
+  }
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: 'sans-serif' }}>
+      Loading your portal...
+    </div>
+  )
+
+  if (notFound) return (
+    <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: 'sans-serif', flexDirection: 'column', gap: '16px' }}>
+      <div style={{ fontSize: '48px' }}>🔍</div>
+      <p>Portal not found. Please check your link.</p>
+    </div>
+  )
+
+  const totalPending = projects.reduce((s, p) => p.payment_status !== 'Paid' ? s + Number(p.amount) : s, 0)
+  const activeFiles = activeProject ? files.filter(f => f.project_id === activeProject.id) : []
+  const activeRevisions = activeProject ? revisions.filter(r => r.project_id === activeProject.id) : []
+  const activeVersions = activeProject ? versions.filter(v => v.project_id === activeProject.id) : []
+  const totalVersions = versions.length
+
+  const progressSteps = ['Briefing', 'Editing', 'In review', 'Approved', 'Delivered']
+  const getStepIndex = (status: string) => {
+    if (status === 'Completed') return 4
+    if (status === 'Review') return 2
+    if (status === 'In Progress') return 1
+    return 0
+  }
+  const currentStep = activeProject ? getStepIndex(activeProject.status) : 0
+  const initials = client.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
+
+  const s = {
+    card: { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '24px', marginBottom: '16px' } as any,
+    label: { fontSize: '11px', fontWeight: 600, color: '#666', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' } as any,
+  }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#f5f4f0',
-      fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-    }}>
+    <div style={{ minHeight: '100vh', background: '#111', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#fff' }}>
 
-      {/* Top nav */}
-      <div style={{
-        background: '#ffffff',
-        borderBottom: '0.5px solid #e5e3dc',
-        padding: '12px 24px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 10,
-      }}>
+      {/* Top Nav */}
+      <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '30px', height: '30px',
-            background: 'linear-gradient(135deg, #639922, #4a7a19)',
-            borderRadius: '8px', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', fontSize: '15px',
-          }}>🎬</div>
+          <div style={{ width: '32px', height: '32px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🎬</div>
           <div>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a1a' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: '#999' }}>Your private project dashboard</div>
+            <div style={{ fontWeight: 700, fontSize: '14px' }}>Studio Portal</div>
+            <div style={{ fontSize: '11px', color: '#666' }}>Your private project dashboard</div>
           </div>
         </div>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '7px',
-          background: '#f5f4f0', borderRadius: '20px',
-          padding: '5px 12px 5px 6px',
-        }}>
-          <div style={{
-            width: '24px', height: '24px', borderRadius: '50%',
-            background: '#E6F1FB', color: '#185FA5',
-            fontSize: '10px', fontWeight: '600',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>{client.initials}</div>
-          <span style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a' }}>{client.name}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#888' }}>
+          <span>🔒</span> Private & secure
         </div>
       </div>
 
-      <div style={{ padding: '24px', maxWidth: '760px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px' }}>
 
-        {/* ── HERO BANNER ── */}
-        <div style={{
-          background: '#ffffff',
-          border: '0.5px solid #e5e3dc',
-          borderRadius: '16px',
-          padding: '24px 28px 0',
-          marginBottom: '16px',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
-          {/* subtle bg glow */}
-          <div style={{
-            position: 'absolute', top: 0, right: 0,
-            width: '300px', height: '200px',
-            background: 'radial-gradient(ellipse at top right, rgba(99,153,34,0.06), transparent 70%)',
-            pointerEvents: 'none',
-          }} />
-
-          {/* Tag */}
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '5px',
-            background: '#f5f4f0', border: '0.5px solid #e5e3dc',
-            borderRadius: '20px', padding: '4px 10px',
-            fontSize: '10px', fontWeight: '600',
-            letterSpacing: '0.07em', textTransform: 'uppercase',
-            color: '#666', marginBottom: '12px',
-          }}>
-            🎬 Video editing client
+        {/* Hero */}
+        <div style={s.card}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#222', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: '#aaa', letterSpacing: '1px', marginBottom: '16px' }}>
+            🎬 VIDEO EDITING CLIENT
           </div>
-
-          {/* Name */}
-          <div style={{ marginBottom: '4px' }}>
-            <span style={{ fontSize: '32px', fontWeight: '700', color: '#1a1a1a', letterSpacing: '-0.5px' }}>
-              {client.name.split(' ')[0]}'s{' '}
-            </span>
-            <span style={{ fontSize: '32px', fontWeight: '400', color: '#666', letterSpacing: '-0.5px' }}>
-              Project Dashboard
-            </span>
-          </div>
-
-          <div style={{ fontSize: '13px', color: '#999', marginBottom: '16px' }}>
-            {client.company} — all your projects and updates in one place
-          </div>
-
-          {/* Contact row */}
-          <div style={{
-            display: 'flex', gap: '20px', flexWrap: 'wrap',
-            padding: '12px 0',
-            borderTop: '0.5px solid #e5e3dc',
-          }}>
-            {[
-              { icon: '✉', val: client.email },
-              { icon: '📞', val: client.phone },
-              { icon: '📅', val: `Active since ${client.activeSince}` },
-            ].map((item) => (
-              <div key={item.val} style={{
-                display: 'flex', alignItems: 'center', gap: '6px',
-                fontSize: '12px', color: '#666',
-              }}>
-                <span>{item.icon}</span> {item.val}
-              </div>
-            ))}
+          <h1 style={{ fontSize: '36px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
+            <span style={{ color: '#fff' }}>{client.name}'s</span>{' '}
+            <span style={{ color: '#555', fontWeight: 400 }}>Project Dashboard</span>
+          </h1>
+          <p style={{ color: '#666', fontSize: '15px', margin: '0 0 20px' }}>
+            {client.channel_name || 'Your Studio'} — all your projects and updates in one place
+          </p>
+          <div style={{ borderTop: '1px solid #222', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            {client.email && <span style={{ fontSize: '13px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>🔲 {client.email}</span>}
+            {client.phone && <span style={{ fontSize: '13px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>🔲 {client.phone}</span>}
+            <span style={{ fontSize: '13px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>🔲 Active client</span>
           </div>
         </div>
 
-        {/* Stats strip */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(3,1fr)',
-          gap: '10px', marginBottom: '20px',
-        }}>
+        {/* Stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
           {[
-            { label: 'Total projects', value: client.totalProjects, sub: '1 active · 1 in review', color: '#1a1a1a' },
-            { label: 'Versions sent', value: client.versionsSent, sub: 'Across all projects', color: '#185FA5' },
-            { label: 'Amount due', value: fmt(client.amountDue), sub: 'See invoice below', color: '#A32D2D' },
-          ].map((s) => (
-            <div key={s.label} style={{
-              background: '#ffffff', border: '0.5px solid #e5e3dc',
-              borderRadius: '12px', padding: '14px',
-            }}>
-              <div style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.07em', color: '#999', marginBottom: '5px' }}>{s.label}</div>
-              <div style={{ fontSize: '22px', fontWeight: '600', color: s.color }}>{s.value}</div>
-              <div style={{ fontSize: '11px', color: '#999', marginTop: '3px' }}>{s.sub}</div>
+            { label: 'TOTAL PROJECTS', value: projects.length, sub: `${projects.filter(p => p.status === 'In Progress').length} active · ${projects.filter(p => p.status === 'Review').length} in review`, color: '#fff' },
+            { label: 'VERSIONS SENT', value: totalVersions, sub: 'Across all projects', color: '#60a5fa' },
+            { label: 'AMOUNT DUE', value: `₹${totalPending.toLocaleString()}`, sub: `${projects.filter(p => p.payment_status !== 'Paid').length} invoices pending`, color: '#f87171' },
+          ].map(card => (
+            <div key={card.label} style={{ ...s.card, marginBottom: 0 }}>
+              <div style={{ fontSize: '10px', fontWeight: 600, color: '#555', letterSpacing: '1px', marginBottom: '10px' }}>{card.label}</div>
+              <div style={{ fontSize: '32px', fontWeight: 800, color: card.color, marginBottom: '4px' }}>{card.value}</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>{card.sub}</div>
             </div>
           ))}
         </div>
 
-        {/* Section heading */}
-        <div style={{
-          fontSize: '11px', fontWeight: '600',
-          letterSpacing: '0.08em', textTransform: 'uppercase',
-          color: '#999', paddingBottom: '10px',
-          borderBottom: '0.5px solid #e5e3dc', marginBottom: '14px',
-        }}>Your projects</div>
-
-        {/* Project tabs */}
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap' }}>
-          {client.projects.map((p, i) => (
-            <button key={p.id}
-              onClick={() => setActiveProject(i)}
-              style={{
-                padding: '6px 16px', borderRadius: '20px',
-                fontSize: '12px', cursor: 'pointer',
-                border: '0.5px solid',
-                borderColor: activeProject === i ? '#1a1a1a' : '#e5e3dc',
-                background: activeProject === i ? '#1a1a1a' : '#ffffff',
-                color: activeProject === i ? '#ffffff' : '#666',
-                fontWeight: '500', fontFamily: 'inherit',
-                transition: 'all 0.15s',
-              }}
-            >{p.name}</button>
-          ))}
-        </div>
-
-        {/* Active project card */}
-        {client.projects.map((project, idx) => idx === activeProject && (
-          <div key={project.id} style={{
-            background: '#ffffff', border: '0.5px solid #e5e3dc',
-            borderRadius: '16px', overflow: 'hidden',
-            marginBottom: '20px',
-          }}>
-            {/* Project header */}
-            <div style={{
-              padding: '16px 20px',
-              borderBottom: '0.5px solid #e5e3dc',
-              display: 'flex', alignItems: 'flex-start',
-              justifyContent: 'space-between', gap: '10px',
-            }}>
-              <div>
-                <div style={{ fontSize: '16px', fontWeight: '600', color: '#1a1a1a', marginBottom: '4px' }}>{project.name}</div>
-                <div style={{ fontSize: '11px', color: '#999', marginBottom: '8px' }}>{project.subtitle}</div>
-                <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '11px', color: '#666', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    📅 Started {project.startDate}
-                  </span>
-                  <span style={{ fontSize: '11px', color: project.deadlineWarn ? '#854F0B' : '#666', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: project.deadlineWarn ? '500' : '400' }}>
-                    🏁 Due {project.deadline}{project.deadlineWarn ? ' ⚠' : ''}
-                  </span>
-                  <span style={{ fontSize: '11px', color: '#666', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                    🔄 {project.revisionsUsed} of {project.revisionsMax} revisions used
-                  </span>
-                </div>
-              </div>
-              <span style={{
-                background: project.statusBg, color: project.statusColor,
-                fontSize: '11px', fontWeight: '600',
-                padding: '4px 12px', borderRadius: '20px', flexShrink: 0,
-              }}>{project.status}</span>
-            </div>
-
-            <div style={{ padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '18px' }}>
-
-              {/* Progress tracker */}
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  📊 Project progress
-                </div>
-                <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                  {project.progress.map((step, i) => (
-                    <div key={step} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
-                      {i > 0 && (
-                        <div style={{
-                          position: 'absolute', top: '9px', left: '-50%',
-                          width: '100%', height: '1.5px',
-                          background: i <= project.currentStep ? '#639922' : '#e5e3dc',
-                          zIndex: 0,
-                        }} />
-                      )}
-                      <div style={{
-                        width: '18px', height: '18px', borderRadius: '50%',
-                        border: '1.5px solid',
-                        borderColor: i < project.currentStep ? '#639922' : i === project.currentStep ? '#378ADD' : '#e5e3dc',
-                        background: i < project.currentStep ? '#639922' : '#ffffff',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        margin: '0 auto 5px', position: 'relative', zIndex: 1,
-                        fontSize: '9px', color: i < project.currentStep ? '#fff' : i === project.currentStep ? '#378ADD' : '#ccc',
-                      }}>
-                        {i < project.currentStep ? '✓' : i === project.currentStep ? '●' : ''}
-                      </div>
-                      <div style={{
-                        fontSize: '10px',
-                        color: i < project.currentStep ? '#639922' : i === project.currentStep ? '#378ADD' : '#999',
-                        fontWeight: i === project.currentStep ? '500' : '400',
-                      }}>{step}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Version history timeline */}
-              {project.versions.length > 0 && (
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999', marginBottom: '10px' }}>
-                    🎬 Version history — {project.versions.filter(v => v.sent).length} drafts sent
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', position: 'relative' }}>
-                    <div style={{
-                      position: 'absolute', top: '13px',
-                      left: '13px', right: '13px',
-                      height: '1.5px', background: '#e5e3dc', zIndex: 0,
-                    }} />
-                    {project.versions.map((v) => (
-                      <div key={v.label} style={{ flex: 1, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-                        <div style={{
-                          width: '26px', height: '26px', borderRadius: '50%',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          margin: '0 auto 5px',
-                          fontSize: '10px', fontWeight: '700',
-                          background: v.latest ? '#1a1a1a' : v.sent ? '#E6F1FB' : '#f5f4f0',
-                          color: v.latest ? '#fff' : v.sent ? '#185FA5' : '#ccc',
-                          border: `1.5px solid ${v.latest ? '#1a1a1a' : v.sent ? '#378ADD' : '#e5e3dc'}`,
-                        }}>{v.label}</div>
-                        <div style={{ fontSize: '10px', color: '#999' }}>{v.date}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {project.versions.length === 0 && (
-                <div style={{
-                  background: '#f5f4f0', borderRadius: '10px',
-                  padding: '12px 14px', fontSize: '12px', color: '#999',
-                }}>
-                  🎬 Your first draft will appear here once it's ready. We'll update you when it's uploaded.
-                </div>
-              )}
-
-              {/* Two columns — revisions + files */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-
-                {/* Revision history */}
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999', marginBottom: '10px' }}>
-                    🔄 Revision history
-                  </div>
-                  {project.revisions.length === 0 ? (
-                    <div style={{ fontSize: '12px', color: '#999', background: '#f5f4f0', padding: '10px 12px', borderRadius: '8px' }}>
-                      No revisions yet — your feedback will appear here.
-                    </div>
-                  ) : project.revisions.map((rev) => (
-                    <div key={rev.round} style={{ display: 'flex', gap: '9px', marginBottom: '10px' }}>
-                      <div style={{
-                        width: '18px', height: '18px', borderRadius: '50%',
-                        border: '1.5px solid',
-                        borderColor: rev.status === 'active' ? '#378ADD' : '#639922',
-                        background: rev.status === 'done' ? '#EAF3DE' : '#E6F1FB',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '9px', flexShrink: 0, marginTop: '1px',
-                        color: rev.status === 'active' ? '#185FA5' : '#3B6D11',
-                        fontWeight: '600',
-                      }}>
-                        {rev.status === 'done' ? '✓' : rev.round}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '12px', fontWeight: '500', color: '#1a1a1a', marginBottom: '3px' }}>
-                          Round {rev.round} — Your feedback
-                        </div>
-                        <div style={{
-                          fontSize: '11px', color: '#666',
-                          background: '#f5f4f0', padding: '6px 9px',
-                          borderRadius: '8px', lineHeight: '1.5',
-                          marginBottom: '3px',
-                        }}>{rev.note}</div>
-                        <div style={{ fontSize: '10px', color: '#999' }}>
-                          {rev.date} · {rev.status === 'active' ? 'Being worked on' : 'Done ✓'}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Files */}
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999', marginBottom: '10px' }}>
-                    📁 Files & drafts
-                  </div>
-                  {project.files.map((file, i) => (
-                    <a key={i} href={file.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: '10px',
-                        padding: '10px 12px',
-                        background: file.type === 'frameio' ? '#12122a' : '#f5f4f0',
-                        border: `0.5px solid ${file.type === 'frameio' ? '#3d3d6b' : '#e5e3dc'}`,
-                        borderRadius: '10px', marginBottom: '7px', cursor: 'pointer',
-                      }}>
-                        <div style={{
-                          width: '30px', height: '30px', borderRadius: '8px',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          flexShrink: 0,
-                          background: file.type === 'frameio' ? '#7B68EE' : '#E8F0FE',
-                        }}>
-                          {file.type === 'frameio'
-                            ? <span style={{ fontSize: '9px', fontWeight: '700', color: '#fff' }}>F.io</span>
-                            : <span style={{ fontSize: '14px' }}>📄</span>
-                          }
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: '12px', fontWeight: '500', color: file.type === 'frameio' ? '#c0bede' : '#1a1a1a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {file.name}
-                          </div>
-                          <div style={{ fontSize: '10px', color: file.type === 'frameio' ? '#5a5a9a' : '#999', marginTop: '2px' }}>
-                            {file.sub}
-                          </div>
-                        </div>
-                        <span style={{ fontSize: '12px', color: file.type === 'frameio' ? '#7B68EE' : '#999', flexShrink: 0 }}>↗</span>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              </div>
-
-              {/* Payment section */}
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#999', marginBottom: '10px' }}>
-                  🧾 Invoice & payment — {project.invoice.num} · {project.invoice.date}
-                </div>
-                <div style={{
-                  background: '#f5f4f0', borderRadius: '10px',
-                  overflow: 'hidden', marginBottom: '10px',
-                }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)' }}>
-                    {[
-                      { label: 'Project fee', value: fmt(project.invoice.projectFee), color: '#1a1a1a' },
-                      { label: 'Amount paid', value: fmt(project.invoice.amountPaid), color: project.invoice.amountPaid > 0 ? '#3B6D11' : '#1a1a1a' },
-                      { label: 'Balance due', value: fmt(project.invoice.balanceDue), color: project.invoice.balanceDue > 0 ? '#A32D2D' : '#3B6D11' },
-                      { label: 'Status', value: project.invoice.status, isStatus: true, statusBg: project.invoice.statusBg, statusColor: project.invoice.statusColor },
-                    ].map((cell, i) => (
-                      <div key={cell.label} style={{
-                        padding: '12px 14px',
-                        borderRight: i < 3 ? '0.5px solid #e5e3dc' : 'none',
-                      }}>
-                        <div style={{ fontSize: '10px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#999', marginBottom: '5px' }}>
-                          {cell.label}
-                        </div>
-                        {(cell as any).isStatus ? (
-                          <span style={{
-                            background: (cell as any).statusBg,
-                            color: (cell as any).statusColor,
-                            fontSize: '11px', fontWeight: '600',
-                            padding: '3px 10px', borderRadius: '20px',
-                          }}>{cell.value}</span>
-                        ) : (
-                          <div style={{ fontSize: '15px', fontWeight: '600', color: cell.color }}>{cell.value}</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  background: '#f5f4f0', padding: '10px 14px',
-                  borderRadius: '10px', fontSize: '12px', color: '#666',
-                }}>
-                  <span>Due date: <strong style={{ color: '#1a1a1a' }}>{project.invoice.dueDate}</strong></span>
-                  <button
-                    onClick={() => alert('Invoice PDF coming soon! Your editor will send it via email.')}
-                    style={{
-                      background: '#1a1a1a', border: 'none',
-                      borderRadius: '8px', padding: '8px 16px',
-                      fontSize: '12px', color: '#fff', cursor: 'pointer',
-                      fontFamily: 'inherit', fontWeight: '500',
-                      display: 'flex', alignItems: 'center', gap: '6px',
-                    }}>
-                    📄 View invoice PDF
-                  </button>
-                </div>
-              </div>
-
+        {/* Project Tabs */}
+        {projects.length > 0 && (
+          <div style={{ marginBottom: '16px' }}>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: '#555', letterSpacing: '1px', marginBottom: '10px' }}>YOUR PROJECTS</div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {projects.map(p => (
+                <button key={p.id} onClick={() => setActiveProject(p)} style={{
+                  padding: '8px 18px', borderRadius: '8px', border: '1px solid',
+                  borderColor: activeProject?.id === p.id ? '#444' : '#2a2a2a',
+                  background: activeProject?.id === p.id ? '#222' : 'transparent',
+                  color: activeProject?.id === p.id ? '#fff' : '#666',
+                  fontSize: '13px', fontWeight: 500, cursor: 'pointer'
+                }}>{p.title}</button>
+              ))}
             </div>
           </div>
-        ))}
+        )}
 
-      </div>
+        {/* Active Project */}
+        {activeProject && (
+          <div style={s.card}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+              <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{activeProject.title}</h2>
+              <span style={{
+                fontSize: '12px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600, border: '1px solid',
+                borderColor: activeProject.status === 'Review' ? '#854d0e' : activeProject.status === 'Completed' ? '#166534' : '#1e3a5f',
+                background: activeProject.status === 'Review' ? '#1c1200' : activeProject.status === 'Completed' ? '#052e16' : '#0c1a2e',
+                color: activeProject.status === 'Review' ? '#fbbf24' : activeProject.status === 'Completed' ? '#4ade80' : '#60a5fa'
+              }}>{activeProject.status}</span>
+            </div>
+            {activeProject.deadline && (
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '24px', display: 'flex', gap: '16px' }}>
+                <span>🔲 Due <span style={{ color: '#f87171' }}>{activeProject.deadline}</span></span>
+              </div>
+            )}
 
-      {/* Footer */}
-      <div style={{
-        textAlign: 'center', padding: '20px',
-        borderTop: '0.5px solid #e5e3dc',
-        fontSize: '11px', color: '#999',
-        background: '#ffffff', marginTop: '8px',
-      }}>
-        🔒 This is your private portal — only you can see this page &nbsp;·&nbsp; Studio Portal by Your Studio Name
+            {/* Progress */}
+            <div style={{ marginBottom: '28px', borderTop: '1px solid #222', paddingTop: '20px' }}>
+              <div style={s.label}>🔲 PROJECT PROGRESS</div>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
+                <div style={{ position: 'absolute', top: '10px', left: 0, height: '1px', background: '#fff', width: `${(currentStep / (progressSteps.length - 1)) * 100}%` }} />
+                {progressSteps.map((step, i) => (
+                  <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 2, flex: 1 }}>
+                    <div style={{
+                      width: '20px', height: '20px', borderRadius: '50%', border: '2px solid',
+                      borderColor: i <= currentStep ? '#fff' : '#333',
+                      background: i < currentStep ? '#fff' : i === currentStep ? '#111' : '#111',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {i < currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#111' }} />}
+                      {i === currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />}
+                    </div>
+                    <span style={{ fontSize: '11px', color: i <= currentStep ? '#fff' : '#555', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>{step}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Version History */}
+            {activeVersions.length > 0 && (
+              <div style={{ marginBottom: '24px', borderTop: '1px solid #222', paddingTop: '20px' }}>
+                <div style={s.label}>🔲 VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '0' }}>
+                  <div style={{ position: 'absolute', top: '16px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
+                  {[...Array(3)].map((_, i) => {
+                    const ver = activeVersions[i]
+                    return (
+                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 2 }}>
+                        <div style={{
+                          width: '32px', height: '32px', borderRadius: '50%',
+                          background: ver ? '#fff' : '#1c1c1c',
+                          border: `2px solid ${ver ? '#fff' : '#333'}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '11px', fontWeight: 700, color: ver ? '#111' : '#555'
+                        }}>v{i + 1}</div>
+                        <span style={{ fontSize: '11px', color: ver ? '#aaa' : '#444' }}>{ver ? ver.sent_date || '—' : '—'}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Revisions & Files */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #222', paddingTop: '20px', marginBottom: '0' }}>
+              <div>
+                <div style={s.label}>🔲 REVISION HISTORY</div>
+                {activeRevisions.length === 0 ? (
+                  <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
+                    No revisions yet — your feedback will appear here.
+                  </div>
+                ) : activeRevisions.map((r, idx) => (
+                  <div key={r.id} style={{ background: '#161616', borderRadius: '8px', padding: '14px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: idx === 0 ? '#2563eb' : '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>{activeRevisions.length - idx}</div>
+                      <span style={{ fontSize: '13px', fontWeight: 600 }}>Round {activeRevisions.length - idx} — Your feedback</span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#aaa', margin: '0 0 6px', paddingLeft: '30px' }}>{r.note}</p>
+                    <div style={{ fontSize: '11px', color: '#555', paddingLeft: '30px' }}>{r.created_date} · {r.status || 'Pending'}</div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={s.label}>🔲 FILES & DRAFTS</div>
+                {activeFiles.length === 0 ? (
+                  <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
+                    Your first draft will appear here once it's ready.
+                  </div>
+                ) : activeFiles.map(f => (
+                  <a key={f.id} href={f.url} target='_blank' rel='noreferrer' style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: '#161616', borderRadius: '8px', padding: '12px 14px',
+                    textDecoration: 'none', marginBottom: '8px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
+                        {f.type === 'Delivery' ? '🎬' : f.type === 'Draft' ? '📝' : '📁'}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: '#fff' }}>{f.name}</div>
+                        <div style={{ fontSize: '11px', color: '#555' }}>{f.type}</div>
+                      </div>
+                    </div>
+                    <span style={{ color: '#555', fontSize: '18px' }}>🔲</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Invoice */}
+        {activeProject && (
+          <div style={s.card}>
+            <div style={s.label}>🔲 INVOICE & PAYMENT</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+              {[
+                { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: '#fff' },
+                { label: 'AMOUNT PAID', value: `₹${activeProject.payment_status === 'Paid' ? Number(activeProject.amount).toLocaleString() : '0'}`, color: '#4ade80' },
+                { label: 'BALANCE DUE', value: `₹${activeProject.payment_status === 'Paid' ? '0' : Number(activeProject.amount).toLocaleString()}`, color: '#f87171' },
+                { label: 'PAYMENT STATUS', value: activeProject.payment_status, status: true },
+              ].map(item => (
+                <div key={item.label}>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#555', letterSpacing: '1px', marginBottom: '8px' }}>{item.label}</div>
+                  {item.status ? (
+                    <span style={{
+                      fontSize: '13px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600,
+                      background: activeProject.payment_status === 'Paid' ? '#052e16' : activeProject.payment_status === 'Partial' ? '#1c1200' : '#1c0a0a',
+                      color: activeProject.payment_status === 'Paid' ? '#4ade80' : activeProject.payment_status === 'Partial' ? '#fbbf24' : '#f87171',
+                      border: '1px solid', borderColor: activeProject.payment_status === 'Paid' ? '#166534' : activeProject.payment_status === 'Partial' ? '#854d0e' : '#7f1d1d'
+                    }}>{item.value}</span>
+                  ) : (
+                    <div style={{ fontSize: '24px', fontWeight: 800, color: item.color }}>{item.value}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+            {activeProject.deadline && (
+              <div style={{ fontSize: '13px', color: '#555', marginBottom: '20px' }}>
+                Due date: <span style={{ color: '#fff', fontWeight: 600 }}>{activeProject.deadline}</span>
+              </div>
+            )}
+            <button style={{
+              width: '100%', background: 'transparent', border: '1px solid #333',
+              borderRadius: '10px', padding: '14px', color: '#fff', fontSize: '14px',
+              fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+            }}>
+              🔲 View Invoice PDF
+            </button>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={{ textAlign: 'center', color: '#444', fontSize: '12px', marginTop: '24px', padding: '16px', borderTop: '1px solid #1a1a1a' }}>
+          🔒 This is your private portal — only you can see this page · Studio Portal by Ayush Siddhapura
+        </div>
       </div>
     </div>
   )

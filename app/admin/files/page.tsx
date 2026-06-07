@@ -1,598 +1,362 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { supabase } from '@/lib/supabase'
 
 const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', icon: '▦', active: false },
-  { label: 'Clients', href: '/admin/clients', icon: '👥', active: false },
-  { label: 'Projects', href: '/admin/projects', icon: '🎬', active: false },
-  { label: 'Invoices', href: '/admin/invoices', icon: '🧾', active: false },
-  { label: 'Files', href: '/admin/files', icon: '📁', active: true },
-  { label: 'Settings', href: '/admin/settings', icon: '⚙️', active: false },
+  { label: 'Overview', href: '/admin/dashboard', icon: '📊' },
+  { label: 'Clients', href: '/admin/clients', icon: '👥' },
+  { label: 'Projects', href: '/admin/projects', icon: '🎬' },
+  { label: 'Invoices', href: '/admin/invoices', icon: '🧾' },
+  { label: 'Files', href: '/admin/files', icon: '📁' },
+  { label: 'Settings', href: '/admin/settings', icon: '⚙️' },
 ]
 
-type FileItem = {
-  id: number
-  name: string
-  type: 'frameio' | 'drive' | 'upload'
-  label: string
-  project: string
-  client: string
-  size?: string
-  date: string
-  url: string
-  fileType: 'Draft' | 'Final' | 'Brief' | 'Invoice'
-  version?: string
+const typeConfig: any = {
+  'Delivery': { bg: '#14532d', color: '#4ade80' },
+  'Draft':    { bg: '#1e3a5f', color: '#60a5fa' },
+  'Reference':{ bg: '#3b2f00', color: '#fbbf24' },
+  'Brief':    { bg: '#3b1f3b', color: '#c084fc' },
+  'Invoice':  { bg: '#1f2f3b', color: '#67e8f9' },
 }
-
-const files: FileItem[] = [
-  { id: 1, name: 'Brand intro – Draft v2', type: 'frameio', label: 'Frame.io', project: 'Brand intro video', client: 'Rahul K.', date: 'Jun 2', url: 'https://frame.io/review/abc123', fileType: 'Draft', version: 'v2' },
-  { id: 2, name: 'Brand intro – Draft v1', type: 'frameio', label: 'Frame.io', project: 'Brand intro video', client: 'Rahul K.', date: 'May 27', url: 'https://frame.io/review/abc111', fileType: 'Draft', version: 'v1' },
-  { id: 3, name: 'project_brief_rahul.pdf', type: 'drive', label: 'Google Drive', project: 'Brand intro video', client: 'Rahul K.', size: '1.2 MB', date: 'May 20', url: 'https://drive.google.com/file/d/abc', fileType: 'Brief' },
-  { id: 4, name: 'YouTube ep.4 – Final review', type: 'frameio', label: 'Frame.io', project: 'YouTube series ep.4', client: 'Priya D.', date: 'Jun 1', url: 'https://frame.io/review/ep4fin', fileType: 'Final', version: 'Final' },
-  { id: 5, name: 'yt_ep4_draft_v3.mp4', type: 'frameio', label: 'Frame.io', project: 'YouTube series ep.4', client: 'Priya D.', date: 'May 29', url: 'https://frame.io/review/ep4v3', fileType: 'Draft', version: 'v3' },
-  { id: 6, name: 'Wedding highlight – Draft v1', type: 'frameio', label: 'Frame.io', project: 'Wedding highlight reel', client: 'Sneha P.', date: 'Jun 3', url: 'https://frame.io/review/wed1', fileType: 'Draft', version: 'v1' },
-  { id: 7, name: 'wedding_brief.pdf', type: 'drive', label: 'Google Drive', project: 'Wedding highlight reel', client: 'Sneha P.', size: '0.8 MB', date: 'May 28', url: 'https://drive.google.com/file/d/wed', fileType: 'Brief' },
-  { id: 8, name: 'invoice_sneha_001.pdf', type: 'drive', label: 'Google Drive', project: 'Wedding highlight reel', client: 'Sneha P.', size: '0.3 MB', date: 'May 5', url: 'https://drive.google.com/file/d/inv1', fileType: 'Invoice' },
-  { id: 9, name: 'product_brief_aryan.pdf', type: 'drive', label: 'Google Drive', project: 'Product launch ad', client: 'Aryan M.', size: '2.1 MB', date: 'May 28', url: 'https://drive.google.com/file/d/aryan', fileType: 'Brief' },
-]
-
-const fileTypeBadge: Record<string, { bg: string; color: string }> = {
-  Draft: { bg: '#E6F1FB', color: '#185FA5' },
-  Final: { bg: '#EDE8F8', color: '#5B3FA6' },
-  Brief: { bg: '#FAEEDA', color: '#854F0B' },
-  Invoice: { bg: '#EAF3DE', color: '#3B6D11' },
-}
-
-const projectGroups = Array.from(new Set(files.map(f => f.project)))
 
 export default function FilesPage() {
+  const [projects, setProjects] = useState<any[]>([])
+  const [files, setFiles] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [tab, setTab] = useState<'link' | 'upload'>('link')
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState('All')
-  const [showPanel, setShowPanel] = useState(false)
-  const [activeTab, setActiveTab] = useState<'link' | 'upload'>('link')
-  const [linkForm, setLinkForm] = useState({ url: '', label: '', project: '', type: 'Draft' })
-  const [copied, setCopied] = useState<number | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({ project_id: '', name: '', url: '', type: 'Draft' })
 
-  const filteredFiles = files.filter(f => {
-    const matchSearch = f.name.toLowerCase().includes(search.toLowerCase()) ||
-      f.project.toLowerCase().includes(search.toLowerCase()) ||
-      f.client.toLowerCase().includes(search.toLowerCase())
-    const matchType = filterType === 'All' ||
-      (filterType === 'Frame.io' && f.type === 'frameio') ||
-      (filterType === 'Drive' && f.type === 'drive') ||
-      (filterType === 'Finals' && f.fileType === 'Final') ||
-      (filterType === 'Briefs' && f.fileType === 'Brief')
-    return matchSearch && matchType
-  })
+  useEffect(() => { fetchAll() }, [])
 
-  const groupedFiles = projectGroups.map(proj => ({
-    project: proj,
-    client: files.find(f => f.project === proj)?.client || '',
-    files: filteredFiles.filter(f => f.project === proj),
-  })).filter(g => g.files.length > 0)
+  async function fetchAll() {
+    const { data: p } = await supabase.from('projects').select('id, title, clients(name)')
+    const { data: f } = await supabase.from('files').select('*, projects(title, clients(name))').order('created_at', { ascending: false })
+    if (p) setProjects(p)
+    if (f) setFiles(f)
+    setLoading(false)
+  }
 
-  const handleCopy = (id: number, url: string) => {
-    navigator.clipboard.writeText(url)
-    setCopied(id)
-    setTimeout(() => setCopied(null), 2000)
+  async function addFile() {
+    if (!form.name || !form.project_id || !form.url) return alert('Please fill in all fields')
+    setSaving(true)
+    const { error } = await supabase.from('files').insert([form])
+    if (!error) {
+      setForm({ project_id: '', name: '', url: '', type: 'Draft' })
+      setPanelOpen(false)
+      fetchAll()
+    } else alert('Error: ' + error.message)
+    setSaving(false)
+  }
+
+  async function deleteFile(id: string) {
+    if (!confirm('Delete this file?')) return
+    await supabase.from('files').delete().eq('id', id)
+    fetchAll()
+  }
+
+  function formatDate(d: string) {
+    if (!d) return ''
+    const date = new Date(d)
+    return `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}, ${date.getFullYear()}`
+  }
+
+  function isFrameio(url: string) { return url?.includes('frame.io') }
+
+  function getThumbnailBg(type: string) {
+    if (type === 'Delivery') return '#14532d'
+    if (type === 'Draft') return '#1e1a3f'
+    if (type === 'Brief') return '#3b2f00'
+    return '#1c1c2e'
   }
 
   const totalFiles = files.length
-  const frameioLinks = files.filter(f => f.type === 'frameio').length
-  const finals = files.filter(f => f.fileType === 'Final').length
-  const driveFiles = files.filter(f => f.type === 'drive').length
+  const deliveries = files.filter(f => f.type === 'Delivery').length
+  const drafts = files.filter(f => f.type === 'Draft').length
+  const briefs = files.filter(f => f.type === 'Brief').length
+
+  const filtered = files.filter(f => {
+    const matchSearch = f.name?.toLowerCase().includes(search.toLowerCase()) ||
+      f.projects?.title?.toLowerCase().includes(search.toLowerCase()) ||
+      f.projects?.clients?.name?.toLowerCase().includes(search.toLowerCase())
+    const matchType = filterType === 'All' ? true : f.type === filterType
+    return matchSearch && matchType
+  })
+
+  const inp: any = { width: '100%', background: '#2a2a2a', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' as const, outline: 'none' }
+  const lbl: any = { fontSize: '12px', color: '#aaa', display: 'block', marginBottom: '6px', fontWeight: 500 }
 
   return (
-    <div style={{
-      display: 'flex', minHeight: '100vh',
-      background: '#f5f4f0',
-      fontFamily: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-    }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
       {/* Sidebar */}
-      <div style={{
-        width: '200px', flexShrink: 0,
-        background: '#ffffff',
-        borderRight: '0.5px solid #e5e3dc',
-        padding: '20px 0',
-        display: 'flex', flexDirection: 'column', gap: '2px',
-        position: 'sticky', top: 0, height: '100vh',
-      }}>
-        <div style={{ padding: '0 16px 16px', borderBottom: '0.5px solid #e5e3dc', marginBottom: '8px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div style={{
-              width: '28px', height: '28px',
-              background: 'linear-gradient(135deg, #639922, #4a7a19)',
-              borderRadius: '8px', display: 'flex',
-              alignItems: 'center', justifyContent: 'center', fontSize: '14px',
-            }}>🎬</div>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1a1a1a' }}>Studio Portal</div>
-              <div style={{ fontSize: '10px', color: '#999' }}>Admin panel</div>
-            </div>
+      <div style={{ width: '200px', background: '#161616', borderRight: '1px solid #222', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px', paddingLeft: '6px' }}>
+          <div style={{ width: '28px', height: '28px', background: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🎬</div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
+            <div style={{ fontSize: '11px', color: '#555' }}>Admin panel</div>
           </div>
         </div>
-        {navItems.map((item) => (
-          <Link key={item.label} href={item.href} style={{
-            display: 'flex', alignItems: 'center', gap: '9px',
-            padding: '8px 16px', fontSize: '13px', textDecoration: 'none',
-            color: item.active ? '#1a1a1a' : '#666',
-            background: item.active ? '#f5f4f0' : 'transparent',
-            fontWeight: item.active ? '500' : '400',
-          }}>
-            <span style={{ fontSize: '15px' }}>{item.icon}</span>
-            {item.label}
-          </Link>
+        {navItems.map(item => (
+          <Link key={item.href} href={item.href} style={{
+            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
+            borderRadius: '8px', textDecoration: 'none',
+            color: item.href === '/admin/files' ? '#fff' : '#666',
+            background: item.href === '/admin/files' ? '#222' : 'transparent', fontSize: '14px'
+          }}>{item.icon} {item.label}</Link>
         ))}
-        <div style={{ flex: 1 }} />
-        <div style={{
-          margin: '0 12px', padding: '10px 12px',
-          background: '#f5f4f0', borderRadius: '10px',
-          fontSize: '11px', color: '#999',
-          display: 'flex', alignItems: 'center', gap: '6px',
-        }}>
-          <span>🔐</span> admin@studio.com
-        </div>
       </div>
 
       {/* Main */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
-        {/* Topbar */}
-        <div style={{
-          background: '#ffffff', borderBottom: '0.5px solid #e5e3dc',
-          padding: '12px 24px', display: 'flex',
-          alignItems: 'center', justifyContent: 'space-between',
-          position: 'sticky', top: 0, zIndex: 10,
-        }}>
-          <div style={{ fontSize: '15px', fontWeight: '600', color: '#1a1a1a' }}>
-            Files <span style={{ fontSize: '12px', color: '#999', fontWeight: '400', marginLeft: '6px' }}>{totalFiles} files</span>
-          </div>
-          <button
-            onClick={() => setShowPanel(true)}
-            style={{
-              background: '#1a1a1a', border: 'none',
-              borderRadius: '8px', padding: '7px 14px',
-              fontSize: '12px', color: '#fff', cursor: 'pointer',
-              fontFamily: 'inherit', fontWeight: '500',
-            }}>☁ Upload / Add link</button>
+        {/* Top bar */}
+        <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Files</h1>
+          <span style={{ fontSize: '12px', color: '#555' }}>{totalFiles} files</span>
+          <button onClick={() => setPanelOpen(true)} style={{
+            marginLeft: 'auto', background: '#222', border: '1px solid #333', borderRadius: '10px',
+            color: '#fff', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '6px'
+          }}>⊞ Upload / Add link</button>
         </div>
 
-        <div style={{ padding: '20px 24px', flex: 1, display: 'flex', gap: '16px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
 
-          {/* Left — file browser */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-
-            {/* Summary stats */}
-            <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(4,1fr)',
-              gap: '8px', marginBottom: '14px',
-            }}>
-              {[
-                { label: 'Total files', value: totalFiles },
-                { label: 'Frame.io links', value: frameioLinks },
-                { label: 'Final deliveries', value: finals },
-                { label: 'Drive files', value: driveFiles },
-              ].map((s) => (
-                <div key={s.label} style={{
-                  background: '#ffffff', border: '0.5px solid #e5e3dc',
-                  borderRadius: '10px', padding: '10px 12px',
-                }}>
-                  <div style={{ fontSize: '10px', color: '#999', marginBottom: '3px' }}>{s.label}</div>
-                  <div style={{ fontSize: '18px', fontWeight: '600', color: '#1a1a1a' }}>{s.value}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Toolbar */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
-              <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
-                <span style={{
-                  position: 'absolute', left: '10px', top: '50%',
-                  transform: 'translateY(-50%)', fontSize: '14px', color: '#999',
-                }}>🔍</span>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search files..."
-                  style={{
-                    width: '100%', height: '34px',
-                    border: '0.5px solid #ccc', borderRadius: '8px',
-                    padding: '0 12px 0 32px', fontSize: '13px',
-                    background: '#fff', color: '#1a1a1a',
-                    outline: 'none', boxSizing: 'border-box',
-                    fontFamily: 'inherit',
-                  }}
-                />
-              </div>
-              {['All', 'Frame.io', 'Drive', 'Finals', 'Briefs'].map((f) => (
-                <button key={f}
-                  onClick={() => setFilterType(f)}
-                  style={{
-                    padding: '5px 12px', borderRadius: '20px', fontSize: '12px',
-                    border: '0.5px solid #ccc',
-                    background: filterType === f ? '#1a1a1a' : 'transparent',
-                    color: filterType === f ? '#fff' : '#666',
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    fontWeight: filterType === f ? '500' : '400',
-                  }}>{f}</button>
-              ))}
-            </div>
-
-            {/* Files grouped by project */}
-            {groupedFiles.length === 0 ? (
-              <div style={{
-                background: '#fff', border: '0.5px solid #e5e3dc',
-                borderRadius: '12px', padding: '40px',
-                textAlign: 'center', color: '#999', fontSize: '13px',
-              }}>No files found</div>
-            ) : groupedFiles.map((group) => (
-              <div key={group.project} style={{ marginBottom: '18px' }}>
-                {/* Group header */}
-                <div style={{
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'space-between', marginBottom: '8px',
-                }}>
-                  <div style={{
-                    display: 'flex', alignItems: 'center', gap: '7px',
-                    fontSize: '13px', fontWeight: '500', color: '#1a1a1a',
-                  }}>
-                    <span style={{ fontSize: '14px', color: '#999' }}>📁</span>
-                    {group.project}
-                    <span style={{ fontSize: '11px', color: '#999', fontWeight: '400' }}>· {group.client}</span>
-                  </div>
-                  <span style={{
-                    fontSize: '11px', color: '#999',
-                    background: '#f5f4f0', padding: '2px 8px',
-                    borderRadius: '20px',
-                  }}>{group.files.length} files</span>
-                </div>
-
-                {/* File rows */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {group.files.map((file) => (
-                    <div key={file.id} style={{
-                      background: file.type === 'frameio' ? '#12122a' : '#ffffff',
-                      border: `0.5px solid ${file.type === 'frameio' ? '#3d3d6b' : '#e5e3dc'}`,
-                      borderRadius: '10px', padding: '10px 14px',
-                      display: 'flex', alignItems: 'center', gap: '10px',
-                    }}>
-                      {/* Icon */}
-                      <div style={{
-                        width: '32px', height: '32px', borderRadius: '8px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '14px', flexShrink: 0,
-                        background: file.type === 'frameio' ? '#7B68EE'
-                          : file.type === 'drive' ? '#E8F0FE'
-                          : '#f5f4f0',
-                      }}>
-                        {file.type === 'frameio' ? (
-                          <span style={{ fontSize: '9px', fontWeight: '700', color: '#fff' }}>F.io</span>
-                        ) : file.type === 'drive' ? (
-                          <span style={{ fontSize: '15px' }}>📄</span>
-                        ) : (
-                          <span style={{ fontSize: '15px' }}>🎬</span>
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{
-                          fontSize: '12px', fontWeight: '500',
-                          color: file.type === 'frameio' ? '#c0bede' : '#1a1a1a',
-                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}>{file.name}</div>
-                        <div style={{
-                          fontSize: '11px', marginTop: '2px',
-                          color: file.type === 'frameio' ? '#5a5a9a' : '#999',
-                          display: 'flex', gap: '10px',
-                        }}>
-                          <span>{file.label}</span>
-                          {file.size && <span>{file.size}</span>}
-                          <span>{file.date}</span>
-                        </div>
-                      </div>
-
-                      {/* Badge */}
-                      <span style={{
-                        background: fileTypeBadge[file.fileType].bg,
-                        color: fileTypeBadge[file.fileType].color,
-                        fontSize: '10px', fontWeight: '500',
-                        padding: '2px 8px', borderRadius: '20px',
-                        flexShrink: 0,
-                      }}>
-                        {file.fileType}{file.version ? ` · ${file.version}` : ''}
-                      </span>
-
-                      {/* Actions */}
-                      <div style={{ display: 'flex', gap: '5px', flexShrink: 0 }}>
-                        <button
-                          onClick={() => handleCopy(file.id, file.url)}
-                          style={{
-                            background: 'transparent',
-                            border: `0.5px solid ${file.type === 'frameio' ? '#3d3d6b' : '#ccc'}`,
-                            borderRadius: '6px', padding: '5px 8px',
-                            fontSize: '11px', cursor: 'pointer',
-                            color: file.type === 'frameio' ? '#7B68EE' : '#555',
-                            fontFamily: 'inherit',
-                          }}>
-                          {copied === file.id ? '✅' : '🔗'}
-                        </button>
-                        <a href={file.url} target="_blank" rel="noopener noreferrer">
-                          <button style={{
-                            background: 'transparent',
-                            border: `0.5px solid ${file.type === 'frameio' ? '#3d3d6b' : '#ccc'}`,
-                            borderRadius: '6px', padding: '5px 8px',
-                            fontSize: '11px', cursor: 'pointer',
-                            color: file.type === 'frameio' ? '#7B68EE' : '#555',
-                            fontFamily: 'inherit',
-                          }}>↗</button>
-                        </a>
-                        <button style={{
-                          background: 'transparent',
-                          border: `0.5px solid ${file.type === 'frameio' ? '#3d3d6b' : '#ccc'}`,
-                          borderRadius: '6px', padding: '5px 8px',
-                          fontSize: '11px', cursor: 'pointer',
-                          color: '#A32D2D', fontFamily: 'inherit',
-                        }} onClick={() => alert('Delete file?')}>🗑</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {/* Stat cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
+            {[
+              { label: 'Total files', value: totalFiles, color: '#fff' },
+              { label: 'Deliveries', value: deliveries, color: '#4ade80' },
+              { label: 'Drafts', value: drafts, color: '#60a5fa' },
+              { label: 'Briefs', value: briefs, color: '#c084fc' },
+            ].map(s => (
+              <div key={s.label} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '18px' }}>
+                <div style={{ fontSize: '12px', color: '#555', marginBottom: '10px' }}>{s.label}</div>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: s.color }}>{s.value}</div>
               </div>
             ))}
           </div>
 
-          {/* Right — upload panel */}
-          <div style={{ width: '220px', flexShrink: 0 }}>
-
-            {/* Add file card */}
-            <div style={{
-              background: '#ffffff', border: '0.5px solid #e5e3dc',
-              borderRadius: '12px', padding: '14px', marginBottom: '12px',
-            }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a1a', marginBottom: '12px' }}>
-                + Add to project
-              </div>
-
-              {/* Tab toggle */}
-              <div style={{
-                display: 'flex', background: '#f5f4f0',
-                borderRadius: '8px', padding: '3px',
-                marginBottom: '12px', gap: '2px',
-              }}>
-                {(['link', 'upload'] as const).map((tab) => (
-                  <button key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    style={{
-                      flex: 1, padding: '5px 4px',
-                      borderRadius: '6px', fontSize: '11px',
-                      border: 'none', cursor: 'pointer',
-                      fontFamily: 'inherit', fontWeight: '500',
-                      background: activeTab === tab ? '#ffffff' : 'transparent',
-                      color: activeTab === tab ? '#1a1a1a' : '#999',
-                      boxShadow: activeTab === tab ? '0 0.5px 2px rgba(0,0,0,0.08)' : 'none',
-                    }}>
-                    {tab === 'link' ? '🔗 Link' : '☁ Upload'}
-                  </button>
-                ))}
-              </div>
-
-              {activeTab === 'link' ? (
-                <div>
-                  {/* Frame.io box */}
-                  <div style={{
-                    background: '#12122a', border: '1px solid #3d3d6b',
-                    borderRadius: '8px', padding: '10px', marginBottom: '10px',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '7px' }}>
-                      <div style={{
-                        width: '18px', height: '18px', borderRadius: '4px',
-                        background: '#7B68EE', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center',
-                        fontSize: '8px', fontWeight: '700', color: '#fff',
-                      }}>F</div>
-                      <span style={{ fontSize: '11px', fontWeight: '500', color: '#c0bede' }}>Frame.io link</span>
-                    </div>
-                    <input
-                      placeholder="https://frame.io/review/..."
-                      value={linkForm.url}
-                      onChange={(e) => setLinkForm({ ...linkForm, url: e.target.value })}
-                      style={{
-                        width: '100%', padding: '6px 8px',
-                        background: '#1a1a35', border: '0.5px solid #3d3d6b',
-                        borderRadius: '6px', fontSize: '11px', color: '#c0bede',
-                        outline: 'none', boxSizing: 'border-box',
-                        fontFamily: 'inherit',
-                      }}
-                    />
-                  </div>
-
-                  <div style={{
-                    fontSize: '10px', color: '#999',
-                    textAlign: 'center', marginBottom: '8px',
-                  }}>— or paste any link —</div>
-
-                  {[
-                    { label: 'Label', placeholder: 'e.g. Draft v2', key: 'label' },
-                  ].map((f) => (
-                    <div key={f.key} style={{ marginBottom: '8px' }}>
-                      <label style={{
-                        display: 'block', fontSize: '10px',
-                        color: '#666', marginBottom: '3px',
-                        fontWeight: '500', textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}>{f.label}</label>
-                      <input
-                        placeholder={f.placeholder}
-                        style={{
-                          width: '100%', padding: '6px 8px',
-                          border: '0.5px solid #ddd', borderRadius: '6px',
-                          fontSize: '12px', color: '#1a1a1a',
-                          outline: 'none', boxSizing: 'border-box',
-                          fontFamily: 'inherit',
-                        }}
-                      />
-                    </div>
-                  ))}
-
-                  <div style={{ marginBottom: '8px' }}>
-                    <label style={{
-                      display: 'block', fontSize: '10px',
-                      color: '#666', marginBottom: '3px',
-                      fontWeight: '500', textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}>Project</label>
-                    <select style={{
-                      width: '100%', padding: '6px 8px',
-                      border: '0.5px solid #ddd', borderRadius: '6px',
-                      fontSize: '12px', color: '#1a1a1a',
-                      outline: 'none', boxSizing: 'border-box',
-                      fontFamily: 'inherit', background: '#fff',
-                    }}>
-                      <option>Brand intro – Rahul K.</option>
-                      <option>Wedding highlight – Sneha P.</option>
-                      <option>Product launch – Aryan M.</option>
-                      <option>YouTube ep.4 – Priya D.</option>
-                    </select>
-                  </div>
-
-                  <div style={{ marginBottom: '10px' }}>
-                    <label style={{
-                      display: 'block', fontSize: '10px',
-                      color: '#666', marginBottom: '3px',
-                      fontWeight: '500', textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}>Type</label>
-                    <select style={{
-                      width: '100%', padding: '6px 8px',
-                      border: '0.5px solid #ddd', borderRadius: '6px',
-                      fontSize: '12px', color: '#1a1a1a',
-                      outline: 'none', boxSizing: 'border-box',
-                      fontFamily: 'inherit', background: '#fff',
-                    }}>
-                      <option>Draft</option>
-                      <option>Final delivery</option>
-                      <option>Reference</option>
-                    </select>
-                  </div>
-
-                  <button
-                    onClick={() => alert('Link saved!')}
-                    style={{
-                      width: '100%', padding: '9px',
-                      background: '#1a1a1a', border: 'none',
-                      borderRadius: '8px', fontSize: '12px',
-                      color: '#fff', cursor: 'pointer',
-                      fontFamily: 'inherit', fontWeight: '500',
-                    }}>🔗 Save link</button>
-                </div>
-              ) : (
-                <div>
-                  <div style={{
-                    border: '1.5px dashed #ccc', borderRadius: '8px',
-                    padding: '20px 12px', textAlign: 'center',
-                    marginBottom: '10px', cursor: 'pointer',
-                  }}>
-                    <div style={{ fontSize: '24px', marginBottom: '6px' }}>📤</div>
-                    <div style={{ fontSize: '12px', color: '#555', marginBottom: '2px' }}>
-                      Drop file or click to browse
-                    </div>
-                    <div style={{ fontSize: '10px', color: '#999' }}>PDF, ZIP · Max 100 MB</div>
-                  </div>
-                  <div style={{ marginBottom: '8px' }}>
-                    <label style={{
-                      display: 'block', fontSize: '10px',
-                      color: '#666', marginBottom: '3px',
-                      fontWeight: '500', textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}>Project</label>
-                    <select style={{
-                      width: '100%', padding: '6px 8px',
-                      border: '0.5px solid #ddd', borderRadius: '6px',
-                      fontSize: '12px', color: '#1a1a1a',
-                      outline: 'none', boxSizing: 'border-box',
-                      fontFamily: 'inherit', background: '#fff',
-                    }}>
-                      <option>Brand intro – Rahul K.</option>
-                      <option>Wedding highlight – Sneha P.</option>
-                    </select>
-                  </div>
-                  <div style={{ marginBottom: '10px' }}>
-                    <label style={{
-                      display: 'block', fontSize: '10px',
-                      color: '#666', marginBottom: '3px',
-                      fontWeight: '500', textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}>File type</label>
-                    <select style={{
-                      width: '100%', padding: '6px 8px',
-                      border: '0.5px solid #ddd', borderRadius: '6px',
-                      fontSize: '12px', color: '#1a1a1a',
-                      outline: 'none', boxSizing: 'border-box',
-                      fontFamily: 'inherit', background: '#fff',
-                    }}>
-                      <option>Brief / reference</option>
-                      <option>Invoice PDF</option>
-                      <option>Final delivery</option>
-                    </select>
-                  </div>
-                  <button style={{
-                    width: '100%', padding: '9px',
-                    background: '#1a1a1a', border: 'none',
-                    borderRadius: '8px', fontSize: '12px',
-                    color: '#fff', cursor: 'pointer',
-                    fontFamily: 'inherit', fontWeight: '500',
-                  }}>☁ Upload</button>
-                </div>
-              )}
+          {/* Search + type filters */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#555' }}>🔍</span>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Search files...'
+                style={{ ...inp, paddingLeft: '34px' }} />
             </div>
+            {['All', 'Delivery', 'Draft', 'Reference', 'Brief', 'Invoice'].map(t => (
+              <button key={t} onClick={() => setFilterType(t)} style={{
+                padding: '7px 14px', borderRadius: '20px', border: '1px solid',
+                borderColor: filterType === t ? '#444' : '#2a2a2a',
+                background: filterType === t ? '#2a2a2a' : 'transparent',
+                color: filterType === t ? '#fff' : '#555',
+                fontSize: '12px', cursor: 'pointer', fontWeight: filterType === t ? 600 : 400, whiteSpace: 'nowrap' as const
+              }}>{t}</button>
+            ))}
+          </div>
 
-            {/* Storage info */}
-            <div style={{
-              background: '#ffffff', border: '0.5px solid #e5e3dc',
-              borderRadius: '12px', padding: '14px',
-            }}>
-              <div style={{ fontSize: '12px', fontWeight: '600', color: '#1a1a1a', marginBottom: '10px' }}>
-                🗄 Storage
-              </div>
-              <div style={{
-                height: '5px', background: '#f5f4f0',
-                borderRadius: '3px', marginBottom: '6px', overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%', width: '30%',
-                  background: 'linear-gradient(90deg, #639922, #9B6FE0)',
-                  borderRadius: '3px',
-                }} />
-              </div>
-              <div style={{ fontSize: '11px', color: '#999', marginBottom: '10px' }}>
-                0.9 GB of 15 GB used (Google Drive)
-              </div>
-              {[
-                { dot: '#7B68EE', label: 'Frame.io links', val: '— (no storage)' },
-                { dot: '#3B6D11', label: 'Drive uploads', val: '0.9 GB' },
-              ].map((row) => (
-                <div key={row.label} style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  fontSize: '11px', marginBottom: '5px', alignItems: 'center',
-                }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#555' }}>
-                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: row.dot, display: 'inline-block' }} />
-                    {row.label}
-                  </span>
-                  <span style={{ color: '#1a1a1a', fontWeight: '500' }}>{row.val}</span>
+          {/* File grid */}
+          {loading ? <p style={{ color: '#555' }}>Loading...</p> : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px', color: '#555' }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
+              <p>No files yet. Click "Upload / Add link" to get started.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
+              {filtered.map((f: any) => (
+                <div key={f.id} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', overflow: 'hidden' }}>
+                  {/* Thumbnail */}
+                  <div style={{ height: '120px', background: getThumbnailBg(f.type), display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    {isFrameio(f.url) ? (
+                      <div style={{ width: '48px', height: '48px', background: '#5a3fc0', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 800, color: '#fff' }}>F</div>
+                    ) : (
+                      <div style={{ fontSize: '36px' }}>
+                        {f.type === 'Delivery' ? '🎬' : f.type === 'Draft' ? '📝' : f.type === 'Brief' ? '📋' : f.type === 'Invoice' ? '🧾' : '📁'}
+                      </div>
+                    )}
+                    {/* Type badge top right */}
+                    <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
+                      <span style={{
+                        fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontWeight: 700,
+                        background: typeConfig[f.type]?.bg || '#2a2a2a',
+                        color: typeConfig[f.type]?.color || '#aaa'
+                      }}>{f.type}</span>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ padding: '14px' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '4px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
+                    <div style={{ fontSize: '11px', color: '#555', marginBottom: '10px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {f.projects?.title} — {f.projects?.clients?.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#444', marginBottom: '12px' }}>{formatDate(f.created_at)}</div>
+
+                    {/* URL preview */}
+                    {f.url && (
+                      <div style={{ fontSize: '11px', color: '#555', background: '#111', borderRadius: '6px', padding: '6px 8px', marginBottom: '10px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {f.url}
+                      </div>
+                    )}
+
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <a href={f.url} target='_blank' rel='noreferrer' style={{
+                        flex: 1, background: '#2a2a2a', color: '#60a5fa', borderRadius: '6px',
+                        padding: '7px', fontSize: '12px', textDecoration: 'none',
+                        textAlign: 'center' as const, fontWeight: 500
+                      }}>Open ↗</a>
+                      <button onClick={() => deleteFile(f.id)} style={{
+                        background: '#2a2a2a', color: '#f87171', border: 'none', borderRadius: '6px',
+                        padding: '7px 10px', cursor: 'pointer', fontSize: '12px'
+                      }}>✕</button>
+                    </div>
+                  </div>
                 </div>
               ))}
-              <div style={{ fontSize: '10px', color: '#999', marginTop: '8px' }}>
-                ✓ Frame.io links use zero storage
-              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* Right Panel */}
+      {panelOpen && (
+        <div style={{ width: '300px', background: '#161616', borderLeft: '1px solid #222', padding: '0', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+
+          {/* Panel header */}
+          <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Add to project</div>
+            <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: '#555', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+          </div>
+
+          {/* Link / Upload tabs */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #222' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {(['link', 'upload'] as const).map(t => (
+                <button key={t} onClick={() => setTab(t)} style={{
+                  background: tab === t ? '#2a2a2a' : '#111',
+                  border: `1px solid ${tab === t ? '#444' : '#222'}`,
+                  borderRadius: '10px', padding: '14px', cursor: 'pointer',
+                  color: tab === t ? '#fff' : '#555', fontSize: '14px', fontWeight: 600,
+                  display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '6px'
+                }}>
+                  <span style={{ fontSize: '20px' }}>{t === 'link' ? '🔗' : '☁️'}</span>
+                  {t === 'link' ? 'Link' : 'Upload'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ padding: '20px', display: 'flex', flexDirection: 'column' as const, gap: '16px', flex: 1 }}>
+
+            {tab === 'link' ? (
+              <>
+                {/* Frame.io section */}
+                <div style={{ background: '#1a1830', border: '1px solid #2a2660', borderRadius: '10px', padding: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <div style={{ width: '24px', height: '24px', background: '#5a3fc0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800, color: '#fff' }}>F</div>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>Frame.io link</div>
+                      <div style={{ fontSize: '11px', color: '#7c6fc0' }}>Paste your review link</div>
+                    </div>
+                  </div>
+                  <input
+                    value={form.url.includes('frame.io') ? form.url : ''}
+                    onChange={e => setForm({ ...form, url: e.target.value })}
+                    placeholder='https://frame.io/rev...'
+                    style={{ width: '100%', background: '#111', border: '1px solid #2a2660', borderRadius: '8px', padding: '10px 12px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }}
+                  />
+                </div>
+
+                <div style={{ textAlign: 'center' as const, fontSize: '12px', color: '#444' }}>— or paste any other link —</div>
+
+                {/* Label */}
+                <div>
+                  <label style={lbl}>Label</label>
+                  <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+                    placeholder='e.g. Draft v2, Final cut'
+                    style={inp} />
+                </div>
+
+                {/* URL (if not frame.io) */}
+                {!form.url.includes('frame.io') && (
+                  <div>
+                    <label style={lbl}>Link URL</label>
+                    <input value={form.url} onChange={e => setForm({ ...form, url: e.target.value })}
+                      placeholder='https://drive.google.com/...'
+                      style={inp} />
+                  </div>
+                )}
+
+                {/* Assign to project */}
+                <div>
+                  <label style={lbl}>Assign to project</label>
+                  <select value={form.project_id} onChange={e => setForm({ ...form, project_id: e.target.value })}
+                    style={{ ...inp }}>
+                    <option value=''>Select project...</option>
+                    {projects.map((p: any) => (
+                      <option key={p.id} value={p.id}>{p.title} — {p.clients?.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Type */}
+                <div>
+                  <label style={lbl}>Type</label>
+                  <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} style={{ ...inp, fontSize: '16px' }}>
+                    {['Draft', 'Delivery', 'Reference', 'Brief', 'Invoice'].map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </div>
+
+                <button onClick={addFile} disabled={saving} style={{
+                  width: '100%', background: saving ? '#333' : '#2a2a2a', color: saving ? '#666' : '#fff',
+                  border: '1px solid #444', borderRadius: '10px', padding: '13px',
+                  fontSize: '14px', fontWeight: 600, cursor: saving ? 'default' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                }}>
+                  ⊞ {saving ? 'Saving...' : 'Save link'}
+                </button>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center' as const, padding: '40px 20px', color: '#555' }}>
+                <div style={{ fontSize: '48px', marginBottom: '12px' }}>☁️</div>
+                <div style={{ fontSize: '14px', marginBottom: '8px', color: '#aaa' }}>Direct upload coming soon</div>
+                <div style={{ fontSize: '12px' }}>Use the Link tab to add Google Drive, WeTransfer or Frame.io links instead.</div>
+              </div>
+            )}
+          </div>
+
+          {/* Storage section */}
+          <div style={{ borderTop: '1px solid #222', padding: '16px 20px', margin: '0' }}>
+            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Storage</div>
+            <div style={{ height: '6px', background: '#2a2a2a', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
+              <div style={{ height: '100%', width: `${Math.min((totalFiles / 50) * 100, 100)}%`, background: 'linear-gradient(90deg, #5a3fc0, #3b82f6)', borderRadius: '3px' }} />
+            </div>
+            <div style={{ fontSize: '12px', color: '#555', marginBottom: '12px' }}>{totalFiles} links saved</div>
+            <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '6px' }}>
+              {[
+                { label: 'Frame.io links', value: files.filter(f => f.url?.includes('frame.io')).length, color: '#5a3fc0' },
+                { label: 'Other links', value: files.filter(f => !f.url?.includes('frame.io')).length, color: '#4ade80' },
+              ].map(s => (
+                <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#aaa' }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color }} />
+                    {s.label}
+                  </div>
+                  <span style={{ color: '#555' }}>{s.value}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: '11px', color: '#444', marginTop: '10px' }}>Links use zero storage ✓</div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
