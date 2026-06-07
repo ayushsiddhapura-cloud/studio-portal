@@ -32,19 +32,33 @@ export default function ClientsPage() {
     if (p) setProjects(p)
   }
 
-  async function createClient() {
-    if (!form.name.trim()) return
-    setSaving(true)
-    const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
-    await supabase.from('clients').insert([{
-      name: form.name, email: form.email, phone: form.phone,
-      channel_name: form.company, notes: form.notes, token, status: 'Active'
-    }])
-    setNewClientToken(token)
-    setForm({ name: '', email: '', phone: '', company: '', notes: '', pin_enabled: false })
+ async function createClient() {
+  if (!form.name.trim()) return
+  setSaving(true)
+  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+  
+  const { data, error } = await supabase.from('clients').insert([{
+    name: form.name,
+    email: form.email,
+    phone: form.phone,
+    channel_name: form.company,
+    notes: form.notes,
+    token,
+    pin_enabled: form.pin_enabled,
+    status: 'Active'
+  }]).select()
+
+  if (error) {
+    alert('Error: ' + error.message)
     setSaving(false)
-    fetchAll()
+    return
   }
+
+  setNewClientToken(token)
+  setForm({ name: '', email: '', phone: '', company: '', notes: '', pin_enabled: false })
+  setSaving(false)
+  fetchAll()
+}
 
   async function deleteClient(id: string) {
     if (!confirm('Delete this client?')) return

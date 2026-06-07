@@ -15,6 +15,12 @@ export default function ClientPortalPage() {
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
+  // PIN protection
+  const [pinRequired, setPinRequired] = useState(false)
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState('')
+  const [pinUnlocked, setPinUnlocked] = useState(false)
+
   useEffect(() => { fetchClient() }, [token])
 
   async function fetchClient() {
@@ -23,6 +29,17 @@ export default function ClientPortalPage() {
     if (!clientData) { setNotFound(true); setLoading(false); return }
     setClient(clientData)
 
+    // Check PIN
+    if (clientData.pin_enabled && clientData.pin) {
+      setPinRequired(true)
+      setLoading(false)
+      return
+    }
+
+    await loadPortalData(clientData)
+  }
+
+  async function loadPortalData(clientData: any) {
     const { data: projectData } = await supabase
       .from('projects').select('*').eq('client_id', clientData.id)
     if (projectData) {
@@ -40,6 +57,165 @@ export default function ClientPortalPage() {
     }
     setLoading(false)
   }
+
+  async function handlePinSubmit() {
+    if (pinInput === client.pin) {
+      setPinUnlocked(true)
+      setPinRequired(false)
+      setPinError('')
+      setLoading(true)
+      await loadPortalData(client)
+    } else {
+      setPinError('Incorrect PIN. Please try again.')
+      setPinInput('')
+    }
+  }
+
+  function openInvoicePDF() {
+    if (!activeProject || !client) return
+
+    const invoiceHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice — ${activeProject.title}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #111; padding: 48px; max-width: 720px; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; padding-bottom: 24px; border-bottom: 2px solid #111; }
+    .brand { font-size: 22px; font-weight: 800; }
+    .brand-sub { font-size: 13px; color: #666; margin-top: 4px; }
+    .invoice-label { text-align: right; }
+    .invoice-label h1 { font-size: 32px; font-weight: 800; color: #111; }
+    .invoice-label p { font-size: 13px; color: #666; margin-top: 4px; }
+    .parties { display: flex; justify-content: space-between; margin-bottom: 40px; }
+    .party h3 { font-size: 11px; font-weight: 700; color: #999; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+    .party p { font-size: 14px; color: #333; line-height: 1.7; }
+    .party .name { font-size: 16px; font-weight: 700; color: #111; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+    thead th { background: #111; color: #fff; padding: 12px 16px; text-align: left; font-size: 12px; letter-spacing: 0.5px; }
+    tbody td { padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+    tbody tr:last-child td { border-bottom: none; }
+    .totals { margin-left: auto; width: 280px; }
+    .total-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; color: #555; }
+    .total-final { display: flex; justify-content: space-between; padding: 14px 0; font-size: 18px; font-weight: 800; border-top: 2px solid #111; margin-top: 8px; }
+    .status-badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .paid { background: #d1fae5; color: #065f46; }
+    .unpaid { background: #fee2e2; color: #991b1b; }
+    .partial { background: #fef3c7; color: #92400e; }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #eee; text-align: center; font-size: 12px; color: #999; line-height: 1.8; }
+    .note { background: #f9f9f9; border-radius: 8px; padding: 16px; margin-bottom: 32px; font-size: 13px; color: #555; }
+    @media print { body { padding: 24px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">🎬 Studio Portal</div>
+      <div class="brand-sub">Professional Video Editing</div>
+    </div>
+    <div class="invoice-label">
+      <h1>INVOICE</h1>
+      <p>#INV-${activeProject.id?.slice(0,8).toUpperCase() || '000001'}</p>
+      <p style="margin-top:8px">Date: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+      ${activeProject.deadline ? `<p>Due: ${activeProject.deadline}</p>` : ''}
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <h3>From</h3>
+      <p class="name">Studio Portal</p>
+      <p>Ayush Siddhapura</p>
+      <p>Ahmedabad, Gujarat</p>
+    </div>
+    <div class="party" style="text-align:right">
+      <h3>Billed To</h3>
+      <p class="name">${client.name}</p>
+      ${client.channel_name ? `<p>${client.channel_name}</p>` : ''}
+      ${client.email ? `<p>${client.email}</p>` : ''}
+      ${client.phone ? `<p>${client.phone}</p>` : ''}
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th>Type</th>
+        <th style="text-align:right">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <strong>${activeProject.title}</strong>
+          ${activeProject.description ? `<br><span style="font-size:12px;color:#888">${activeProject.description}</span>` : ''}
+        </td>
+        <td>Video Editing</td>
+        <td style="text-align:right;font-weight:700">₹${Number(activeProject.amount).toLocaleString()}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="total-row"><span>Subtotal</span><span>₹${Number(activeProject.amount).toLocaleString()}</span></div>
+    <div class="total-row"><span>Tax (0%)</span><span>₹0</span></div>
+    <div class="total-final"><span>Total</span><span>₹${Number(activeProject.amount).toLocaleString()}</span></div>
+    <div style="margin-top:12px;text-align:right">
+      <span class="status-badge ${activeProject.payment_status === 'Paid' ? 'paid' : activeProject.payment_status === 'Partial' ? 'partial' : 'unpaid'}">
+        ${activeProject.payment_status === 'Paid' ? '✓ PAID' : activeProject.payment_status === 'Partial' ? 'PARTIALLY PAID' : 'PAYMENT DUE'}
+      </span>
+    </div>
+  </div>
+
+  ${activeProject.payment_status !== 'Paid' ? `
+  <div class="note" style="margin-top:32px">
+    <strong>Payment Terms:</strong> Payment due within 7 days of delivery. Thank you for your business!
+  </div>
+  ` : ''}
+
+  <div class="footer">
+    Thank you for working with Studio Portal · studio-portal-ayushsiddhapura24.vercel.app<br>
+    This invoice was generated automatically from your client portal.
+    <br><br>
+    <button onclick="window.print()" style="background:#111;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px">
+      🖨️ Print / Save as PDF
+    </button>
+  </div>
+</body>
+</html>`
+
+    const blob = new Blob([invoiceHTML], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+  }
+
+  // ── PIN SCREEN ──
+  if (pinRequired && !pinUnlocked) return (
+    <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+      <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '40px 36px', width: '360px', textAlign: 'center' }}>
+        <div style={{ fontSize: '40px', marginBottom: '16px' }}>🔒</div>
+        <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Portal Protected</h2>
+        <p style={{ color: '#666', fontSize: '14px', margin: '0 0 28px' }}>Enter your PIN to access your project portal</p>
+        <input
+          type="password"
+          value={pinInput}
+          onChange={e => setPinInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
+          placeholder="Enter PIN"
+          maxLength={6}
+          style={{ width: '100%', background: '#111', border: '1px solid #333', borderRadius: '10px', padding: '14px', color: '#fff', fontSize: '20px', textAlign: 'center', letterSpacing: '8px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' }}
+        />
+        {pinError && <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 12px' }}>{pinError}</p>}
+        <button onClick={handlePinSubmit} style={{ width: '100%', background: '#fff', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
+          Unlock Portal →
+        </button>
+        <p style={{ color: '#444', fontSize: '12px', marginTop: '20px' }}>Contact your studio if you forgot your PIN</p>
+      </div>
+    </div>
+  )
 
   if (loading) return (
     <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: 'sans-serif' }}>
@@ -68,7 +244,6 @@ export default function ClientPortalPage() {
     return 0
   }
   const currentStep = activeProject ? getStepIndex(activeProject.status) : 0
-  const initials = client.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
 
   const s = {
     card: { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '24px', marginBottom: '16px' } as any,
@@ -107,9 +282,9 @@ export default function ClientPortalPage() {
             {client.channel_name || 'Your Studio'} — all your projects and updates in one place
           </p>
           <div style={{ borderTop: '1px solid #222', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-            {client.email && <span style={{ fontSize: '13px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>🔲 {client.email}</span>}
-            {client.phone && <span style={{ fontSize: '13px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>🔲 {client.phone}</span>}
-            <span style={{ fontSize: '13px', color: '#888', display: 'flex', alignItems: 'center', gap: '6px' }}>🔲 Active client</span>
+            {client.email && <span style={{ fontSize: '13px', color: '#888' }}>✉️ {client.email}</span>}
+            {client.phone && <span style={{ fontSize: '13px', color: '#888' }}>📱 {client.phone}</span>}
+            <span style={{ fontSize: '13px', color: '#4ade80' }}>● Active client</span>
           </div>
         </div>
 
@@ -159,14 +334,14 @@ export default function ClientPortalPage() {
               }}>{activeProject.status}</span>
             </div>
             {activeProject.deadline && (
-              <div style={{ fontSize: '13px', color: '#666', marginBottom: '24px', display: 'flex', gap: '16px' }}>
-                <span>🔲 Due <span style={{ color: '#f87171' }}>{activeProject.deadline}</span></span>
+              <div style={{ fontSize: '13px', color: '#666', marginBottom: '24px' }}>
+                Due <span style={{ color: '#f87171' }}>{activeProject.deadline}</span>
               </div>
             )}
 
             {/* Progress */}
             <div style={{ marginBottom: '28px', borderTop: '1px solid #222', paddingTop: '20px' }}>
-              <div style={s.label}>🔲 PROJECT PROGRESS</div>
+              <div style={s.label}>📋 PROJECT PROGRESS</div>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
                 <div style={{ position: 'absolute', top: '10px', left: 0, height: '1px', background: '#fff', width: `${(currentStep / (progressSteps.length - 1)) * 100}%` }} />
@@ -175,10 +350,9 @@ export default function ClientPortalPage() {
                     <div style={{
                       width: '20px', height: '20px', borderRadius: '50%', border: '2px solid',
                       borderColor: i <= currentStep ? '#fff' : '#333',
-                      background: i < currentStep ? '#fff' : i === currentStep ? '#111' : '#111',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                      {i < currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#111' }} />}
+                      {i < currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />}
                       {i === currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />}
                     </div>
                     <span style={{ fontSize: '11px', color: i <= currentStep ? '#fff' : '#555', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>{step}</span>
@@ -190,8 +364,8 @@ export default function ClientPortalPage() {
             {/* Version History */}
             {activeVersions.length > 0 && (
               <div style={{ marginBottom: '24px', borderTop: '1px solid #222', paddingTop: '20px' }}>
-                <div style={s.label}>🔲 VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', gap: '0' }}>
+                <div style={s.label}>📁 VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
                   <div style={{ position: 'absolute', top: '16px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
                   {[...Array(3)].map((_, i) => {
                     const ver = activeVersions[i]
@@ -213,9 +387,9 @@ export default function ClientPortalPage() {
             )}
 
             {/* Revisions & Files */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #222', paddingTop: '20px', marginBottom: '0' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #222', paddingTop: '20px' }}>
               <div>
-                <div style={s.label}>🔲 REVISION HISTORY</div>
+                <div style={s.label}>💬 REVISION HISTORY</div>
                 {activeRevisions.length === 0 ? (
                   <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
                     No revisions yet — your feedback will appear here.
@@ -224,7 +398,7 @@ export default function ClientPortalPage() {
                   <div key={r.id} style={{ background: '#161616', borderRadius: '8px', padding: '14px', marginBottom: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                       <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: idx === 0 ? '#2563eb' : '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>{activeRevisions.length - idx}</div>
-                      <span style={{ fontSize: '13px', fontWeight: 600 }}>Round {activeRevisions.length - idx} — Your feedback</span>
+                      <span style={{ fontSize: '13px', fontWeight: 600 }}>Round {activeRevisions.length - idx}</span>
                     </div>
                     <p style={{ fontSize: '13px', color: '#aaa', margin: '0 0 6px', paddingLeft: '30px' }}>{r.note}</p>
                     <div style={{ fontSize: '11px', color: '#555', paddingLeft: '30px' }}>{r.created_date} · {r.status || 'Pending'}</div>
@@ -232,7 +406,7 @@ export default function ClientPortalPage() {
                 ))}
               </div>
               <div>
-                <div style={s.label}>🔲 FILES & DRAFTS</div>
+                <div style={s.label}>📂 FILES & DRAFTS</div>
                 {activeFiles.length === 0 ? (
                   <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
                     Your first draft will appear here once it's ready.
@@ -252,7 +426,7 @@ export default function ClientPortalPage() {
                         <div style={{ fontSize: '11px', color: '#555' }}>{f.type}</div>
                       </div>
                     </div>
-                    <span style={{ color: '#555', fontSize: '18px' }}>🔲</span>
+                    <span style={{ color: '#555', fontSize: '18px' }}>↗</span>
                   </a>
                 ))}
               </div>
@@ -263,7 +437,7 @@ export default function ClientPortalPage() {
         {/* Invoice */}
         {activeProject && (
           <div style={s.card}>
-            <div style={s.label}>🔲 INVOICE & PAYMENT</div>
+            <div style={s.label}>🧾 INVOICE & PAYMENT</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
               {[
                 { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: '#fff' },
@@ -291,12 +465,14 @@ export default function ClientPortalPage() {
                 Due date: <span style={{ color: '#fff', fontWeight: 600 }}>{activeProject.deadline}</span>
               </div>
             )}
-            <button style={{
-              width: '100%', background: 'transparent', border: '1px solid #333',
-              borderRadius: '10px', padding: '14px', color: '#fff', fontSize: '14px',
-              fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-            }}>
-              🔲 View Invoice PDF
+            <button
+              onClick={openInvoicePDF}
+              style={{
+                width: '100%', background: '#fff', border: 'none',
+                borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
+                fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+              }}>
+              🧾 View Invoice PDF
             </button>
           </div>
         )}
