@@ -322,11 +322,13 @@ export default function ProjectDetailPage() {
                   fontSize: '13px', fontWeight: 600, textDecoration: 'none', boxSizing: 'border-box'
                 }}>⊞ View invoice PDF ↗</a>
               ) : (
-                <button onClick={() => setEditMode(true)} style={{
-                  width: '100%', marginTop: '14px', background: '#2a2a2a', color: '#aaa',
-                  border: '1px solid #333', borderRadius: '8px', padding: '11px',
-                  fontSize: '13px', fontWeight: 600, cursor: 'pointer'
-                }}>⊞ Add invoice PDF link</button>
+                <button onClick={() => viewInvoicePDF()} style={{
+                 width: '100%', background: 'transparent', border: '1px solid #333',
+                 borderRadius: '10px', padding: '14px', color: '#fff', fontSize: '14px',
+                 fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                 }}>
+                  🔲 View Invoice PDF
+                 </button>
               )}
             </div>
 
