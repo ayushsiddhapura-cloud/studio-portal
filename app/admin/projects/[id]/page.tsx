@@ -306,30 +306,29 @@ export default function ProjectDetailPage() {
                   {item.badge ? (
                     <span style={{
                       fontSize: '12px', padding: '3px 12px', borderRadius: '20px', fontWeight: 600,
-                      background: project.payment_status === 'Paid' ? '#14532d' : project.payment_status === 'Partial' ? '#3b2f00' : '#3b2f00',
-                      color: project.payment_status === 'Paid' ? '#4ade80' : project.payment_status === 'Partial' ? '#fbbf24' : '#fbbf24'
+                      background: project.payment_status === 'Paid' ? '#14532d' : '#3b2f00',
+                      color: project.payment_status === 'Paid' ? '#4ade80' : '#fbbf24'
                     }}>{item.value}</span>
                   ) : (
                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{item.value}</span>
                   )}
                 </div>
               ))}
-              {project.invoice_pdf_url ? (
-                <a href={project.invoice_pdf_url} target='_blank' rel='noreferrer' style={{
+              <a
+                href={project.invoice_pdf_url || '#'}
+                target='_blank'
+                rel='noreferrer'
+                onClick={e => { if (!project.invoice_pdf_url) e.preventDefault() }}
+                style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                  width: '100%', marginTop: '14px', background: '#2a2a2a', color: '#fff',
+                  width: '100%', marginTop: '14px',
+                  background: project.invoice_pdf_url ? '#2a2a2a' : 'transparent',
+                  color: project.invoice_pdf_url ? '#fff' : '#555',
                   border: '1px solid #333', borderRadius: '8px', padding: '11px',
                   fontSize: '13px', fontWeight: 600, textDecoration: 'none', boxSizing: 'border-box'
-                }}>⊞ View invoice PDF ↗</a>
-              ) : (
-                <button onClick={() => viewInvoicePDF()} style={{
-                 width: '100%', background: 'transparent', border: '1px solid #333',
-                 borderRadius: '10px', padding: '14px', color: '#fff', fontSize: '14px',
-                 fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-                 }}>
-                  🔲 View Invoice PDF
-                 </button>
-              )}
+                }}>
+                🧾 {project.invoice_pdf_url ? 'View Invoice PDF ↗' : 'No invoice URL set'}
+              </a>
             </div>
 
             {/* Admin notes */}
