@@ -3,26 +3,33 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { useTheme } from '@/lib/theme-context'
+import {
+  IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings,
+  IconKanban, IconList, IconPlus, IconSearch, IconCalendar, IconRevision
+} from '@/lib/icons'
 
 const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', icon: '📊' },
-  { label: 'Clients', href: '/admin/clients', icon: '👥' },
-  { label: 'Projects', href: '/admin/projects', icon: '🎬' },
-  { label: 'Invoices', href: '/admin/invoices', icon: '🧾' },
-  { label: 'Files', href: '/admin/files', icon: '📁' },
-  { label: 'Settings', href: '/admin/settings', icon: '⚙️' },
+  { label: 'Overview', href: '/admin/dashboard', Icon: IconOverview },
+  { label: 'Clients', href: '/admin/clients', Icon: IconClients },
+  { label: 'Projects', href: '/admin/projects', Icon: IconProjects },
+  { label: 'Invoices', href: '/admin/invoices', Icon: IconInvoices },
+  { label: 'Files', href: '/admin/files', Icon: IconFiles },
+  { label: 'Settings', href: '/admin/settings', Icon: IconSettings },
 ]
 
-const columns = [
+const COLUMNS = [
   { key: 'In Progress', label: 'In progress', color: '#3b82f6' },
-  { key: 'Review', label: 'In review', color: '#f59e0b' },
-  { key: 'Revision', label: 'Revision', color: '#ef4444' },
-  { key: 'Completed', label: 'Delivered', color: '#22c55e' },
+  { key: 'Review',      label: 'In review',   color: '#f59e0b' },
+  { key: 'Revision',    label: 'Revision',    color: '#ef4444' },
+  { key: 'Completed',   label: 'Delivered',   color: '#22c55e' },
 ]
 
 export default function ProjectsPage() {
+  const { theme, toggle } = useTheme()
   const [projects, setProjects] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
+  const [revisions, setRevisions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'kanban' | 'list'>('kanban')
   const [search, setSearch] = useState('')
@@ -38,173 +45,214 @@ export default function ProjectsPage() {
   async function fetchAll() {
     const { data: p } = await supabase.from('projects').select('*, clients(name)').order('created_at', { ascending: false })
     const { data: c } = await supabase.from('clients').select('id, name')
+    const { data: r } = await supabase.from('revisions').select('project_id')
     if (p) setProjects(p)
     if (c) setClients(c)
+    if (r) setRevisions(r)
     setLoading(false)
   }
 
   async function addProject() {
     if (!form.title || !form.client_id) return alert('Please fill in client and project title')
-    const { error } = await supabase.from('projects').insert([{ ...form, amount: parseFloat(form.amount) || 0 }])
-    if (!error) {
-      setForm({ client_id: '', title: '', status: 'In Progress', deadline: '', amount: '', payment_status: 'Pending', invoice_pdf_url: '' })
-      setShowForm(false)
-      fetchAll()
-    } else alert('Error: ' + error.message)
-  }
-
-  async function deleteProject(id: string) {
-    if (!confirm('Delete this project?')) return
-    await supabase.from('projects').delete().eq('id', id)
+    await supabase.from('projects').insert([{ ...form, amount: parseFloat(form.amount) || 0 }])
+    setForm({ client_id: '', title: '', status: 'In Progress', deadline: '', amount: '', payment_status: 'Pending', invoice_pdf_url: '' })
+    setShowForm(false)
     fetchAll()
   }
 
+  function revCount(pid: string) { return revisions.filter((r: any) => r.project_id === pid).length }
+  function isOverdue(d: string) { return d && new Date(d) < new Date() }
+  function fmtDeadline(d: string) {
+    if (!d) return null
+    const dt = new Date(d)
+    return `${dt.toLocaleString('default', { month: 'short' })} ${dt.getDate()}`
+  }
   function initials(name: string) { return name?.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || '?' }
   const avatarPalette = [
-    { bg: '#dbeafe', color: '#1d4ed8' }, { bg: '#dcfce7', color: '#15803d' },
-    { bg: '#fce7f3', color: '#be185d' }, { bg: '#fef3c7', color: '#b45309' },
-    { bg: '#ede9fe', color: '#6d28d9' }, { bg: '#ffedd5', color: '#c2410c' },
+    { bg: '#1e3a5f', color: '#60a5fa' }, { bg: '#14532d', color: '#4ade80' },
+    { bg: '#4a1942', color: '#e879f9' }, { bg: '#3b2f00', color: '#fbbf24' },
+    { bg: '#2e1a5e', color: '#a78bfa' }, { bg: '#3b1a00', color: '#fb923c' },
   ]
   function av(name: string) { return avatarPalette[(name?.charCodeAt(0) || 0) % avatarPalette.length] }
 
-  function isOverdue(deadline: string) {
-    if (!deadline) return false
-    return new Date(deadline) < new Date()
-  }
-
-  function formatDeadline(deadline: string) {
-    if (!deadline) return null
-    const d = new Date(deadline)
-    return `${d.toLocaleString('default', { month: 'short' })} ${d.getDate()}`
-  }
-
   const filtered = projects.filter(p => {
-    const matchSearch = p.title?.toLowerCase().includes(search.toLowerCase()) || p.clients?.name?.toLowerCase().includes(search.toLowerCase())
-    const matchFilter = filter === 'All' ? true : filter === 'Overdue' ? isOverdue(p.deadline) : true
+    const matchSearch = p.title?.toLowerCase().includes(search.toLowerCase()) ||
+      p.clients?.name?.toLowerCase().includes(search.toLowerCase())
+    const matchFilter = filter === 'All' ? true
+      : filter === 'Overdue' ? (isOverdue(p.deadline) && p.status !== 'Completed')
+      : true
     return matchSearch && matchFilter
   })
 
-  const inp: any = { width: '100%', background: '#2a2a2a', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' }
-  const lbl: any = { fontSize: '12px', color: '#aaa', display: 'block', marginBottom: '4px' }
+  const activeCount = projects.filter(p => p.status !== 'Completed').length
+
+  const inp: any = {
+    background: 'var(--bg-input)', border: '1px solid var(--border-input)',
+    borderRadius: '8px', padding: '10px 12px', color: 'var(--text)',
+    fontSize: '14px', boxSizing: 'border-box' as const, outline: 'none', width: '100%'
+  }
+  const lbl: any = { fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '6px', letterSpacing: '0.06em' }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
       {/* Sidebar */}
-      <div style={{ width: '200px', background: '#161616', borderRight: '1px solid #222', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px', paddingLeft: '6px' }}>
-          <div style={{ width: '28px', height: '28px', background: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🎬</div>
+      <div style={{ width: '220px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', paddingLeft: '6px' }}>
+          <div style={{ width: '30px', height: '30px', background: 'var(--text)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="5" width="14" height="10" rx="1.5" />
+              <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
+            </svg>
+          </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: '#555' }}>Admin panel</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin panel</div>
           </div>
         </div>
-        {navItems.map(item => (
-          <Link key={item.href} href={item.href} style={{
+
+        {navItems.map(({ label, href, Icon }) => (
+          <Link key={href} href={href} style={{
             display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
             borderRadius: '8px', textDecoration: 'none',
-            color: item.href === '/admin/projects' ? '#fff' : '#666',
-            background: item.href === '/admin/projects' ? '#222' : 'transparent', fontSize: '14px'
-          }}>{item.icon} {item.label}</Link>
+            color: href === '/admin/projects' ? 'var(--text)' : 'var(--text-inactive)',
+            background: href === '/admin/projects' ? 'var(--bg-hover)' : 'transparent',
+            fontSize: '14px', fontWeight: href === '/admin/projects' ? 600 : 400
+          }}>
+            <Icon size={16} /> {label}
+          </Link>
         ))}
+
+        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+          <button onClick={toggle} style={{
+            width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border)',
+            borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
+            color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
+          }}>
+            {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+        </div>
       </div>
 
       {/* Main */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Projects</h1>
-          <span style={{ fontSize: '12px', color: '#555', background: '#222', padding: '2px 8px', borderRadius: '20px' }}>
-            {projects.filter(p => p.status !== 'Completed').length} active
-          </span>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-            {['kanban', 'list'].map(v => (
-              <button key={v} onClick={() => setView(v as any)} style={{
-                background: view === v ? '#2a2a2a' : 'transparent',
-                border: '1px solid #333', borderRadius: '8px',
-                color: view === v ? '#fff' : '#666', padding: '8px 16px',
-                fontSize: '13px', cursor: 'pointer', fontWeight: 500,
-                display: 'flex', alignItems: 'center', gap: '6px'
-              }}>⊞ {v.charAt(0).toUpperCase() + v.slice(1)}</button>
-            ))}
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '2px 9px', borderRadius: '20px' }}>{activeCount} active</span>
+
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '10px', padding: '3px', gap: '3px' }}>
+              {(['kanban', 'list'] as const).map(v => (
+                <button key={v} onClick={() => setView(v)} style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '6px 12px', borderRadius: '7px', border: 'none', cursor: 'pointer',
+                  background: view === v ? 'var(--bg-surface)' : 'transparent',
+                  color: view === v ? 'var(--text)' : 'var(--text-muted)',
+                  fontSize: '13px', fontWeight: view === v ? 600 : 400,
+                  boxShadow: view === v ? '0 1px 3px rgba(0,0,0,0.15)' : 'none'
+                }}>
+                  {v === 'kanban' ? <IconKanban size={14} /> : <IconList size={14} />}
+                  {v === 'kanban' ? 'Kanban' : 'List'}
+                </button>
+              ))}
+            </div>
+
             <button onClick={() => setShowForm(true)} style={{
-              background: '#fff', color: '#000', border: 'none', borderRadius: '8px',
-              padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '6px'
-            }}>⊞ New project</button>
+              display: 'flex', alignItems: 'center', gap: '7px',
+              background: 'var(--bg-hover)', border: '1px solid var(--border)',
+              borderRadius: '10px', color: 'var(--text)', padding: '8px 16px',
+              fontSize: '13px', fontWeight: 600, cursor: 'pointer'
+            }}>
+              <IconPlus size={14} /> New project
+            </button>
           </div>
         </div>
 
         {/* Search + filters */}
-        <div style={{ padding: '16px 24px', display: 'flex', gap: '10px', alignItems: 'center', borderBottom: '1px solid #1a1a1a' }}>
+        <div style={{ padding: '12px 24px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', gap: '10px', alignItems: 'center' }}>
           <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#555' }}>🔍</span>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Search projects...'
-              style={{ ...inp, paddingLeft: '34px', background: '#1a1a1a', border: '1px solid #222' }} />
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}>
+              <IconSearch size={15} />
+            </span>
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder='Search projects...'
+              style={{ ...inp, paddingLeft: '36px' }} />
           </div>
-          {['All', 'Mine', 'Overdue'].map(f => (
+          {['All', 'Overdue'].map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
-              background: filter === f ? '#2a2a2a' : 'transparent',
-              border: '1px solid', borderColor: filter === f ? '#444' : '#222',
-              borderRadius: '20px', color: filter === f ? '#fff' : '#555',
-              padding: '6px 14px', fontSize: '13px', cursor: 'pointer'
+              padding: '7px 16px', borderRadius: '20px', border: '1px solid',
+              borderColor: filter === f ? 'var(--text-sec)' : 'var(--border)',
+              background: filter === f ? 'var(--bg-hover)' : 'transparent',
+              color: filter === f ? 'var(--text)' : 'var(--text-muted)',
+              fontSize: '13px', cursor: 'pointer', fontWeight: filter === f ? 600 : 400
             }}>{f}</button>
           ))}
-          <button style={{
-            marginLeft: 'auto', background: '#1a1a1a', border: '1px solid #333',
-            borderRadius: '8px', color: '#aaa', padding: '6px 14px', fontSize: '13px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '6px'
-          }}>⊞ Client</button>
         </div>
 
-        {/* Kanban / List */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
-          {loading ? <p style={{ color: '#555' }}>Loading...</p> : view === 'kanban' ? (
-
-            /* KANBAN */
+        {/* Board */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+          {loading ? (
+            <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
+          ) : view === 'kanban' ? (
+            /* ── KANBAN ── */
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'start' }}>
-              {columns.map(col => {
-                const colProjects = filtered.filter(p => p.status === col.key)
+              {COLUMNS.map(col => {
+                const cards = filtered.filter(p => p.status === col.key)
                 return (
                   <div key={col.key}>
-                    {/* Column header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '10px', borderBottom: `2px solid ${col.color}` }}>
-                      <span style={{ fontSize: '14px', fontWeight: 600, color: '#fff' }}>{col.label}</span>
-                      <span style={{ fontSize: '12px', background: '#222', color: '#666', padding: '2px 8px', borderRadius: '20px' }}>{colProjects.length}</span>
+                    <div style={{ marginBottom: '14px' }}>
+                      <div style={{ height: '3px', background: col.color, borderRadius: '2px', marginBottom: '12px' }} />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 600 }}>{col.label}</span>
+                        <span style={{ fontSize: '12px', background: 'var(--bg-hover)', color: 'var(--text-muted)', borderRadius: '20px', padding: '1px 8px', fontWeight: 600 }}>{cards.length}</span>
+                      </div>
                     </div>
-                    {/* Cards */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      {colProjects.map(p => {
-                        const overdue = isOverdue(p.deadline)
+                      {cards.length === 0 ? (
+                        <div style={{ border: '1.5px dashed var(--border-card)', borderRadius: '12px', padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '13px' }}>
+                          No projects
+                        </div>
+                      ) : cards.map(p => {
                         const clientName = p.clients?.name || '—'
                         const avStyle = av(clientName)
+                        const overdue = isOverdue(p.deadline) && p.status !== 'Completed'
+                        const revs = revCount(p.id)
+                        const deadline = fmtDeadline(p.deadline)
                         return (
                           <Link key={p.id} href={`/admin/projects/${p.id}`} style={{ textDecoration: 'none' }}>
-                            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '10px', padding: '14px', cursor: 'pointer', transition: 'border-color 0.2s' }}
-                              onMouseEnter={e => (e.currentTarget.style.borderColor = '#444')}
-                              onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a2a')}>
-                              <div style={{ fontSize: '14px', fontWeight: 600, color: '#fff', marginBottom: '10px', lineHeight: 1.3 }}>{p.title}</div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: avStyle.bg, color: avStyle.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
+                            <div
+                              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '16px', cursor: 'pointer' }}
+                              onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-input)')}
+                              onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border-card)')}
+                            >
+                              <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text)', marginBottom: '12px', lineHeight: 1.35 }}>{p.title}</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '12px' }}>
+                                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: avStyle.bg, color: avStyle.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, flexShrink: 0 }}>
                                   {initials(clientName)}
                                 </div>
-                                <span style={{ fontSize: '13px', color: '#888' }}>{clientName.split(' ')[0]} {clientName.split(' ')[1]?.[0] ? clientName.split(' ')[1][0] + '.' : ''}</span>
+                                <span style={{ fontSize: '12px', color: 'var(--text-sec)' }}>
+                                  {clientName.split(' ')[0]} {clientName.split(' ')[1]?.[0] ? clientName.split(' ')[1][0] + '.' : ''}
+                                </span>
                               </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  {p.deadline && (
-                                    <span style={{ fontSize: '12px', color: overdue ? '#ef4444' : '#666', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                      ⊞ {formatDeadline(p.deadline)}
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                  {deadline && (
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: overdue ? '#ef4444' : 'var(--text-muted)' }}>
+                                      <IconCalendar size={12} /> {deadline}
                                     </span>
                                   )}
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                                    <IconRevision size={12} /> {revs}/3
+                                  </span>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                  {overdue && col.key === 'Completed' && (
-                                    <span style={{ fontSize: '11px', background: '#ef4444', color: '#fff', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Overdue</span>
-                                  )}
-                                  <span style={{ fontSize: '12px', color: '#555', display: 'flex', alignItems: 'center', gap: '3px' }}>⊞ 0/2</span>
-                                </div>
+                                {overdue && (
+                                  <span style={{ fontSize: '11px', background: '#3b1f1f', color: '#f87171', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Overdue</span>
+                                )}
+                                {col.key === 'Completed' && (
+                                  <span style={{ fontSize: '11px', background: '#14532d', color: '#4ade80', padding: '2px 8px', borderRadius: '20px', fontWeight: 600 }}>Done</span>
+                                )}
                               </div>
                             </div>
                           </Link>
@@ -215,32 +263,57 @@ export default function ProjectsPage() {
                 )
               })}
             </div>
-
           ) : (
-
-            /* LIST VIEW */
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {filtered.map(p => {
-                const overdue = isOverdue(p.deadline)
+            /* ── LIST ── */
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 120px 100px 120px 110px', gap: '12px', padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
+                {['Project', 'Client', 'Deadline', 'Revisions', 'Status', 'Payment'].map(h => (
+                  <div key={h} style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>{h}</div>
+                ))}
+              </div>
+              {filtered.length === 0 ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>No projects found.</div>
+              ) : filtered.map(p => {
                 const clientName = p.clients?.name || '—'
                 const avStyle = av(clientName)
+                const overdue = isOverdue(p.deadline) && p.status !== 'Completed'
+                const statusColors: any = {
+                  'In Progress': { bg: '#1e3a5f', color: '#60a5fa' },
+                  'Review':      { bg: '#3b2f00', color: '#fbbf24' },
+                  'Completed':   { bg: '#14532d', color: '#4ade80' },
+                  'Revision':    { bg: '#3b1f1f', color: '#f87171' },
+                }
+                const sc = statusColors[p.status] || { bg: 'var(--bg-input)', color: 'var(--text-muted)' }
                 return (
                   <Link key={p.id} href={`/admin/projects/${p.id}`} style={{ textDecoration: 'none' }}>
-                    <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '10px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '16px' }}
-                      onMouseEnter={e => (e.currentTarget.style.borderColor = '#444')}
-                      onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a2a')}>
-                      <div style={{ flex: 1, fontWeight: 600, fontSize: '14px', color: '#fff' }}>{p.title}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: avStyle.bg, color: avStyle.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>{initials(clientName)}</div>
-                        <span style={{ fontSize: '13px', color: '#888' }}>{clientName}</span>
+                    <div
+                      style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 120px 100px 120px 110px', gap: '12px', padding: '14px 20px', borderBottom: '1px solid var(--border-card)', alignItems: 'center' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: avStyle.bg, color: avStyle.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 700, flexShrink: 0 }}>
+                          {initials(clientName)}
+                        </div>
+                        <span style={{ fontSize: '13px', color: 'var(--text-sec)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{clientName.split(' ')[0]}</span>
                       </div>
-                      {p.deadline && <span style={{ fontSize: '12px', color: overdue ? '#ef4444' : '#666' }}>⊞ {formatDeadline(p.deadline)}</span>}
-                      <span style={{
-                        fontSize: '12px', padding: '3px 10px', borderRadius: '20px', fontWeight: 500,
-                        background: p.status === 'Completed' ? '#14532d' : p.status === 'Review' ? '#3b2f00' : p.status === 'Revision' ? '#3b1f1f' : '#1e3a5f',
-                        color: p.status === 'Completed' ? '#4ade80' : p.status === 'Review' ? '#fbbf24' : p.status === 'Revision' ? '#f87171' : '#60a5fa'
-                      }}>{p.status}</span>
-                      <span style={{ fontSize: '13px', color: '#555' }}>₹{Number(p.amount).toLocaleString()}</span>
+                      <div style={{ fontSize: '13px', color: overdue ? '#ef4444' : 'var(--text-sec)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <IconCalendar size={12} /> {fmtDeadline(p.deadline) || '—'}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--text-sec)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <IconRevision size={12} /> {revCount(p.id)} / 3
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '20px', fontWeight: 600, background: sc.bg, color: sc.color }}>{p.status}</span>
+                      </div>
+                      <div>
+                        <span style={{
+                          fontSize: '12px', padding: '4px 10px', borderRadius: '20px', fontWeight: 600,
+                          background: p.payment_status === 'Paid' ? '#14532d' : overdue ? '#3b1f1f' : '#3b2f00',
+                          color: p.payment_status === 'Paid' ? '#4ade80' : overdue ? '#f87171' : '#fbbf24'
+                        }}>{overdue && p.payment_status !== 'Paid' ? 'Overdue' : p.payment_status}</span>
+                      </div>
                     </div>
                   </Link>
                 )
@@ -250,60 +323,55 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {/* New Project Panel */}
+      {/* New Project Modal */}
       {showForm && (
         <>
           <div onClick={() => setShowForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }} />
-          <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '360px', background: '#161616', borderLeft: '1px solid #222', zIndex: 50, padding: '28px 24px', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+          <div style={{
+            position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
+            width: '480px', background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+            borderRadius: '16px', padding: '28px', zIndex: 50
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
               <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>New project</h2>
-              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: '#555', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '20px', cursor: 'pointer', lineHeight: 1 }}>×</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div>
-                <label style={lbl}>Client *</label>
-                <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })} style={{ ...inp }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={lbl}>CLIENT</label>
+                <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })} style={inp}>
                   <option value=''>Select client...</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <div>
-                <label style={lbl}>Project title *</label>
-                <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder='e.g. Wedding highlight reel' style={inp} />
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={lbl}>PROJECT TITLE</label>
+                <input placeholder='e.g. YouTube Video Edit – June' value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} style={inp} />
               </div>
               <div>
-                <label style={lbl}>Status</label>
-                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={{ ...inp }}>
+                <label style={lbl}>STATUS</label>
+                <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })} style={inp}>
                   {['In Progress', 'Review', 'Revision', 'Completed'].map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
               <div>
-                <label style={lbl}>Deadline</label>
+                <label style={lbl}>DEADLINE</label>
                 <input type='date' value={form.deadline} onChange={e => setForm({ ...form, deadline: e.target.value })} style={inp} />
               </div>
               <div>
-                <label style={lbl}>Amount (₹)</label>
-                <input value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder='5000' style={inp} />
+                <label style={lbl}>AMOUNT (₹)</label>
+                <input placeholder='5000' value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} style={inp} />
               </div>
               <div>
-                <label style={lbl}>Payment status</label>
-                <select value={form.payment_status} onChange={e => setForm({ ...form, payment_status: e.target.value })} style={{ ...inp }}>
+                <label style={lbl}>PAYMENT STATUS</label>
+                <select value={form.payment_status} onChange={e => setForm({ ...form, payment_status: e.target.value })} style={inp}>
                   {['Pending', 'Paid', 'Partial'].map(s => <option key={s}>{s}</option>)}
                 </select>
               </div>
-              <div>
-                <label style={lbl}>Invoice PDF URL (optional)</label>
-                <input value={form.invoice_pdf_url} onChange={e => setForm({ ...form, invoice_pdf_url: e.target.value })} placeholder='https://drive.google.com/...' style={inp} />
-                <div style={{ fontSize: '11px', color: '#444', marginTop: '4px' }}>💡 Google Drive or Canva share link</div>
-              </div>
-              <div style={{ display: 'flex', gap: '10px', paddingTop: '8px' }}>
-                <button onClick={addProject} style={{ flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '8px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
-                  Create project
-                </button>
-                <button onClick={() => setShowForm(false)} style={{ flex: 1, background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '8px', padding: '12px', fontSize: '14px', cursor: 'pointer' }}>
-                  Cancel
-                </button>
-              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+              <button onClick={addProject} style={{ flex: 1, background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Save project</button>
+              <button onClick={() => setShowForm(false)} style={{ flex: 1, background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-input)', borderRadius: '10px', padding: '12px', fontSize: '14px', cursor: 'pointer' }}>Cancel</button>
             </div>
           </div>
         </>

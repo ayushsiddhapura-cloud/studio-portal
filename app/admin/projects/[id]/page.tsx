@@ -4,19 +4,24 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { useTheme } from '@/lib/theme-context'
+import {
+  IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings, IconEdit, IconUpload
+} from '@/lib/icons'
 
 const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', icon: '📊' },
-  { label: 'Clients', href: '/admin/clients', icon: '👥' },
-  { label: 'Projects', href: '/admin/projects', icon: '🎬' },
-  { label: 'Invoices', href: '/admin/invoices', icon: '🧾' },
-  { label: 'Files', href: '/admin/files', icon: '📁' },
-  { label: 'Settings', href: '/admin/settings', icon: '⚙️' },
+  { label: 'Overview', href: '/admin/dashboard', Icon: IconOverview },
+  { label: 'Clients', href: '/admin/clients', Icon: IconClients },
+  { label: 'Projects', href: '/admin/projects', Icon: IconProjects },
+  { label: 'Invoices', href: '/admin/invoices', Icon: IconInvoices },
+  { label: 'Files', href: '/admin/files', Icon: IconFiles },
+  { label: 'Settings', href: '/admin/settings', Icon: IconSettings },
 ]
 
 export default function ProjectDetailPage() {
   const { id } = useParams()
   const router = useRouter()
+  const { theme, toggle } = useTheme()
   const [project, setProject] = useState<any>(null)
   const [client, setClient] = useState<any>(null)
   const [files, setFiles] = useState<any[]>([])
@@ -111,54 +116,75 @@ export default function ProjectDetailPage() {
 
   function isOverdue(deadline: string) { return deadline && new Date(deadline) < new Date() }
 
-  const fileIcon: any = { Draft: '🟦', Delivery: '🟩', Reference: '🟧', Brief: '🟨' }
+  const inp: any = {
+    width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)',
+    borderRadius: '6px', padding: '8px 12px', color: 'var(--text)',
+    fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none'
+  }
+  const lbl: any = { fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }
 
-  const inp: any = { width: '100%', background: '#2a2a2a', border: '1px solid #333', borderRadius: '6px', padding: '8px 12px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' }
-  const lbl: any = { fontSize: '11px', color: '#666', display: 'block', marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }
-
-  if (loading) return <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontFamily: 'sans-serif' }}>Loading...</div>
-  if (!project) return <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#555', fontFamily: 'sans-serif' }}>Project not found.</div>
+  if (loading) return <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontFamily: 'sans-serif' }}>Loading...</div>
+  if (!project) return <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontFamily: 'sans-serif' }}>Project not found.</div>
 
   const progressPct = revisions.length > 0
     ? Math.min(100, Math.round((revisions.filter((r: any) => r.status === 'Done').length / Math.max(revisions.length, 1)) * 100))
     : project.status === 'Completed' ? 100 : project.status === 'Review' ? 66 : project.status === 'Revision' ? 50 : 30
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
       {/* Sidebar */}
-      <div style={{ width: '200px', background: '#161616', borderRight: '1px solid #222', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px', paddingLeft: '6px' }}>
-          <div style={{ width: '28px', height: '28px', background: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🎬</div>
+      <div style={{ width: '220px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', paddingLeft: '6px' }}>
+          <div style={{ width: '30px', height: '30px', background: 'var(--text)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="5" width="14" height="10" rx="1.5" />
+              <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
+            </svg>
+          </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: '#555' }}>Admin panel</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin panel</div>
           </div>
         </div>
-        {navItems.map(item => (
-          <Link key={item.href} href={item.href} style={{
+
+        {navItems.map(({ label, href, Icon }) => (
+          <Link key={href} href={href} style={{
             display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
             borderRadius: '8px', textDecoration: 'none',
-            color: item.href === '/admin/projects' ? '#fff' : '#666',
-            background: item.href === '/admin/projects' ? '#222' : 'transparent', fontSize: '14px'
-          }}>{item.icon} {item.label}</Link>
+            color: href === '/admin/projects' ? 'var(--text)' : 'var(--text-inactive)',
+            background: href === '/admin/projects' ? 'var(--bg-hover)' : 'transparent',
+            fontSize: '14px', fontWeight: href === '/admin/projects' ? 600 : 400
+          }}>
+            <Icon size={16} /> {label}
+          </Link>
         ))}
+
+        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+          <button onClick={toggle} style={{
+            width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border)',
+            borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
+            color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
+          }}>
+            {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+        </div>
       </div>
 
       {/* Content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Link href='/admin/projects' style={{ fontSize: '13px', color: '#555', textDecoration: 'none' }}>Projects</Link>
-          <span style={{ color: '#333' }}>›</span>
-          <span style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>{project.title}</span>
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link href='/admin/projects' style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>Projects</Link>
+          <span style={{ color: 'var(--border-input)' }}>›</span>
+          <span style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{project.title}</span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-            <button onClick={() => setEditMode(true)} style={{ background: 'transparent', border: '1px solid #333', borderRadius: '8px', color: '#aaa', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ⊞ Edit
+            <button onClick={() => setEditMode(true)} style={{ background: 'transparent', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-sec)', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <IconEdit size={13} /> Edit
             </button>
-            <button onClick={() => setShowFileForm(true)} style={{ background: 'transparent', border: '1px solid #333', borderRadius: '8px', color: '#aaa', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              ⊞ Upload file
+            <button onClick={() => setShowFileForm(true)} style={{ background: 'transparent', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-sec)', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <IconUpload size={13} /> Upload file
             </button>
             <button onClick={deleteProject} style={{ background: 'transparent', border: '1px solid #3b1f1f', borderRadius: '8px', color: '#f87171', padding: '7px 16px', fontSize: '13px', cursor: 'pointer' }}>
               Delete
@@ -173,15 +199,15 @@ export default function ProjectDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
             {/* Project info card */}
-            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '24px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                 <div>
                   <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 8px' }}>{project.title}</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#fff' }}>
                       {client?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                     </div>
-                    <span style={{ fontSize: '14px', color: '#aaa' }}>{client?.name} · {client?.channel_name || client?.email || ''}</span>
+                    <span style={{ fontSize: '14px', color: 'var(--text-sec)' }}>{client?.name} · {client?.channel_name || client?.email || ''}</span>
                   </div>
                 </div>
                 <span style={{
@@ -199,27 +225,26 @@ export default function ProjectDetailPage() {
                   { label: 'QUOTED PRICE', value: `₹${Number(project.amount).toLocaleString()}` },
                 ].map(item => (
                   <div key={item.label}>
-                    <div style={{ fontSize: '10px', color: '#555', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '6px' }}>{item.label}</div>
-                    <div style={{ fontSize: '15px', fontWeight: 700, color: item.red ? '#ef4444' : '#fff' }}>{item.value}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '6px' }}>{item.label}</div>
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: item.red ? '#ef4444' : 'var(--text)' }}>{item.value}</div>
                   </div>
                 ))}
               </div>
 
-              {/* Progress bar */}
               <div>
-                <div style={{ height: '6px', background: '#2a2a2a', borderRadius: '3px', overflow: 'hidden', marginBottom: '6px' }}>
+                <div style={{ height: '6px', background: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden', marginBottom: '6px' }}>
                   <div style={{ height: '100%', width: `${progressPct}%`, background: '#3b82f6', borderRadius: '3px', transition: 'width 0.5s' }} />
                 </div>
-                <div style={{ fontSize: '12px', color: '#555' }}>Project progress — {progressPct}%</div>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Project progress — {progressPct}%</div>
               </div>
             </div>
 
             {/* Revision history */}
-            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '24px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Revision history</h3>
-                <button onClick={() => setShowRevForm(!showRevForm)} style={{ background: '#2a2a2a', border: '1px solid #333', borderRadius: '8px', color: '#aaa', padding: '6px 14px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  ⊞ Add round
+                <button onClick={() => setShowRevForm(!showRevForm)} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-sec)', padding: '6px 14px', fontSize: '12px', cursor: 'pointer' }}>
+                  + Add round
                 </button>
               </div>
 
@@ -228,63 +253,65 @@ export default function ProjectDetailPage() {
                   <input value={newRevision} onChange={e => setNewRevision(e.target.value)}
                     placeholder='Describe the revision feedback...'
                     style={{ ...inp, flex: 1 }} />
-                  <button onClick={addRevision} style={{ background: '#fff', color: '#000', border: 'none', borderRadius: '6px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Add</button>
-                  <button onClick={() => setShowRevForm(false)} style={{ background: 'transparent', color: '#555', border: '1px solid #333', borderRadius: '6px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer' }}>✕</button>
+                  <button onClick={addRevision} style={{ background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '6px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Add</button>
+                  <button onClick={() => setShowRevForm(false)} style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-input)', borderRadius: '6px', padding: '8px 14px', fontSize: '13px', cursor: 'pointer' }}>✕</button>
                 </div>
               )}
 
               {revisions.length === 0 ? (
-                <div style={{ color: '#555', fontSize: '14px', padding: '16px 0' }}>No revisions yet.</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '14px', padding: '16px 0' }}>No revisions yet.</div>
               ) : revisions.map((r: any, i: number) => (
-                <div key={r.id} style={{ borderTop: i > 0 ? '1px solid #222' : 'none', paddingTop: i > 0 ? '16px' : '0', marginTop: i > 0 ? '16px' : '0' }}>
+                <div key={r.id} style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none', paddingTop: i > 0 ? '16px' : '0', marginTop: i > 0 ? '16px' : '0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
                     <span style={{ fontSize: '14px', fontWeight: 600 }}>Round {r.round_number || revisions.length - i}</span>
-                    <span style={{ fontSize: '12px', color: '#555' }}>{formatDate(r.created_at)}</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{formatDate(r.created_at)}</span>
                   </div>
-                  <p style={{ fontSize: '14px', color: '#aaa', margin: '0 0 6px', lineHeight: 1.5 }}>{r.note}</p>
-                  <span style={{ fontSize: '12px', color: '#555' }}>Submitted by client</span>
+                  <p style={{ fontSize: '14px', color: 'var(--text-sec)', margin: '0 0 6px', lineHeight: 1.5 }}>{r.note}</p>
+                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Submitted by client</span>
                 </div>
               ))}
             </div>
 
             {/* Files */}
-            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '24px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>Files</h3>
-                <span style={{ fontSize: '13px', color: '#555' }}>{files.length} files</span>
+                <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{files.length} files</span>
               </div>
 
               {showFileForm && (
-                <div style={{ background: '#2a2a2a', borderRadius: '8px', padding: '14px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ background: 'var(--bg-input)', borderRadius: '8px', padding: '14px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <input value={newFile.name} onChange={e => setNewFile({ ...newFile, name: e.target.value })} placeholder='File name (e.g. brand_intro_v1.mp4)' style={inp} />
                   <input value={newFile.url} onChange={e => setNewFile({ ...newFile, url: e.target.value })} placeholder='URL (Google Drive, WeTransfer, etc.)' style={inp} />
-                  <select value={newFile.type} onChange={e => setNewFile({ ...newFile, type: e.target.value })} style={{ ...inp }}>
+                  <select value={newFile.type} onChange={e => setNewFile({ ...newFile, type: e.target.value })} style={inp}>
                     {['Draft', 'Delivery', 'Reference', 'Brief'].map(t => <option key={t}>{t}</option>)}
                   </select>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={addFile} style={{ background: '#fff', color: '#000', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Add file</button>
-                    <button onClick={() => setShowFileForm(false)} style={{ background: 'transparent', color: '#555', border: '1px solid #333', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={addFile} style={{ background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Add file</button>
+                    <button onClick={() => setShowFileForm(false)} style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-input)', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
                   </div>
                 </div>
               )}
 
               {files.length === 0 ? (
-                <div style={{ color: '#555', fontSize: '14px', padding: '16px 0' }}>No files uploaded yet.</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '14px', padding: '16px 0' }}>No files uploaded yet.</div>
               ) : files.map((f: any) => (
-                <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', borderBottom: '1px solid #222' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', flexShrink: 0 }}>
-                    {fileIcon[f.type] || '📄'}
+                <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--text-muted)' }}>
+                      <path d="M3 1.5h6l4 4v9H3z" /><path d="M9 1.5V5.5H13" />
+                    </svg>
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 500, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
-                    <div style={{ fontSize: '11px', color: '#555' }}>{f.type} · {formatDate(f.created_at)}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{f.type} · {formatDate(f.created_at)}</div>
                   </div>
                   <span style={{
                     fontSize: '11px', padding: '3px 10px', borderRadius: '20px', fontWeight: 600,
-                    background: f.type === 'Delivery' ? '#14532d' : f.type === 'Draft' ? '#1e3a5f' : '#2a2a2a',
-                    color: f.type === 'Delivery' ? '#4ade80' : f.type === 'Draft' ? '#60a5fa' : '#aaa'
+                    background: f.type === 'Delivery' ? '#14532d' : f.type === 'Draft' ? '#1e3a5f' : 'var(--bg-input)',
+                    color: f.type === 'Delivery' ? '#4ade80' : f.type === 'Draft' ? '#60a5fa' : 'var(--text-sec)'
                   }}>{f.type}</span>
-                  <a href={f.url} target='_blank' rel='noreferrer' style={{ color: '#555', fontSize: '16px', textDecoration: 'none' }}>↗</a>
+                  <a href={f.url} target='_blank' rel='noreferrer' style={{ color: 'var(--text-muted)', fontSize: '16px', textDecoration: 'none' }}>↗</a>
                 </div>
               ))}
             </div>
@@ -294,15 +321,15 @@ export default function ProjectDetailPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
             {/* Payment */}
-            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '20px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '20px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 16px' }}>Payment</h3>
               {[
                 { label: 'Amount', value: `₹${Number(project.amount).toLocaleString()}` },
                 { label: 'Status', value: project.payment_status, badge: true },
                 { label: 'Due date', value: formatDate(project.deadline) },
               ].map(item => (
-                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #222' }}>
-                  <span style={{ fontSize: '13px', color: '#666' }}>{item.label}</span>
+                <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{item.label}</span>
                   {item.badge ? (
                     <span style={{
                       fontSize: '12px', padding: '3px 12px', borderRadius: '20px', fontWeight: 600,
@@ -310,7 +337,7 @@ export default function ProjectDetailPage() {
                       color: project.payment_status === 'Paid' ? '#4ade80' : '#fbbf24'
                     }}>{item.value}</span>
                   ) : (
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{item.value}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>{item.value}</span>
                   )}
                 </div>
               ))}
@@ -322,52 +349,52 @@ export default function ProjectDetailPage() {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
                   width: '100%', marginTop: '14px',
-                  background: project.invoice_pdf_url ? '#2a2a2a' : 'transparent',
-                  color: project.invoice_pdf_url ? '#fff' : '#555',
-                  border: '1px solid #333', borderRadius: '8px', padding: '11px',
-                  fontSize: '13px', fontWeight: 600, textDecoration: 'none', boxSizing: 'border-box'
+                  background: project.invoice_pdf_url ? 'var(--bg-input)' : 'transparent',
+                  color: project.invoice_pdf_url ? 'var(--text)' : 'var(--text-muted)',
+                  border: '1px solid var(--border-input)', borderRadius: '8px', padding: '11px',
+                  fontSize: '13px', fontWeight: 600, textDecoration: 'none', boxSizing: 'border-box' as const
                 }}>
-                🧾 {project.invoice_pdf_url ? 'View Invoice PDF ↗' : 'No invoice URL set'}
+                {project.invoice_pdf_url ? 'View Invoice PDF ↗' : 'No invoice URL set'}
               </a>
             </div>
 
             {/* Admin notes */}
-            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '20px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '20px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 12px' }}>Admin notes</h3>
               {editNote ? (
                 <>
                   <textarea value={note} onChange={e => setNote(e.target.value)} rows={4}
-                    style={{ ...inp, resize: 'vertical', marginBottom: '10px' }} />
+                    style={{ ...inp, resize: 'vertical' as const, marginBottom: '10px' }} />
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={saveNote} style={{ flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '6px', padding: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Save</button>
-                    <button onClick={() => setEditNote(false)} style={{ flex: 1, background: 'transparent', color: '#555', border: '1px solid #333', borderRadius: '6px', padding: '8px', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={saveNote} style={{ flex: 1, background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '6px', padding: '8px', fontSize: '13px', cursor: 'pointer', fontWeight: 600 }}>Save</button>
+                    <button onClick={() => setEditNote(false)} style={{ flex: 1, background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-input)', borderRadius: '6px', padding: '8px', fontSize: '13px', cursor: 'pointer' }}>Cancel</button>
                   </div>
                 </>
               ) : (
                 <>
-                  <p style={{ fontSize: '13px', color: note ? '#aaa' : '#555', lineHeight: 1.6, margin: '0 0 14px' }}>
+                  <p style={{ fontSize: '13px', color: note ? 'var(--text-sec)' : 'var(--text-muted)', lineHeight: 1.6, margin: '0 0 14px' }}>
                     {note || 'No notes yet. Click Edit note to add private notes about this client.'}
                   </p>
                   <button onClick={() => setEditNote(true)} style={{
-                    width: '100%', background: '#2a2a2a', color: '#aaa',
-                    border: '1px solid #333', borderRadius: '8px', padding: '10px',
+                    width: '100%', background: 'var(--bg-input)', color: 'var(--text-sec)',
+                    border: '1px solid var(--border-input)', borderRadius: '8px', padding: '10px',
                     fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
-                  }}>⊞ Edit note</button>
+                  }}>Edit note</button>
                 </>
               )}
             </div>
 
             {/* Activity log */}
-            <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '20px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '20px' }}>
               <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 16px' }}>Activity log</h3>
               {activity.length === 0 ? (
-                <div style={{ color: '#555', fontSize: '13px' }}>No activity yet.</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No activity yet.</div>
               ) : activity.map((a, i) => (
                 <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '12px', alignItems: 'flex-start' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#333', border: '2px solid #555', flexShrink: 0, marginTop: '4px' }} />
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--border-input)', border: '2px solid var(--text-dim)', flexShrink: 0, marginTop: '4px' }} />
                   <div>
-                    <div style={{ fontSize: '13px', color: '#aaa' }}>{a.label}</div>
-                    <div style={{ fontSize: '11px', color: '#555' }}>{formatTime(a.time)}</div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-sec)' }}>{a.label}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatTime(a.time)}</div>
                   </div>
                 </div>
               ))}
@@ -380,23 +407,23 @@ export default function ProjectDetailPage() {
       {editMode && (
         <>
           <div onClick={() => setEditMode(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '460px', background: '#1c1c1c', border: '1px solid #333', borderRadius: '14px', padding: '28px', zIndex: 50 }}>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '460px', background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '14px', padding: '28px', zIndex: 50 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Edit project</h2>
-              <button onClick={() => setEditMode(false)} style={{ background: 'none', border: 'none', color: '#555', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setEditMode(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div><label style={lbl}>TITLE</label><input value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} style={inp} /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={lbl}>STATUS</label>
-                  <select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} style={{ ...inp }}>
+                  <select value={editForm.status} onChange={e => setEditForm({ ...editForm, status: e.target.value })} style={inp}>
                     {['In Progress', 'Review', 'Revision', 'Completed', 'On Hold'].map(s => <option key={s}>{s}</option>)}
                   </select>
                 </div>
                 <div>
                   <label style={lbl}>PAYMENT STATUS</label>
-                  <select value={editForm.payment_status} onChange={e => setEditForm({ ...editForm, payment_status: e.target.value })} style={{ ...inp }}>
+                  <select value={editForm.payment_status} onChange={e => setEditForm({ ...editForm, payment_status: e.target.value })} style={inp}>
                     {['Pending', 'Paid', 'Partial'].map(s => <option key={s}>{s}</option>)}
                   </select>
                 </div>
@@ -414,8 +441,8 @@ export default function ProjectDetailPage() {
                 <input value={editForm.invoice_pdf_url} onChange={e => setEditForm({ ...editForm, invoice_pdf_url: e.target.value })} placeholder='https://drive.google.com/...' style={inp} />
               </div>
               <div style={{ display: 'flex', gap: '10px', paddingTop: '8px' }}>
-                <button onClick={saveEdit} style={{ flex: 1, background: '#fff', color: '#000', border: 'none', borderRadius: '8px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Save changes</button>
-                <button onClick={() => setEditMode(false)} style={{ flex: 1, background: 'transparent', color: '#666', border: '1px solid #333', borderRadius: '8px', padding: '12px', fontSize: '14px', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={saveEdit} style={{ flex: 1, background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '8px', padding: '12px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>Save changes</button>
+                <button onClick={() => setEditMode(false)} style={{ flex: 1, background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '12px', fontSize: '14px', cursor: 'pointer' }}>Cancel</button>
               </div>
             </div>
           </div>

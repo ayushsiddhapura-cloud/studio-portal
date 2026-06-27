@@ -3,14 +3,16 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { useTheme } from '@/lib/theme-context'
+import { IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings } from '@/lib/icons'
 
 const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', icon: '📊' },
-  { label: 'Clients', href: '/admin/clients', icon: '👥' },
-  { label: 'Projects', href: '/admin/projects', icon: '🎬' },
-  { label: 'Invoices', href: '/admin/invoices', icon: '🧾' },
-  { label: 'Files', href: '/admin/files', icon: '📁' },
-  { label: 'Settings', href: '/admin/settings', icon: '⚙️' },
+  { label: 'Overview', href: '/admin/dashboard', Icon: IconOverview },
+  { label: 'Clients', href: '/admin/clients', Icon: IconClients },
+  { label: 'Projects', href: '/admin/projects', Icon: IconProjects },
+  { label: 'Invoices', href: '/admin/invoices', Icon: IconInvoices },
+  { label: 'Files', href: '/admin/files', Icon: IconFiles },
+  { label: 'Settings', href: '/admin/settings', Icon: IconSettings },
 ]
 
 const typeConfig: any = {
@@ -22,6 +24,7 @@ const typeConfig: any = {
 }
 
 export default function FilesPage() {
+  const { theme, toggle } = useTheme()
   const [projects, setProjects] = useState<any[]>([])
   const [files, setFiles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -88,41 +91,55 @@ export default function FilesPage() {
     return matchSearch && matchType
   })
 
-  const inp: any = { width: '100%', background: '#2a2a2a', border: '1px solid #333', borderRadius: '8px', padding: '10px 12px', color: '#fff', fontSize: '14px', boxSizing: 'border-box' as const, outline: 'none' }
-  const lbl: any = { fontSize: '12px', color: '#aaa', display: 'block', marginBottom: '6px', fontWeight: 500 }
+  const inp: any = { width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box' as const, outline: 'none' }
+  const lbl: any = { fontSize: '12px', color: 'var(--text-sec)', display: 'block', marginBottom: '6px', fontWeight: 500 }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
       {/* Sidebar */}
-      <div style={{ width: '200px', background: '#161616', borderRight: '1px solid #222', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+      <div style={{ width: '200px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px', paddingLeft: '6px' }}>
-          <div style={{ width: '28px', height: '28px', background: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🎬</div>
+          <div style={{ width: '30px', height: '30px', background: 'var(--text)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="5" width="14" height="10" rx="1.5" />
+              <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
+            </svg>
+          </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: '#555' }}>Admin panel</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin panel</div>
           </div>
         </div>
         {navItems.map(item => (
           <Link key={item.href} href={item.href} style={{
             display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
             borderRadius: '8px', textDecoration: 'none',
-            color: item.href === '/admin/files' ? '#fff' : '#666',
-            background: item.href === '/admin/files' ? '#222' : 'transparent', fontSize: '14px'
-          }}>{item.icon} {item.label}</Link>
+            color: item.href === '/admin/files' ? 'var(--text)' : 'var(--text-inactive)',
+            background: item.href === '/admin/files' ? 'var(--bg-hover)' : 'transparent', fontSize: '14px'
+          }}><item.Icon size={16} /> {item.label}</Link>
         ))}
+        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+          <button onClick={toggle} style={{
+            width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border)',
+            borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
+            color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
+          }}>
+            {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+        </div>
       </div>
 
       {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Files</h1>
-          <span style={{ fontSize: '12px', color: '#555' }}>{totalFiles} files</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{totalFiles} files</span>
           <button onClick={() => setPanelOpen(true)} style={{
-            marginLeft: 'auto', background: '#222', border: '1px solid #333', borderRadius: '10px',
-            color: '#fff', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+            marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
+            color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
           }}>⊞ Upload / Add link</button>
         </div>
@@ -132,13 +149,13 @@ export default function FilesPage() {
           {/* Stat cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
             {[
-              { label: 'Total files', value: totalFiles, color: '#fff' },
+              { label: 'Total files', value: totalFiles, color: 'var(--text)' },
               { label: 'Deliveries', value: deliveries, color: '#4ade80' },
               { label: 'Drafts', value: drafts, color: '#60a5fa' },
               { label: 'Briefs', value: briefs, color: '#c084fc' },
             ].map(s => (
-              <div key={s.label} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '18px' }}>
-                <div style={{ fontSize: '12px', color: '#555', marginBottom: '10px' }}>{s.label}</div>
+              <div key={s.label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '18px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px' }}>{s.label}</div>
                 <div style={{ fontSize: '28px', fontWeight: 800, color: s.color }}>{s.value}</div>
               </div>
             ))}
@@ -147,7 +164,7 @@ export default function FilesPage() {
           {/* Search + type filters */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
-              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#555' }}>🔍</span>
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Search files...'
                 style={{ ...inp, paddingLeft: '34px' }} />
             </div>
@@ -163,15 +180,15 @@ export default function FilesPage() {
           </div>
 
           {/* File grid */}
-          {loading ? <p style={{ color: '#555' }}>Loading...</p> : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#555' }}>
+          {loading ? <p style={{ color: 'var(--text-muted)' }}>Loading...</p> : filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
               <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
               <p>No files yet. Click "Upload / Add link" to get started.</p>
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
               {filtered.map((f: any) => (
-                <div key={f.id} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', overflow: 'hidden' }}>
+                <div key={f.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', overflow: 'hidden' }}>
                   {/* Thumbnail */}
                   <div style={{ height: '120px', background: getThumbnailBg(f.type), display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     {isFrameio(f.url) ? (
@@ -193,27 +210,27 @@ export default function FilesPage() {
 
                   {/* Info */}
                   <div style={{ padding: '14px' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '4px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
-                    <div style={{ fontSize: '11px', color: '#555', marginBottom: '10px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)', marginBottom: '4px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '10px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {f.projects?.title} — {f.projects?.clients?.name}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#444', marginBottom: '12px' }}>{formatDate(f.created_at)}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginBottom: '12px' }}>{formatDate(f.created_at)}</div>
 
                     {/* URL preview */}
                     {f.url && (
-                      <div style={{ fontSize: '11px', color: '#555', background: '#111', borderRadius: '6px', padding: '6px 8px', marginBottom: '10px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', background: 'var(--bg-deep)', borderRadius: '6px', padding: '6px 8px', marginBottom: '10px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {f.url}
                       </div>
                     )}
 
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <a href={f.url} target='_blank' rel='noreferrer' style={{
-                        flex: 1, background: '#2a2a2a', color: '#60a5fa', borderRadius: '6px',
+                        flex: 1, background: 'var(--bg-input)', color: '#60a5fa', borderRadius: '6px',
                         padding: '7px', fontSize: '12px', textDecoration: 'none',
                         textAlign: 'center' as const, fontWeight: 500
                       }}>Open ↗</a>
                       <button onClick={() => deleteFile(f.id)} style={{
-                        background: '#2a2a2a', color: '#f87171', border: 'none', borderRadius: '6px',
+                        background: 'var(--bg-input)', color: '#f87171', border: 'none', borderRadius: '6px',
                         padding: '7px 10px', cursor: 'pointer', fontSize: '12px'
                       }}>✕</button>
                     </div>
@@ -227,16 +244,16 @@ export default function FilesPage() {
 
       {/* Right Panel */}
       {panelOpen && (
-        <div style={{ width: '300px', background: '#161616', borderLeft: '1px solid #222', padding: '0', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: '300px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '0', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
 
           {/* Panel header */}
-          <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #222', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Add to project</div>
-            <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: '#555', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
           </div>
 
           {/* Link / Upload tabs */}
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #222' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {(['link', 'upload'] as const).map(t => (
                 <button key={t} onClick={() => setTab(t)} style={{
@@ -270,11 +287,11 @@ export default function FilesPage() {
                     value={form.url.includes('frame.io') ? form.url : ''}
                     onChange={e => setForm({ ...form, url: e.target.value })}
                     placeholder='https://frame.io/rev...'
-                    style={{ width: '100%', background: '#111', border: '1px solid #2a2660', borderRadius: '8px', padding: '10px 12px', color: '#fff', fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }}
+                    style={{ width: '100%', background: 'var(--bg-deep)', border: '1px solid #2a2660', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }}
                   />
                 </div>
 
-                <div style={{ textAlign: 'center' as const, fontSize: '12px', color: '#444' }}>— or paste any other link —</div>
+                <div style={{ textAlign: 'center' as const, fontSize: '12px', color: 'var(--text-dim)' }}>— or paste any other link —</div>
 
                 {/* Label */}
                 <div>
@@ -324,36 +341,36 @@ export default function FilesPage() {
                 </button>
               </>
             ) : (
-              <div style={{ textAlign: 'center' as const, padding: '40px 20px', color: '#555' }}>
+              <div style={{ textAlign: 'center' as const, padding: '40px 20px', color: 'var(--text-muted)' }}>
                 <div style={{ fontSize: '48px', marginBottom: '12px' }}>☁️</div>
-                <div style={{ fontSize: '14px', marginBottom: '8px', color: '#aaa' }}>Direct upload coming soon</div>
+                <div style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-sec)' }}>Direct upload coming soon</div>
                 <div style={{ fontSize: '12px' }}>Use the Link tab to add Google Drive, WeTransfer or Frame.io links instead.</div>
               </div>
             )}
           </div>
 
           {/* Storage section */}
-          <div style={{ borderTop: '1px solid #222', padding: '16px 20px', margin: '0' }}>
+          <div style={{ borderTop: '1px solid var(--border)', padding: '16px 20px', margin: '0' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Storage</div>
-            <div style={{ height: '6px', background: '#2a2a2a', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
+            <div style={{ height: '6px', background: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
               <div style={{ height: '100%', width: `${Math.min((totalFiles / 50) * 100, 100)}%`, background: 'linear-gradient(90deg, #5a3fc0, #3b82f6)', borderRadius: '3px' }} />
             </div>
-            <div style={{ fontSize: '12px', color: '#555', marginBottom: '12px' }}>{totalFiles} links saved</div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>{totalFiles} links saved</div>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '6px' }}>
               {[
                 { label: 'Frame.io links', value: files.filter(f => f.url?.includes('frame.io')).length, color: '#5a3fc0' },
                 { label: 'Other links', value: files.filter(f => !f.url?.includes('frame.io')).length, color: '#4ade80' },
               ].map(s => (
                 <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#aaa' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-sec)' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color }} />
                     {s.label}
                   </div>
-                  <span style={{ color: '#555' }}>{s.value}</span>
+                  <span style={{ color: 'var(--text-muted)' }}>{s.value}</span>
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: '11px', color: '#444', marginTop: '10px' }}>Links use zero storage ✓</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '10px' }}>Links use zero storage ✓</div>
           </div>
         </div>
       )}

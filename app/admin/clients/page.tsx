@@ -3,17 +3,20 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
+import { useTheme } from '@/lib/theme-context'
+import { IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings } from '@/lib/icons'
 
 const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', icon: '📊' },
-  { label: 'Clients', href: '/admin/clients', icon: '👥' },
-  { label: 'Projects', href: '/admin/projects', icon: '🎬' },
-  { label: 'Invoices', href: '/admin/invoices', icon: '🧾' },
-  { label: 'Files', href: '/admin/files', icon: '📁' },
-  { label: 'Settings', href: '/admin/settings', icon: '⚙️' },
+  { label: 'Overview', href: '/admin/dashboard', Icon: IconOverview },
+  { label: 'Clients', href: '/admin/clients', Icon: IconClients },
+  { label: 'Projects', href: '/admin/projects', Icon: IconProjects },
+  { label: 'Invoices', href: '/admin/invoices', Icon: IconInvoices },
+  { label: 'Files', href: '/admin/files', Icon: IconFiles },
+  { label: 'Settings', href: '/admin/settings', Icon: IconSettings },
 ]
 
 export default function ClientsPage() {
+  const { theme, toggle } = useTheme()
   const [clients, setClients] = useState<any[]>([])
   const [projects, setProjects] = useState<any[]>([])
   const [search, setSearch] = useState('')
@@ -101,45 +104,59 @@ export default function ClientsPage() {
   ]
   function av(name: string) { return avatarPalette[(name?.charCodeAt(0) || 0) % avatarPalette.length] }
 
-  const inp: any = { width: '100%', background: '#2a2a2a', border: '1px solid #3a3a3a', borderRadius: '8px', padding: '11px 14px', color: '#fff', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }
-  const lbl: any = { fontSize: '13px', color: '#aaa', display: 'block', marginBottom: '6px', fontWeight: 500 }
+  const inp: any = { width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '11px 14px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }
+  const lbl: any = { fontSize: '13px', color: 'var(--text-sec)', display: 'block', marginBottom: '6px', fontWeight: 500 }
 
   const portalPreview = typeof window !== 'undefined'
     ? `${window.location.origin}/c/auto-generated...`
     : 'studio-portal.com/c/auto-generated...'
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#0f0f0f', color: '#fff', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
       {/* Sidebar */}
-      <div style={{ width: '200px', background: '#161616', borderRight: '1px solid #222', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
+      <div style={{ width: '200px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px', paddingLeft: '6px' }}>
-          <div style={{ width: '28px', height: '28px', background: '#fff', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>🎬</div>
+          <div style={{ width: '30px', height: '30px', background: 'var(--text)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="5" width="14" height="10" rx="1.5" />
+              <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
+            </svg>
+          </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: '#555' }}>Admin panel</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin panel</div>
           </div>
         </div>
         {navItems.map(item => (
           <Link key={item.href} href={item.href} style={{
             display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
             borderRadius: '8px', textDecoration: 'none',
-            color: item.href === '/admin/clients' ? '#fff' : '#666',
-            background: item.href === '/admin/clients' ? '#222' : 'transparent', fontSize: '14px'
-          }}>{item.icon} {item.label}</Link>
+            color: item.href === '/admin/clients' ? 'var(--text)' : 'var(--text-inactive)',
+            background: item.href === '/admin/clients' ? 'var(--bg-hover)' : 'transparent', fontSize: '14px'
+          }}><item.Icon size={16} /> {item.label}</Link>
         ))}
+        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+          <button onClick={toggle} style={{
+            width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border)',
+            borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
+            color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
+          }}>
+            {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          </button>
+        </div>
       </div>
 
       {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Clients</h1>
-          <span style={{ fontSize: '12px', color: '#555', background: '#222', padding: '2px 8px', borderRadius: '20px' }}>{clients.length} total</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: '#222', padding: '2px 8px', borderRadius: '20px' }}>{clients.length} total</span>
           <button onClick={() => { setPanelOpen(true); setNewClientToken(null) }} style={{
-            marginLeft: 'auto', background: '#222', border: '1px solid #333', borderRadius: '10px',
-            color: '#fff', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+            marginLeft: 'auto', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '10px',
+            color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
           }}>⊞ Add client</button>
         </div>
@@ -147,11 +164,11 @@ export default function ClientsPage() {
         {/* Search + Filter */}
         <div style={{ padding: '16px 24px 8px', display: 'flex', gap: '10px' }}>
           <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#555' }}>🔍</span>
+            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Search clients...'
               style={{ ...inp, paddingLeft: '34px' }} />
           </div>
-          <button style={{ background: '#222', border: '1px solid #333', borderRadius: '8px', color: '#aaa', padding: '10px 18px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-sec)', padding: '10px 18px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
             ⊞ Filter
           </button>
         </div>
@@ -164,7 +181,7 @@ export default function ClientsPage() {
             const badge = lastBadge(client.id)
             const avStyle = av(client.name)
             return (
-              <div key={client.id} style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '14px', padding: '18px' }}>
+              <div key={client.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '14px', padding: '18px' }}>
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                   <div style={{ width: '42px', height: '42px', borderRadius: '50%', background: avStyle.bg, color: avStyle.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700, flexShrink: 0 }}>
@@ -172,25 +189,25 @@ export default function ClientsPage() {
                   </div>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontWeight: 700, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
-                    <div style={{ fontSize: '12px', color: '#555', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.channel_name || client.email || '—'}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.channel_name || client.email || '—'}</div>
                   </div>
-                  <button onClick={() => deleteClient(client.id)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#444', cursor: 'pointer', fontSize: '16px', padding: '2px', flexShrink: 0 }}>✕</button>
+                  <button onClick={() => deleteClient(client.id)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '16px', padding: '2px', flexShrink: 0 }}>✕</button>
                 </div>
 
                 {/* Stats */}
                 <div style={{ display: 'flex', gap: '20px', marginBottom: '16px' }}>
                   <div>
                     <div style={{ fontSize: '18px', fontWeight: 700 }}>{proj.length}</div>
-                    <div style={{ fontSize: '11px', color: '#555' }}>projects</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>projects</div>
                   </div>
                   <div>
                     <div style={{ fontSize: '18px', fontWeight: 700 }}>₹{billed(client.id).toLocaleString()}</div>
-                    <div style={{ fontSize: '11px', color: '#555' }}>billed</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>billed</div>
                   </div>
                   {pending(client.id) > 0 && (
                     <div>
                       <div style={{ fontSize: '18px', fontWeight: 700, color: '#f87171' }}>₹{pending(client.id).toLocaleString()}</div>
-                      <div style={{ fontSize: '11px', color: '#555' }}>pending</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>pending</div>
                     </div>
                   )}
                 </div>
@@ -226,10 +243,10 @@ export default function ClientsPage() {
 
       {/* Right Panel — always visible when open */}
       {panelOpen && (
-        <div style={{ width: '320px', background: '#161616', borderLeft: '1px solid #222', padding: '28px 20px', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0' }}>
+        <div style={{ width: '320px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '28px 20px', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>⊞ Add new client</h2>
-            <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: '#555', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
           </div>
 
           <div style={{ marginBottom: '14px' }}>
@@ -256,12 +273,12 @@ export default function ClientsPage() {
           </div>
 
           {/* Portal access */}
-          <div style={{ background: '#111', border: '1px solid #2a2a2a', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
+          <div style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-card)', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Client portal access</div>
-            <div style={{ fontSize: '12px', color: '#555', marginBottom: '12px', lineHeight: 1.5 }}>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
               A unique private link is auto-generated. Share it with the client to give them access to their portal.
             </div>
-            <div style={{ fontFamily: 'monospace', fontSize: '11px', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '6px', padding: '8px 10px', color: '#666', wordBreak: 'break-all' }}>
+            <div style={{ fontFamily: 'monospace', fontSize: '11px', background: 'var(--bg-surface-alt)', border: '1px solid var(--border-card)', borderRadius: '6px', padding: '8px 10px', color: 'var(--text-inactive)', wordBreak: 'break-all' }}>
               {newClientToken
                 ? `${typeof window !== 'undefined' ? window.location.origin : 'studio-portal.com'}/c/${newClientToken}`
                 : portalPreview}
@@ -275,7 +292,7 @@ export default function ClientsPage() {
                 {copied === newClientToken ? '✅ Copied!' : '⊞ Copy portal link'}
               </button>
             )}
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: '#aaa', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: 'var(--text-sec)', cursor: 'pointer' }}>
               <input type='checkbox' checked={form.pin_enabled} onChange={e => setForm({ ...form, pin_enabled: e.target.checked })}
                 style={{ width: '14px', height: '14px', accentColor: '#7c3aed' }} />
               Enable PIN protection
@@ -293,7 +310,7 @@ export default function ClientsPage() {
 
           <button onClick={() => newClientToken && copyLink(newClientToken)} style={{
             width: '100%', background: 'transparent', color: newClientToken ? '#aaa' : '#444',
-            border: '1px solid #2a2a2a', borderRadius: '10px', padding: '13px', fontSize: '14px',
+            border: '1px solid var(--border-card)', borderRadius: '10px', padding: '13px', fontSize: '14px',
             fontWeight: 600, cursor: newClientToken ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
           }}>
