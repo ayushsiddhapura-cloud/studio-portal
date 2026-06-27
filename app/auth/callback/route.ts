@@ -37,8 +37,10 @@ export async function GET(request: NextRequest) {
   const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error || !user) {
-    console.error('exchangeCodeForSession error:', error?.message)
-    return NextResponse.redirect(loginUrl)
+    const errUrl = new URL('/', origin)
+    errUrl.searchParams.set('auth_error', error?.message ?? 'no_user')
+    errUrl.searchParams.set('auth_code', error?.code ?? 'unknown')
+    return NextResponse.redirect(errUrl)
   }
 
   // Check if profile already exists
