@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
+import { IconSearch, IconPlus, IconUpload, IconFolder, IconCloud, IconVideo, IconFileText, IconLink, IconInvoices } from '@/lib/icons'
 
 const typeConfig: any = {
   'Delivery': { bg: '#14532d', color: '#4ade80' },
@@ -99,7 +100,7 @@ export default function FilesPage() {
             marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
-          }}>⊞ Upload / Add link</button>
+          }}><IconUpload size={14} /> Upload / Add link</button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
@@ -122,7 +123,7 @@ export default function FilesPage() {
           {/* Search + type filters */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
-              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}><IconSearch size={15} /></span>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Search files...'
                 style={{ ...inp, paddingLeft: '34px' }} />
             </div>
@@ -140,7 +141,7 @@ export default function FilesPage() {
           {/* File grid */}
           {loading ? <p style={{ color: 'var(--text-muted)' }}>Loading...</p> : filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
-              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📁</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', opacity: 0.4 }}><IconFolder size={48} /></div>
               <p>No files yet. Click "Upload / Add link" to get started.</p>
             </div>
           ) : (
@@ -152,8 +153,8 @@ export default function FilesPage() {
                     {isFrameio(f.url) ? (
                       <div style={{ width: '48px', height: '48px', background: '#5a3fc0', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 800, color: '#fff' }}>F</div>
                     ) : (
-                      <div style={{ fontSize: '36px' }}>
-                        {f.type === 'Delivery' ? '🎬' : f.type === 'Draft' ? '📝' : f.type === 'Brief' ? '📋' : f.type === 'Invoice' ? '🧾' : '📁'}
+                      <div style={{ opacity: 0.6, color: '#fff' }}>
+                        {f.type === 'Delivery' ? <IconVideo size={36} /> : f.type === 'Invoice' ? <IconInvoices size={36} /> : f.type === 'Brief' || f.type === 'Draft' || f.type === 'Reference' ? <IconFileText size={36} /> : <IconFolder size={36} />}
                       </div>
                     )}
                     {/* Type badge top right */}
@@ -206,7 +207,7 @@ export default function FilesPage() {
 
           {/* Panel header */}
           <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Add to project</div>
+            <div style={{ fontSize: '14px', fontWeight: 600 }}>Add to project</div>
             <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
           </div>
 
@@ -221,7 +222,7 @@ export default function FilesPage() {
                   color: tab === t ? '#fff' : '#555', fontSize: '14px', fontWeight: 600,
                   display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '6px'
                 }}>
-                  <span style={{ fontSize: '20px' }}>{t === 'link' ? '🔗' : '☁️'}</span>
+                  <span style={{ display: 'flex' }}>{t === 'link' ? <IconLink size={20} /> : <IconCloud size={20} />}</span>
                   {t === 'link' ? 'Link' : 'Upload'}
                 </button>
               ))}
@@ -295,12 +296,12 @@ export default function FilesPage() {
                   fontSize: '14px', fontWeight: 600, cursor: saving ? 'default' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                 }}>
-                  ⊞ {saving ? 'Saving...' : 'Save link'}
+                  <IconPlus size={14} /> {saving ? 'Saving...' : 'Save link'}
                 </button>
               </>
             ) : (
               <div style={{ textAlign: 'center' as const, padding: '40px 20px', color: 'var(--text-muted)' }}>
-                <div style={{ fontSize: '48px', marginBottom: '12px' }}>☁️</div>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', opacity: 0.4 }}><IconCloud size={48} /></div>
                 <div style={{ fontSize: '14px', marginBottom: '8px', color: 'var(--text-sec)' }}>Direct upload coming soon</div>
                 <div style={{ fontSize: '12px' }}>Use the Link tab to add Google Drive, WeTransfer or Frame.io links instead.</div>
               </div>
@@ -309,7 +310,7 @@ export default function FilesPage() {
 
           {/* Storage section */}
           <div style={{ borderTop: '1px solid var(--border)', padding: '16px 20px', margin: '0' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Storage</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>Storage</div>
             <div style={{ height: '6px', background: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
               <div style={{ height: '100%', width: `${Math.min((totalFiles / 50) * 100, 100)}%`, background: 'linear-gradient(90deg, #5a3fc0, #3b82f6)', borderRadius: '3px' }} />
             </div>

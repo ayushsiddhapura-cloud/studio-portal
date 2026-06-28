@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { useTheme } from '@/lib/theme-context'
 import {
-  IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings, IconEdit, IconUpload
+  IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings, IconEdit, IconUpload, IconSun, IconMoon
 } from '@/lib/icons'
 
 const navItems = [
@@ -166,7 +166,7 @@ export default function ProjectDetailPage() {
             borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
             color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
           }}>
-            {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            {theme === 'dark' ? <IconSun size={15} /> : <IconMoon size={15} />} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
           </button>
         </div>
       </div>

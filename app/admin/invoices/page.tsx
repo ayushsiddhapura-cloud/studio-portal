@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
+import { IconPlus, IconSearch } from '@/lib/icons'
 
 export default function InvoicesPage() {
   const [projects, setProjects] = useState<any[]>([])
@@ -107,7 +108,7 @@ export default function InvoicesPage() {
             marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
-          }}>⊞ New invoice</button>
+          }}><IconPlus size={14} /> New invoice</button>
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
@@ -135,7 +136,7 @@ export default function InvoicesPage() {
           {/* Search + Filter */}
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
             <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
-              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}>🔍</span>
+              <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}><IconSearch size={15} /></span>
               <input value={search} onChange={e => setSearch(e.target.value)}
                 placeholder='Search by client or project...'
                 style={{ width: '100%', background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '8px', padding: '10px 12px 10px 34px', color: 'var(--text)', fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }} />

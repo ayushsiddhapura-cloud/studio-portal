@@ -166,3 +166,48 @@ export const IconExternalLink = ({ size = 13 }: { size?: number }) => (
     <line x1="12" y1="1" x2="5.5" y2="7.5" />
   </svg>
 )
+
+export const IconFolder = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
+  </svg>
+)
+
+export const IconCloud = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 10a6 6 0 0 0-11.8-1.2A4 4 0 0 0 7 17h11a4 4 0 0 0 0-8z" />
+    <line x1="12" y1="13" x2="12" y2="20" />
+    <polyline points="9 17 12 20 15 17" />
+  </svg>
+)
+
+export const IconVideo = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="6" width="15" height="12" rx="2" />
+    <path d="M17 10l5-3v10l-5-3" />
+  </svg>
+)
+
+export const IconFileText = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="8" y1="13" x2="16" y2="13" />
+    <line x1="8" y1="17" x2="13" y2="17" />
+  </svg>
+)
+
+export const IconCopy = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="5" width="9" height="9" rx="1.5" />
+    <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2H3.5A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" />
+  </svg>
+)
+
+export const IconFilter = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="2" y1="4" x2="14" y2="4" />
+    <line x1="4" y1="8" x2="12" y2="8" />
+    <line x1="6" y1="12" x2="10" y2="12" />
+  </svg>
+)

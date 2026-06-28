@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
-import { IconSearch } from '@/lib/icons'
+import { IconSearch, IconPlus, IconCopy, IconFilter } from '@/lib/icons'
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([])
@@ -117,7 +117,7 @@ export default function ClientsPage() {
             marginLeft: 'auto', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
-          }}>⊞ Add client</button>
+          }}><IconPlus size={14} /> Add client</button>
         </div>
 
         {/* Search + Filter */}
@@ -128,7 +128,7 @@ export default function ClientsPage() {
               style={{ ...inp, paddingLeft: '34px' }} />
           </div>
           <button style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-sec)', padding: '10px 18px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            ⊞ Filter
+            <IconFilter size={13} /> Filter
           </button>
         </div>
 
@@ -190,7 +190,7 @@ export default function ClientsPage() {
                       background: 'transparent', border: 'none', color: copied === client.token ? '#4ade80' : '#555',
                       fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
                     }}>
-                      ⊞ {copied === client.token ? 'Copied!' : 'Portal link'}
+                      <IconCopy size={12} /> {copied === client.token ? 'Copied!' : 'Portal link'}
                     </button>
                   )}
                 </div>
@@ -204,7 +204,7 @@ export default function ClientsPage() {
       {panelOpen && (
         <div style={{ width: '320px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '28px 20px', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>⊞ Add new client</h2>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Add new client</h2>
             <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
           </div>
 
@@ -233,7 +233,7 @@ export default function ClientsPage() {
 
           {/* Portal access */}
           <div style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-card)', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
-            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Client portal access</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '8px' }}>Client portal access</div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
               A unique private link is auto-generated. Share it with the client to give them access to their portal.
             </div>
@@ -248,7 +248,7 @@ export default function ClientsPage() {
                 border: '1px solid #166534', borderRadius: '6px', padding: '8px',
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer'
               }}>
-                {copied === newClientToken ? '✅ Copied!' : '⊞ Copy portal link'}
+                {copied === newClientToken ? 'Copied!' : <><IconCopy size={12} /> Copy portal link</>}
               </button>
             )}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: 'var(--text-sec)', cursor: 'pointer' }}>
@@ -264,7 +264,7 @@ export default function ClientsPage() {
             fontWeight: 700, cursor: saving ? 'default' : 'pointer', marginBottom: '10px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
           }}>
-            ⊞ {saving ? 'Creating...' : 'Create client'}
+            <IconPlus size={14} /> {saving ? 'Creating...' : 'Create client'}
           </button>
 
           <button onClick={() => newClientToken && copyLink(newClientToken)} style={{
@@ -273,7 +273,7 @@ export default function ClientsPage() {
             fontWeight: 600, cursor: newClientToken ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
           }}>
-            ⊞ Copy portal link
+            <IconCopy size={14} /> Copy portal link
           </button>
         </div>
       )}

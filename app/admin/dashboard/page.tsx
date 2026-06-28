@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
+import { IconPlus, IconCalendar } from '@/lib/icons'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -74,12 +75,12 @@ export default function DashboardPage() {
               background: 'transparent', border: '1px solid var(--border-input)', borderRadius: '8px',
               color: 'var(--text-sec)', padding: '8px 16px', fontSize: '13px', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500
-            }}>⊞ New project</button>
+            }}><IconPlus size={13} /> New project</button>
             <button onClick={() => router.push('/admin/clients')} style={{
               background: 'transparent', border: '1px solid var(--border-input)', borderRadius: '8px',
               color: 'var(--text-sec)', padding: '8px 16px', fontSize: '13px', cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500
-            }}>⊞ Add client</button>
+            }}><IconPlus size={13} /> Add client</button>
           </div>
         </div>
 
@@ -89,17 +90,17 @@ export default function DashboardPage() {
               {/* Row 1 — 3 cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '14px' }}>
                 <div style={card}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Total clients</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>Total clients</div>
                   <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text)', marginBottom: '6px', lineHeight: 1 }}>{totalClients}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{addedThisMonth} added this month</div>
                 </div>
                 <div style={card}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Active projects</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>Active projects</div>
                   <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text)', marginBottom: '6px', lineHeight: 1 }}>{activeProjects}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{dueThisWeek} due this week</div>
                 </div>
                 <div style={card}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Completed</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>Completed</div>
                   <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text)', marginBottom: '6px', lineHeight: 1 }}>{completed}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>All time</div>
                 </div>
@@ -109,19 +110,19 @@ export default function DashboardPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '24px' }}>
                 {/* Pending payments */}
                 <div style={card}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Pending payments</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>Pending payments</div>
                   <div style={{ fontSize: '36px', fontWeight: 800, color: '#ef4444', marginBottom: '6px', lineHeight: 1 }}>₹{pendingAmount.toLocaleString()}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{unpaidCount} invoices unpaid</div>
                 </div>
                 {/* Total earnings — highlighted green border */}
                 <div style={{ ...card, border: '1px solid #166534' }}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ Total earnings</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>Total earnings</div>
                   <div style={{ fontSize: '36px', fontWeight: 800, color: '#4ade80', marginBottom: '6px', lineHeight: 1 }}>₹{totalEarned.toLocaleString()}</div>
                   <div style={{ fontSize: '12px', color: '#4ade80' }}>Collected: ₹{totalBilled.toLocaleString()}</div>
                 </div>
                 {/* This month */}
                 <div style={card}>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>⊞ This month</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>This month</div>
                   <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text)', marginBottom: '6px', lineHeight: 1 }}>₹{thisMonthEarned.toLocaleString()}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>vs ₹{lastMonthEarned.toLocaleString()} last month</div>
                 </div>
@@ -168,7 +169,7 @@ export default function DashboardPage() {
                           </span>
                         </div>
                         <div style={{ fontSize: '13px', color: overdue ? '#ef4444' : '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          ⊞ {formatDeadline(p.deadline)}
+                          <IconCalendar size={12} /> {formatDeadline(p.deadline)}
                         </div>
                         <div style={{ fontSize: '13px', color: 'var(--text-sec)' }}>0 / 3</div>
                         <div>
@@ -196,8 +197,8 @@ export default function DashboardPage() {
 
                 {/* Upcoming deadlines */}
                 <div style={card}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    ⊞ Upcoming deadlines
+                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '16px' }}>
+                    Upcoming deadlines
                   </div>
                   {upcomingDeadlines.length === 0 ? (
                     <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>No upcoming deadlines.</div>
@@ -219,11 +220,11 @@ export default function DashboardPage() {
 
                 {/* Pending invoices */}
                 <div style={card}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    ⊞ Pending invoices
+                  <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '16px' }}>
+                    Pending invoices
                   </div>
                   {pendingInvoices.length === 0 ? (
-                    <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>All invoices paid! 🎉</div>
+                    <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>All invoices paid!</div>
                   ) : pendingInvoices.map(p => {
                     const clientName = p.clients?.name || '—'
                     const overdue = isOverdue(p.deadline)
