@@ -3,17 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
-import { IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings } from '@/lib/icons'
-
-const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', Icon: IconOverview },
-  { label: 'Clients', href: '/admin/clients', Icon: IconClients },
-  { label: 'Projects', href: '/admin/projects', Icon: IconProjects },
-  { label: 'Invoices', href: '/admin/invoices', Icon: IconInvoices },
-  { label: 'Files', href: '/admin/files', Icon: IconFiles },
-  { label: 'Settings', href: '/admin/settings', Icon: IconSettings },
-]
+import { Sidebar } from '@/lib/sidebar'
 
 const typeConfig: any = {
   'Delivery': { bg: '#14532d', color: '#4ade80' },
@@ -24,7 +14,6 @@ const typeConfig: any = {
 }
 
 export default function FilesPage() {
-  const { theme, toggle } = useTheme()
   const [projects, setProjects] = useState<any[]>([])
   const [files, setFiles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -97,38 +86,7 @@ export default function FilesPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
-      {/* Sidebar */}
-      <div style={{ width: '200px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '4px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '28px', paddingLeft: '6px' }}>
-          <div style={{ width: '30px', height: '30px', background: 'var(--text)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="1" y="5" width="14" height="10" rx="1.5" />
-              <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin panel</div>
-          </div>
-        </div>
-        {navItems.map(item => (
-          <Link key={item.href} href={item.href} style={{
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
-            borderRadius: '8px', textDecoration: 'none',
-            color: item.href === '/admin/files' ? 'var(--text)' : 'var(--text-inactive)',
-            background: item.href === '/admin/files' ? 'var(--bg-hover)' : 'transparent', fontSize: '14px'
-          }}><item.Icon size={16} /> {item.label}</Link>
-        ))}
-        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
-          <button onClick={toggle} style={{
-            width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border)',
-            borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
-            color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
-          }}>
-            {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </button>
-        </div>
-      </div>
+      <Sidebar />
 
       {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>

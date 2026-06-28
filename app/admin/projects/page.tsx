@@ -3,20 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
-import {
-  IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings,
-  IconKanban, IconList, IconPlus, IconSearch, IconCalendar, IconRevision
-} from '@/lib/icons'
-
-const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', Icon: IconOverview },
-  { label: 'Clients', href: '/admin/clients', Icon: IconClients },
-  { label: 'Projects', href: '/admin/projects', Icon: IconProjects },
-  { label: 'Invoices', href: '/admin/invoices', Icon: IconInvoices },
-  { label: 'Files', href: '/admin/files', Icon: IconFiles },
-  { label: 'Settings', href: '/admin/settings', Icon: IconSettings },
-]
+import { IconKanban, IconList, IconPlus, IconSearch, IconCalendar, IconRevision } from '@/lib/icons'
+import { Sidebar } from '@/lib/sidebar'
 
 const COLUMNS = [
   { key: 'In Progress', label: 'In progress', color: '#3b82f6' },
@@ -26,7 +14,6 @@ const COLUMNS = [
 ]
 
 export default function ProjectsPage() {
-  const { theme, toggle } = useTheme()
   const [projects, setProjects] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
   const [revisions, setRevisions] = useState<any[]>([])
@@ -96,43 +83,7 @@ export default function ProjectsPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
-      {/* Sidebar */}
-      <div style={{ width: '220px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', paddingLeft: '6px' }}>
-          <div style={{ width: '30px', height: '30px', background: 'var(--text)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="1" y="5" width="14" height="10" rx="1.5" />
-              <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin panel</div>
-          </div>
-        </div>
-
-        {navItems.map(({ label, href, Icon }) => (
-          <Link key={href} href={href} style={{
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
-            borderRadius: '8px', textDecoration: 'none',
-            color: href === '/admin/projects' ? 'var(--text)' : 'var(--text-inactive)',
-            background: href === '/admin/projects' ? 'var(--bg-hover)' : 'transparent',
-            fontSize: '14px', fontWeight: href === '/admin/projects' ? 600 : 400
-          }}>
-            <Icon size={16} /> {label}
-          </Link>
-        ))}
-
-        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
-          <button onClick={toggle} style={{
-            width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border)',
-            borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
-            color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
-          }}>
-            {theme === 'dark' ? '☀️' : '🌙'} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </button>
-        </div>
-      </div>
+      <Sidebar />
 
       {/* Main */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>

@@ -107,3 +107,62 @@ export const IconUpload = ({ size = 14 }: { size?: number }) => (
     <path d="M2 11h10" />
   </svg>
 )
+
+export const IconBrands = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 13V6.5l6-4 6 4V13" />
+    <rect x="5.5" y="9" width="5" height="4" rx="0.5" />
+    <path d="M2 6.5h12" />
+  </svg>
+)
+
+export const IconSun = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <circle cx="8" cy="8" r="3" />
+    <line x1="8" y1="1" x2="8" y2="2.5" />
+    <line x1="8" y1="13.5" x2="8" y2="15" />
+    <line x1="1" y1="8" x2="2.5" y2="8" />
+    <line x1="13.5" y1="8" x2="15" y2="8" />
+    <line x1="3.05" y1="3.05" x2="4.1" y2="4.1" />
+    <line x1="11.9" y1="11.9" x2="12.95" y2="12.95" />
+    <line x1="3.05" y1="12.95" x2="4.1" y2="11.9" />
+    <line x1="11.9" y1="4.1" x2="12.95" y2="3.05" />
+  </svg>
+)
+
+export const IconMoon = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13.5 10A6 6 0 0 1 6 2.5a6 6 0 1 0 7.5 7.5z" />
+  </svg>
+)
+
+export const IconSignOut = ({ size = 15 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" />
+    <path d="M10.5 11L14 8l-3.5-3" />
+    <line x1="6" y1="8" x2="14" y2="8" />
+  </svg>
+)
+
+export const IconInstagram = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1.5" y="1.5" width="13" height="13" rx="3.5" />
+    <circle cx="8" cy="8" r="3" />
+    <circle cx="11.5" cy="4.5" r="0.5" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+export const IconLink = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5.5 8.5a3.5 3.5 0 0 0 5 0l2-2a3.5 3.5 0 0 0-5-5L6 3" />
+    <path d="M8.5 5.5a3.5 3.5 0 0 0-5 0l-2 2a3.5 3.5 0 0 0 5 5L8 11" />
+  </svg>
+)
+
+export const IconExternalLink = ({ size = 13 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 13 13" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 2H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8" />
+    <path d="M8 1h4v4" />
+    <line x1="12" y1="1" x2="5.5" y2="7.5" />
+  </svg>
+)
