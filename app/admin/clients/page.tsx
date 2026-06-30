@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
 import { IconSearch, IconPlus, IconCopy, IconFilter } from '@/lib/icons'
+import { COUNTRY_CODES } from '@/lib/countryCodes'
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<any[]>([])
@@ -12,9 +13,11 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', notes: '', pin_enabled: false })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', phone_code: '+91', company: '', notes: '', pin_enabled: false, pin: '' })
+  const [brandsList, setBrandsList] = useState<{ name: string; instagram: string }[]>([{ name: '', instagram: '' }])
   const [saving, setSaving] = useState(false)
   const [newClientToken, setNewClientToken] = useState<string | null>(null)
+  const [newClientPin, setNewClientPin] = useState<string | null>(null)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -29,15 +32,17 @@ export default function ClientsPage() {
   if (!form.name.trim()) return
   setSaving(true)
   const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
-  
+
   const { data, error } = await supabase.from('clients').insert([{
     name: form.name,
     email: form.email,
     phone: form.phone,
+    phone_code: form.phone_code,
     channel_name: form.company,
     notes: form.notes,
     token,
     pin_enabled: form.pin_enabled,
+    pin: form.pin_enabled ? form.pin : null,
     status: 'Active'
   }]).select()
 
@@ -47,10 +52,34 @@ export default function ClientsPage() {
     return
   }
 
+  const brandRows = brandsList
+    .filter(b => b.name.trim())
+    .map(b => ({
+      name: b.name.trim(), instagram: b.instagram.trim(), client_id: data[0].id,
+      status: 'Active', category: '', services: [], links: [], notes: ''
+    }))
+  if (brandRows.length) await supabase.from('brands').insert(brandRows)
+
   setNewClientToken(token)
-  setForm({ name: '', email: '', phone: '', company: '', notes: '', pin_enabled: false })
+  setNewClientPin(form.pin_enabled ? form.pin : null)
+  setForm({ name: '', email: '', phone: '', phone_code: '+91', company: '', notes: '', pin_enabled: false, pin: '' })
+  setBrandsList([{ name: '', instagram: '' }])
   setSaving(false)
   fetchAll()
+}
+
+function togglePin(checked: boolean) {
+  if (checked && !form.pin) {
+    setForm({ ...form, pin_enabled: checked, pin: Math.floor(1000 + Math.random() * 9000).toString() })
+  } else {
+    setForm({ ...form, pin_enabled: checked })
+  }
+}
+
+function addBrandRow() { setBrandsList([...brandsList, { name: '', instagram: '' }]) }
+function removeBrandRow(i: number) { setBrandsList(brandsList.filter((_, idx) => idx !== i)) }
+function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
+  setBrandsList(brandsList.map((b, idx) => idx === i ? { ...b, [key]: value } : b))
 }
 
   async function deleteClient(id: string) {
@@ -113,7 +142,7 @@ export default function ClientsPage() {
         <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Clients</h1>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: '#222', padding: '2px 8px', borderRadius: '20px' }}>{clients.length} total</span>
-          <button onClick={() => { setPanelOpen(true); setNewClientToken(null) }} style={{
+          <button onClick={() => { setPanelOpen(true); setNewClientToken(null); setNewClientPin(null) }} style={{
             marginLeft: 'auto', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
@@ -218,7 +247,13 @@ export default function ClientsPage() {
           </div>
           <div style={{ marginBottom: '14px' }}>
             <label style={lbl}>Phone</label>
-            <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder='+91 98765 43210' style={inp} />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <select value={form.phone_code} onChange={e => setForm({ ...form, phone_code: e.target.value })}
+                style={{ ...inp, width: '92px', flex: 'none', paddingLeft: '8px', paddingRight: '2px' }}>
+                {COUNTRY_CODES.map(c => <option key={c.code} value={c.code}>{c.code} {c.country}</option>)}
+              </select>
+              <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder='98765 43210' style={{ ...inp, flex: 1 }} />
+            </div>
           </div>
           <div style={{ marginBottom: '14px' }}>
             <label style={lbl}>Company (optional)</label>
@@ -229,6 +264,26 @@ export default function ClientsPage() {
             <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })}
               placeholder='Any private notes about this client...' rows={3}
               style={{ ...inp, resize: 'vertical' }} />
+          </div>
+
+          {/* Brands */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={lbl}>Brands (optional)</label>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', lineHeight: 1.5 }}>
+              Link the brands you'll work on for this client — e.g. separate Instagram pages. These also show up on the Brands page.
+            </div>
+            {brandsList.map((b, i) => (
+              <div key={i} style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+                <input value={b.name} onChange={e => updateBrandRow(i, 'name', e.target.value)} placeholder='Brand name' style={{ ...inp, flex: 1 }} />
+                <input value={b.instagram} onChange={e => updateBrandRow(i, 'instagram', e.target.value)} placeholder='@instagram' style={{ ...inp, flex: 1 }} />
+                {brandsList.length > 1 && (
+                  <button onClick={() => removeBrandRow(i)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', flexShrink: 0 }}>✕</button>
+                )}
+              </div>
+            ))}
+            <button onClick={addBrandRow} style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'none', border: '1px dashed var(--border)', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+              <IconPlus size={12} /> Add another brand
+            </button>
           </div>
 
           {/* Portal access */}
@@ -251,11 +306,23 @@ export default function ClientsPage() {
                 {copied === newClientToken ? 'Copied!' : <><IconCopy size={12} /> Copy portal link</>}
               </button>
             )}
+            {newClientToken && newClientPin && (
+              <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-sec)', textAlign: 'center' }}>
+                PIN for this client: <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#fff', letterSpacing: '2px' }}>{newClientPin}</span>
+              </div>
+            )}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: 'var(--text-sec)', cursor: 'pointer' }}>
-              <input type='checkbox' checked={form.pin_enabled} onChange={e => setForm({ ...form, pin_enabled: e.target.checked })}
+              <input type='checkbox' checked={form.pin_enabled} onChange={e => togglePin(e.target.checked)}
                 style={{ width: '14px', height: '14px', accentColor: '#7c3aed' }} />
               Enable PIN protection
             </label>
+            {form.pin_enabled && (
+              <div style={{ marginTop: '10px' }}>
+                <label style={{ ...lbl, fontSize: '11px' }}>PIN (share this with the client separately)</label>
+                <input value={form.pin} onChange={e => setForm({ ...form, pin: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                  maxLength={6} style={{ ...inp, fontFamily: 'monospace', letterSpacing: '4px', textAlign: 'center' }} />
+              </div>
+            )}
           </div>
 
           <button onClick={createClient} disabled={saving} style={{

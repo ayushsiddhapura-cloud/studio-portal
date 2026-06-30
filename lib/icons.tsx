@@ -211,3 +211,45 @@ export const IconFilter = ({ size = 14 }: { size?: number }) => (
     <line x1="6" y1="12" x2="10" y2="12" />
   </svg>
 )
+
+export const IconLock = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="7" width="10" height="7" rx="1.5" />
+    <path d="M5 7V4.5a3 3 0 0 1 6 0V7" />
+  </svg>
+)
+
+export const IconMail = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1.5" y="3" width="13" height="10" rx="1.5" />
+    <path d="M2 4l6 5 6-5" />
+  </svg>
+)
+
+export const IconPhone = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 2.5h2.5l1 3-1.5 1.2a8 8 0 0 0 4.3 4.3l1.2-1.5 3 1V13a1.5 1.5 0 0 1-1.5 1.5C6.6 14.5 1.5 9.4 1.5 4 1.5 3.17 2.17 2.5 3 2.5z" />
+  </svg>
+)
+
+export const IconChecklist = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 4l1 1 2-2" />
+    <line x1="8" y1="4" x2="14" y2="4" />
+    <path d="M3 9l1 1 2-2" />
+    <line x1="8" y1="9" x2="14" y2="9" />
+  </svg>
+)
+
+export const IconChat = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1.5 3.5h13v8h-8L3 14v-2.5H1.5v-8z" />
+  </svg>
+)
+
+export const IconFolderOpen = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1.5 5V3.5a1 1 0 0 1 1-1h3l1.5 1.5h6a1 1 0 0 1 1 1V6" />
+    <path d="M1.5 5h12.7a1 1 0 0 1 .97 1.24l-1.1 4.5a1 1 0 0 1-.97.76H2.6a1 1 0 0 1-.97-.76l-1.1-4.5A1 1 0 0 1 1.5 5z" />
+  </svg>
+)

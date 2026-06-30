@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
+import { IconLock, IconSearch, IconMail, IconPhone, IconChecklist, IconFolderOpen, IconChat, IconFolder, IconVideo, IconFileText, IconInvoices } from '@/lib/icons'
 
 const PORTAL_SIG_B64 = 'https://i.ibb.co/jk4n7ZZX/my-sing.png'
 
@@ -154,7 +155,7 @@ export default function ClientPortalPage() {
         <h3>Billed To:</h3>
         <div class="client-name">${client.name}</div>
         ${client.channel_name ? `<p>(YouTube Channel: ${client.channel_name})</p>` : ''}
-        ${client.phone ? `<p>Contact No: ${client.phone}</p>` : ''}
+        ${client.phone ? `<p>Contact No: ${client.phone_code ? client.phone_code + ' ' : ''}${client.phone}</p>` : ''}
         ${client.email ? `<p>${client.email}</p>` : ''}
       </div>
       <div class="invoice-info">
@@ -221,7 +222,7 @@ export default function ClientPortalPage() {
   if (pinRequired && !pinUnlocked) return (
     <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
       <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '40px 36px', width: '360px', textAlign: 'center' }}>
-        <div style={{ fontSize: '40px', marginBottom: '16px' }}>🔒</div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: '#fff' }}><IconLock size={36} /></div>
         <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Portal Protected</h2>
         <p style={{ color: '#666', fontSize: '14px', margin: '0 0 28px' }}>Enter your PIN to access your project portal</p>
         <input
@@ -250,7 +251,7 @@ export default function ClientPortalPage() {
 
   if (notFound) return (
     <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: 'sans-serif', flexDirection: 'column', gap: '16px' }}>
-      <div style={{ fontSize: '48px' }}>🔍</div>
+      <div style={{ opacity: 0.5 }}><IconSearch size={40} /></div>
       <p>Portal not found. Please check your link.</p>
     </div>
   )
@@ -281,14 +282,14 @@ export default function ClientPortalPage() {
       {/* Top Nav */}
       <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>🎬</div>
+          <div style={{ width: '32px', height: '32px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111' }}><IconVideo size={17} /></div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '14px' }}>Studio Portal</div>
             <div style={{ fontSize: '11px', color: '#666' }}>Your private project dashboard</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#888' }}>
-          <span>🔒</span> Private & secure
+          <IconLock size={14} /> Private & secure
         </div>
       </div>
 
@@ -297,7 +298,7 @@ export default function ClientPortalPage() {
         {/* Hero */}
         <div style={s.card}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#222', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: '#aaa', letterSpacing: '1px', marginBottom: '16px' }}>
-            🎬 VIDEO EDITING CLIENT
+            <IconVideo size={12} /> VIDEO EDITING CLIENT
           </div>
           <h1 style={{ fontSize: '36px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
             <span style={{ color: '#fff' }}>{client.name}'s</span>{' '}
@@ -307,8 +308,8 @@ export default function ClientPortalPage() {
             {client.channel_name || 'Your Studio'} — all your projects and updates in one place
           </p>
           <div style={{ borderTop: '1px solid #222', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-            {client.email && <span style={{ fontSize: '13px', color: '#888' }}>✉️ {client.email}</span>}
-            {client.phone && <span style={{ fontSize: '13px', color: '#888' }}>📱 {client.phone}</span>}
+            {client.email && <span style={{ fontSize: '13px', color: '#888', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconMail size={13} /> {client.email}</span>}
+            {client.phone && <span style={{ fontSize: '13px', color: '#888', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconPhone size={13} /> {client.phone_code ? `${client.phone_code} ` : ''}{client.phone}</span>}
             <span style={{ fontSize: '13px', color: '#4ade80' }}>● Active client</span>
           </div>
         </div>
@@ -366,7 +367,7 @@ export default function ClientPortalPage() {
 
             {/* Progress */}
             <div style={{ marginBottom: '28px', borderTop: '1px solid #222', paddingTop: '20px' }}>
-              <div style={s.label}>📋 PROJECT PROGRESS</div>
+              <div style={s.label}><IconChecklist size={13} /> PROJECT PROGRESS</div>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
                 <div style={{ position: 'absolute', top: '10px', left: 0, height: '1px', background: '#fff', width: `${(currentStep / (progressSteps.length - 1)) * 100}%` }} />
@@ -389,7 +390,7 @@ export default function ClientPortalPage() {
             {/* Version History */}
             {activeVersions.length > 0 && (
               <div style={{ marginBottom: '24px', borderTop: '1px solid #222', paddingTop: '20px' }}>
-                <div style={s.label}>📁 VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
+                <div style={s.label}><IconFolder size={13} /> VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
                   <div style={{ position: 'absolute', top: '16px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
                   {[...Array(3)].map((_, i) => {
@@ -414,7 +415,7 @@ export default function ClientPortalPage() {
             {/* Revisions & Files */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #222', paddingTop: '20px' }}>
               <div>
-                <div style={s.label}>💬 REVISION HISTORY</div>
+                <div style={s.label}><IconChat size={13} /> REVISION HISTORY</div>
                 {activeRevisions.length === 0 ? (
                   <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
                     No revisions yet — your feedback will appear here.
@@ -431,7 +432,7 @@ export default function ClientPortalPage() {
                 ))}
               </div>
               <div>
-                <div style={s.label}>📂 FILES & DRAFTS</div>
+                <div style={s.label}><IconFolderOpen size={13} /> FILES & DRAFTS</div>
                 {activeFiles.length === 0 ? (
                   <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
                     Your first draft will appear here once it's ready.
@@ -443,8 +444,8 @@ export default function ClientPortalPage() {
                     textDecoration: 'none', marginBottom: '8px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px' }}>
-                        {f.type === 'Delivery' ? '🎬' : f.type === 'Draft' ? '📝' : '📁'}
+                      <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        {f.type === 'Delivery' ? <IconVideo size={15} /> : f.type === 'Draft' ? <IconFileText size={15} /> : <IconFolder size={15} />}
                       </div>
                       <div>
                         <div style={{ fontSize: '13px', fontWeight: 500, color: '#fff' }}>{f.name}</div>
@@ -462,7 +463,7 @@ export default function ClientPortalPage() {
         {/* Invoice */}
         {activeProject && (
           <div style={s.card}>
-            <div style={s.label}>🧾 INVOICE & PAYMENT</div>
+            <div style={s.label}><IconInvoices size={13} /> INVOICE & PAYMENT</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
               {[
                 { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: '#fff' },
@@ -497,14 +498,14 @@ export default function ClientPortalPage() {
                 borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
                 fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
               }}>
-              🧾 View Invoice PDF
+<IconInvoices size={15} /> View Invoice PDF
             </button>
           </div>
         )}
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', color: '#444', fontSize: '12px', marginTop: '24px', padding: '16px', borderTop: '1px solid #1a1a1a' }}>
-          🔒 This is your private portal — only you can see this page · Studio Portal by Ayush Siddhapura
+        <div style={{ textAlign: 'center', color: '#444', fontSize: '12px', marginTop: '24px', padding: '16px', borderTop: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+          <IconLock size={12} /> This is your private portal — only you can see this page · Studio Portal by Ayush Siddhapura
         </div>
       </div>
     </div>

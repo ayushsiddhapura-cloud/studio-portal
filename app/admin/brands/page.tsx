@@ -14,6 +14,8 @@ type Brand = {
   instagram: string
   links: { label: string; url: string }[]
   notes: string
+  client_id?: string | null
+  clients?: { name: string } | null
 }
 
 const SERVICE_SUGGESTIONS = ['Branding', 'Designing', 'Marketing', 'Photography', 'Video', 'Social Media', 'SEO', 'Web Dev']
@@ -38,7 +40,7 @@ export default function BrandsPage() {
   useEffect(() => { fetchBrands() }, [])
 
   async function fetchBrands() {
-    const { data } = await supabase.from('brands').select('*').order('created_at', { ascending: false })
+    const { data } = await supabase.from('brands').select('*, clients(name)').order('created_at', { ascending: false })
     if (data) setBrands(data as Brand[])
   }
 
@@ -158,6 +160,7 @@ export default function BrandsPage() {
                 <div>
                   <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>{b.name}</div>
                   {b.category && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{b.category}</div>}
+                  {b.clients?.name && <div style={{ fontSize: '11px', color: 'var(--text-dim)', marginTop: '2px' }}>Client: {b.clients.name}</div>}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{
