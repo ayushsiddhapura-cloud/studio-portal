@@ -178,7 +178,7 @@ export default function InvoicesPage() {
           {/* Table */}
           {loading ? <p style={{ color: 'var(--text-muted)' }}>Loading...</p> : (
             <div style={{ ...card, padding: '0', overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '70px 1.5fr 2fr 120px 110px 130px 80px', gap: '12px', padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '70px 1.5fr 2fr 120px 110px 130px 140px', gap: '12px', padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
                 {['Inv #', 'Client', 'Project', 'Amount', 'Due', 'Status', 'Actions'].map(h => (
                   <div key={h} style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>{h}</div>
                 ))}
@@ -195,7 +195,7 @@ export default function InvoicesPage() {
 
                 return (
                   <div key={p.id}
-                    style={{ display: 'grid', gridTemplateColumns: '70px 1.5fr 2fr 120px 110px 130px 80px', gap: '12px', padding: '16px 20px', borderBottom: '1px solid var(--border-card)', alignItems: 'center' }}
+                    style={{ display: 'grid', gridTemplateColumns: '70px 1.5fr 2fr 120px 110px 130px 140px', gap: '12px', padding: '16px 20px', borderBottom: '1px solid var(--border-card)', alignItems: 'center' }}
                     onMouseEnter={e => (e.currentTarget.style.background = '#222')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
