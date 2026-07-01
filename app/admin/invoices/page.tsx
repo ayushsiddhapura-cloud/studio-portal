@@ -13,10 +13,11 @@ export default function InvoicesPage() {
   const [filter, setFilter] = useState('All')
   const [search, setSearch] = useState('')
   const [showModal, setShowModal] = useState(false)
+  const [editingProject, setEditingProject] = useState<any>(null)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     client_id: '', project_id: '', amount: '',
-    invoice_date: '', due_date: '', notes: ''
+    invoice_date: '', due_date: '', notes: '', invoice_pdf_url: ''
   })
 
   useEffect(() => { fetchAll() }, [])
@@ -34,17 +35,39 @@ export default function InvoicesPage() {
     fetchAll()
   }
 
-  async function createInvoice() {
-    if (!form.client_id || !form.project_id) return alert('Please select a client and project')
+  function openAdd() {
+    setEditingProject(null)
+    setForm({ client_id: '', project_id: '', amount: '', invoice_date: '', due_date: '', notes: '', invoice_pdf_url: '' })
+    setShowModal(true)
+  }
+
+  function openEdit(p: any) {
+    setEditingProject(p)
+    setForm({
+      client_id: p.client_id || '',
+      project_id: p.id,
+      amount: p.amount?.toString() || '',
+      invoice_date: '',
+      due_date: p.deadline || '',
+      notes: '',
+      invoice_pdf_url: p.invoice_pdf_url || '',
+    })
+    setShowModal(true)
+  }
+
+  async function saveInvoice() {
+    if (!form.project_id) return alert('Please select a project')
     setSaving(true)
     await supabase.from('projects').update({
       amount: parseFloat(form.amount) || 0,
       deadline: form.due_date || null,
-      payment_status: 'Pending',
+      payment_status: editingProject ? editingProject.payment_status : 'Pending',
+      invoice_pdf_url: form.invoice_pdf_url || null,
     }).eq('id', form.project_id)
-    setForm({ client_id: '', project_id: '', amount: '', invoice_date: '', due_date: '', notes: '' })
+    setForm({ client_id: '', project_id: '', amount: '', invoice_date: '', due_date: '', notes: '', invoice_pdf_url: '' })
     setSaving(false)
     setShowModal(false)
+    setEditingProject(null)
     fetchAll()
   }
 
@@ -104,7 +127,7 @@ export default function InvoicesPage() {
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{projects.length} total</span>
             </div>
           </div>
-          <button onClick={() => setShowModal(true)} style={{
+          <button onClick={openAdd} style={{
             marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
@@ -159,6 +182,7 @@ export default function InvoicesPage() {
                 {['Inv #', 'Client', 'Project', 'Amount', 'Due', 'Status', 'Actions'].map(h => (
                   <div key={h} style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>{h}</div>
                 ))}
+
               </div>
 
               {filtered.length === 0 ? (
@@ -196,11 +220,12 @@ export default function InvoicesPage() {
                         {over ? 'Overdue' : p.payment_status}
                       </span>
                     </div>
-                    <div>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                       <select value={p.payment_status} onChange={e => updatePayment(p.id, e.target.value)}
                         style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '6px', color: 'var(--text-sec)', padding: '5px 6px', fontSize: '11px', cursor: 'pointer' }}>
                         {['Pending', 'Paid', 'Partial'].map(s => <option key={s}>{s}</option>)}
                       </select>
+                      <button onClick={() => openEdit(p)} style={{ background: 'none', border: '1px solid var(--border-input)', borderRadius: '6px', color: 'var(--text-muted)', padding: '4px 8px', fontSize: '11px', cursor: 'pointer', whiteSpace: 'nowrap' }}>Edit</button>
                     </div>
                   </div>
                 )
@@ -222,7 +247,7 @@ export default function InvoicesPage() {
           }}>
             {/* Modal header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: '#111' }}>New invoice</h2>
+              <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: '#111' }}>{editingProject ? 'Edit invoice' : 'New invoice'}</h2>
               <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#9ca3af', lineHeight: 1 }}>×</button>
             </div>
 
@@ -231,7 +256,8 @@ export default function InvoicesPage() {
               <div>
                 <label style={modalLbl}>CLIENT</label>
                 <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value, project_id: '' })}
-                  style={{ ...modalInp, color: form.client_id ? '#111' : '#9ca3af' }}>
+                  disabled={!!editingProject}
+                  style={{ ...modalInp, color: form.client_id ? '#111' : '#9ca3af', opacity: editingProject ? 0.6 : 1 }}>
                   <option value=''>Select client name</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -243,7 +269,8 @@ export default function InvoicesPage() {
                 <select value={form.project_id} onChange={e => {
                   const proj = projects.find(p => p.id === e.target.value)
                   setForm({ ...form, project_id: e.target.value, amount: proj?.amount?.toString() || '' })
-                }} style={{ ...modalInp, color: form.project_id ? '#111' : '#9ca3af' }}>
+                }} disabled={!!editingProject}
+                  style={{ ...modalInp, color: form.project_id ? '#111' : '#9ca3af', opacity: editingProject ? 0.6 : 1 }}>
                   <option value=''>Select project</option>
                   {clientProjects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
@@ -270,6 +297,14 @@ export default function InvoicesPage() {
                 </div>
               </div>
 
+              {/* Invoice PDF link */}
+              <div>
+                <label style={modalLbl}>INVOICE PDF LINK (OPTIONAL)</label>
+                <input value={form.invoice_pdf_url} onChange={e => setForm({ ...form, invoice_pdf_url: e.target.value })}
+                  placeholder='https://drive.google.com/...'
+                  style={modalInp} />
+              </div>
+
               {/* Notes */}
               <div>
                 <label style={modalLbl}>NOTES (OPTIONAL)</label>
@@ -280,16 +315,16 @@ export default function InvoicesPage() {
 
               {/* Buttons */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', paddingTop: '8px' }}>
-                <button onClick={() => setShowModal(false)} style={{
+                <button onClick={() => { setShowModal(false); setEditingProject(null) }} style={{
                   background: '#fff', color: '#374151', border: '1px solid #e5e7eb',
                   borderRadius: '12px', padding: '14px', fontSize: '15px',
                   fontWeight: 500, cursor: 'pointer'
                 }}>Cancel</button>
-                <button onClick={createInvoice} disabled={saving} style={{
+                <button onClick={saveInvoice} disabled={saving} style={{
                   background: 'var(--bg-deep)', color: '#fff', border: 'none',
                   borderRadius: '12px', padding: '14px', fontSize: '15px',
                   fontWeight: 600, cursor: saving ? 'default' : 'pointer'
-                }}>{saving ? 'Creating...' : 'Create invoice'}</button>
+                }}>{saving ? 'Saving...' : editingProject ? 'Save changes' : 'Create invoice'}</button>
               </div>
             </div>
           </div>
