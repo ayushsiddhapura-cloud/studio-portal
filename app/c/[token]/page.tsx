@@ -226,7 +226,7 @@ export default function ClientPortalPage() {
               <div style={s.label}><IconChecklist size={13} /> PROJECT PROGRESS</div>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '2px', background: '#2a2a2a' }} />
-                <div style={{ position: 'absolute', top: '10px', left: 0, height: '2px', background: '#fff', width: `${currentStep === 0 ? 0 : (currentStep / (progressSteps.length - 1)) * 100}%`, transition: 'width 0.4s' }} />
+                <div style={{ position: 'absolute', top: '10px', left: 0, height: '2px', background: '#fff', width: `${((currentStep + 0.5) / progressSteps.length) * 100}%`, transition: 'width 0.4s' }} />
                 {progressSteps.map((step, i) => (
                   <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 2, flex: 1 }}>
                     <div style={{
