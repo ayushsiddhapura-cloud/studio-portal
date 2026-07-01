@@ -18,7 +18,7 @@ type Brand = {
   clients?: { name: string } | null
 }
 
-const SERVICE_SUGGESTIONS = ['Branding', 'Designing', 'Marketing', 'Photography', 'Video', 'Social Media', 'SEO', 'Web Dev']
+const SERVICE_SUGGESTIONS = ['Video Editing', 'Designing', 'Social Media', 'YouTube']
 const LINK_LABELS = ['Website', 'Drive', 'Assets', 'Design', 'Notion', 'Figma']
 
 export default function BrandsPage() {
@@ -55,7 +55,7 @@ export default function BrandsPage() {
 
   function openEdit(b: Brand) {
     setEditBrand(b)
-    setForm({ name: b.name, category: b.category, status: b.status, services: [...b.services], instagram: b.instagram, links: [...b.links], notes: b.notes })
+    setForm({ name: b.name, category: b.category, status: b.status, services: [...(b.services || [])], instagram: b.instagram, links: [...(b.links || [])], notes: b.notes })
     setServiceInput('')
     setLinkLabel('')
     setLinkUrl('')
@@ -66,7 +66,7 @@ export default function BrandsPage() {
     if (!form.name.trim()) return
     setSaving(true)
     if (editBrand) {
-      await supabase.from('brands').update(form).eq('id', editBrand.id)
+      await supabase.from('brands').update({ ...form, client_id: editBrand.client_id }).eq('id', editBrand.id)
     } else {
       await supabase.from('brands').insert([form])
     }
@@ -184,9 +184,13 @@ export default function BrandsPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                 {b.instagram ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-sec)' }}>
+                  <a
+                    href={`https://instagram.com/${b.instagram.replace(/^@/, '')}`}
+                    target='_blank' rel='noopener noreferrer'
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: 'var(--text-sec)', textDecoration: 'none' }}
+                  >
                     <IconInstagram size={14} /> {b.instagram}
-                  </div>
+                  </a>
                 ) : <div />}
                 {b.links.length > 0 && (
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
