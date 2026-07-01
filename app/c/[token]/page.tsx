@@ -5,7 +5,6 @@ import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { IconLock, IconSearch, IconMail, IconPhone, IconChecklist, IconFolderOpen, IconChat, IconFolder, IconVideo, IconFileText, IconInvoices } from '@/lib/icons'
 
-const PORTAL_SIG_B64 = 'https://i.ibb.co/jk4n7ZZX/my-sing.png'
 
 export default function ClientPortalPage() {
   const { token } = useParams()
@@ -74,149 +73,6 @@ export default function ClientPortalPage() {
     }
   }
 
-  function openInvoicePDF() {
-    if (!activeProject || !client) return
-
-    function amountInWords(n: number): string {
-      const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen']
-      const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety']
-      if (n === 0) return 'Zero'
-      if (n < 20) return ones[n]
-      if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '')
-      if (n < 1000) return ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + amountInWords(n%100) : '')
-      if (n < 100000) return amountInWords(Math.floor(n/1000)) + ' Thousand' + (n%1000 ? ' ' + amountInWords(n%1000) : '')
-      if (n < 10000000) return amountInWords(Math.floor(n/100000)) + ' Lakh' + (n%100000 ? ' ' + amountInWords(n%100000) : '')
-      return amountInWords(Math.floor(n/10000000)) + ' Crore' + (n%10000000 ? ' ' + amountInWords(n%10000000) : '')
-    }
-
-    const amount = Number(activeProject.amount)
-    const amountWords = amountInWords(amount) + ' only'
-    const invoiceNum = (activeProject.id?.slice(0,8).toUpperCase() || '000001')
-    const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })
-    const sigB64 = PORTAL_SIG_B64
-
-    const invoiceHTML = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Invoice</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; background: #fff; color: #111; max-width: 794px; margin: 0 auto; }
-    .header { background: #00B4B4; padding: 36px 48px; display: flex; justify-content: space-between; align-items: flex-start; }
-    .invoice-title { font-size: 42px; font-weight: 900; color: #fff; line-height: 1; }
-    .invoice-subtitle { font-size: 24px; font-weight: 900; color: #F5C518; }
-    .invoice-meta { text-align: right; color: #fff; }
-    .invoice-meta p { font-size: 14px; margin-bottom: 4px; }
-    .body { padding: 36px 48px; }
-    .billed-row { display: flex; justify-content: space-between; margin-bottom: 28px; }
-    .billed-to h3 { font-size: 12px; font-weight: 800; color: #00B4B4; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
-    .client-name { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
-    .billed-to p { font-size: 14px; color: #555; line-height: 1.7; }
-    .invoice-info { text-align: right; font-size: 14px; color: #555; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; border: 1px solid #e0e0e0; }
-    thead th { background: #fff; color: #111; padding: 14px 18px; text-align: left; font-size: 13px; font-weight: 700; border-bottom: 2px solid #e0e0e0; }
-    thead th:last-child { text-align: right; }
-    tbody td { padding: 16px 18px; font-size: 14px; border-bottom: 1px solid #f0f0f0; color: #333; }
-    tbody td:last-child { text-align: right; font-weight: 600; }
-    .totals-wrap { display: flex; justify-content: flex-end; margin: 12px 0 16px; }
-    .totals { width: 300px; }
-    .tr { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; color: #555; }
-    .tr.bold { font-weight: 800; font-size: 18px; color: #111; border-top: 2px solid #111; padding-top: 12px; margin-top: 6px; }
-    .amount-words { background: #f7f7f7; border-left: 4px solid #00B4B4; padding: 10px 16px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
-    .notes { margin-bottom: 24px; }
-    .notes h4 { font-size: 14px; font-weight: 800; color: #00B4B4; margin-bottom: 10px; }
-    .notes li { font-size: 13px; color: #444; line-height: 1.8; margin-left: 18px; }
-    .bottom-row { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #eee; padding-top: 20px; }
-    .payment-info h4 { font-size: 13px; font-weight: 800; color: #F5C518; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
-    .payment-info p { font-size: 13px; color: #444; line-height: 1.8; }
-    .sig-block { text-align: right; }
-    .sig-block img { height: 70px; filter: invert(1); display: block; margin-left: auto; margin-bottom: 4px; }
-    .sig-name { font-size: 15px; font-weight: 800; color: #F5C518; }
-    .sig-thanks { font-size: 13px; font-weight: 700; color: #F5C518; }
-    .print-btn { display: block; margin: 28px auto 0; background: #111; color: #fff; border: none; padding: 12px 32px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; }
-    @media print { .print-btn { display: none; } }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="invoice-title">INVOICE FOR</div>
-      <div class="invoice-subtitle">VIDEO EDITOR</div>
-    </div>
-    <div class="invoice-meta">
-      <p style="font-size:16px;font-weight:700">Invoice No. ${invoiceNum}</p>
-      <p>${dateStr}</p>
-    </div>
-  </div>
-  <div class="body">
-    <div class="billed-row">
-      <div class="billed-to">
-        <h3>Billed To:</h3>
-        <div class="client-name">${client.name}</div>
-        ${client.channel_name ? `<p>(YouTube Channel: ${client.channel_name})</p>` : ''}
-        ${client.phone ? `<p>Contact No: ${client.phone_code ? client.phone_code + ' ' : ''}${client.phone}</p>` : ''}
-        ${client.email ? `<p>${client.email}</p>` : ''}
-      </div>
-      <div class="invoice-info">
-        <p style="font-weight:700">Invoice No. ${invoiceNum}</p>
-        <p>${dateStr}</p>
-      </div>
-    </div>
-    <table>
-      <thead><tr><th>Item</th><th style="text-align:center">Quantity</th><th style="text-align:center">Unit Price</th><th>Total</th></tr></thead>
-      <tbody>
-        <tr>
-          <td><strong>${activeProject.title}</strong><br><span style="font-size:12px;color:#888">(YouTube Video Editing)</span></td>
-          <td style="text-align:center">1</td>
-          <td style="text-align:center">&#x20B9;${amount.toLocaleString('en-IN')}/-</td>
-          <td>&#x20B9;${amount.toLocaleString('en-IN')}/-</td>
-        </tr>
-        <tr><td style="color:#ccc">&#8212;</td><td style="color:#ccc;text-align:center">&#8212;</td><td style="color:#ccc;text-align:center">&#8212;</td><td style="color:#ccc">&#8212;</td></tr>
-      </tbody>
-    </table>
-    <div class="totals-wrap">
-      <div class="totals">
-        <div class="tr"><span>Subtotal</span><span>&#x20B9;${amount.toLocaleString('en-IN')}/-</span></div>
-        <div class="tr"><span>Discount (0%)</span><span>&#x20B9;0/-</span></div>
-        <div class="tr"><span>Tax (0%)</span><span>&#x20B9;0/-</span></div>
-        <div class="tr bold"><span>Total</span><span>&#x20B9;${amount.toLocaleString('en-IN')}/-</span></div>
-      </div>
-    </div>
-    <div class="amount-words"><span style="font-weight:400;color:#666">Total Amount (&#x20B9; - In Words): </span>${amountWords.charAt(0).toUpperCase() + amountWords.slice(1)}</div>
-    <div class="notes">
-      <h4>Note:</h4>
-      <ul>
-        <li>This invoice is valid for 15 days from the date of issue.</li>
-        <li>Please process the payment by the due date to avoid any late fees.</li>
-        <li>All payments are non-refundable once the work is delivered.</li>
-        <li>For any disputes or clarifications, please contact me within 7 days.</li>
-      </ul>
-    </div>
-    <div class="bottom-row">
-      <div class="payment-info">
-        <h4>Payment Information</h4>
-        <p>Bank Name : State Bank of India, Surat</p>
-        <p>A/C Name: Ayush Bhaveshbhai Siddhapura</p>
-        <p>A/C NO: 42626612933</p>
-        <p>IFSC Code: SBIN0016040</p>
-        <p>UPI ID: Ayushsiddhapura248@oksbi</p>
-      </div>
-      <div class="sig-block">
-        <img src="${sigB64}" alt="Signature" style="filter:invert(1)" />
-        <div class="sig-name">Ayush Siddhapura</div>
-        <div class="sig-thanks">Thank you!</div>
-      </div>
-    </div>
-    <button class="print-btn" onclick="window.print()">Print / Save as PDF</button>
-  </div>
-</body>
-</html>`
-
-    const blob = new Blob([invoiceHTML], { type: 'text/html' })
-    const url = URL.createObjectURL(blob)
-    window.open(url, '_blank')
-  }
 
   // ── PIN SCREEN ──
   if (pinRequired && !pinUnlocked) return (
@@ -369,8 +225,8 @@ export default function ClientPortalPage() {
             <div style={{ marginBottom: '28px', borderTop: '1px solid #222', paddingTop: '20px' }}>
               <div style={s.label}><IconChecklist size={13} /> PROJECT PROGRESS</div>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
-                <div style={{ position: 'absolute', top: '10px', left: 0, height: '1px', background: '#fff', width: `${(currentStep / (progressSteps.length - 1)) * 100}%` }} />
+                <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '2px', background: '#2a2a2a' }} />
+                <div style={{ position: 'absolute', top: '10px', left: 0, height: '2px', background: '#fff', width: `${currentStep === 0 ? 0 : (currentStep / (progressSteps.length - 1)) * 100}%`, transition: 'width 0.4s' }} />
                 {progressSteps.map((step, i) => (
                   <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 2, flex: 1 }}>
                     <div style={{
@@ -491,15 +347,20 @@ export default function ClientPortalPage() {
                 Due date: <span style={{ color: '#fff', fontWeight: 600 }}>{activeProject.deadline}</span>
               </div>
             )}
-            <button
-              onClick={openInvoicePDF}
-              style={{
-                width: '100%', background: '#fff', border: 'none',
-                borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
-                fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
-              }}>
-<IconInvoices size={15} /> View Invoice PDF
-            </button>
+            {activeProject.invoice_pdf_url && (
+              <a
+                href={activeProject.invoice_pdf_url}
+                target='_blank'
+                rel='noopener noreferrer'
+                style={{
+                  width: '100%', background: '#fff', border: 'none',
+                  borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
+                  fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  textDecoration: 'none', boxSizing: 'border-box'
+                }}>
+                <IconInvoices size={15} /> View Invoice PDF
+              </a>
+            )}
           </div>
         )}
 
