@@ -101,13 +101,13 @@ export default function InvoicesPage() {
   const card: any = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '20px' }
 
   const modalInp: any = {
-    width: '100%', background: '#fff', border: '1px solid #e5e7eb',
-    borderRadius: '10px', padding: '13px 16px', color: '#111',
+    width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)',
+    borderRadius: '10px', padding: '13px 16px', color: 'var(--text)',
     fontSize: '15px', boxSizing: 'border-box', outline: 'none',
     fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
   }
   const modalLbl: any = {
-    fontSize: '11px', fontWeight: 700, color: '#6b7280', letterSpacing: '0.08em',
+    fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.08em',
     display: 'block', marginBottom: '8px'
   }
 
@@ -242,13 +242,13 @@ export default function InvoicesPage() {
           <div style={{
             position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
             width: '500px', maxHeight: '90vh', overflowY: 'auto',
-            background: '#fff', borderRadius: '20px', padding: '36px',
+            background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '20px', padding: '36px',
             zIndex: 50, fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif'
           }}>
             {/* Modal header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: '#111' }}>{editingProject ? 'Edit invoice' : 'New invoice'}</h2>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#9ca3af', lineHeight: 1 }}>×</button>
+              <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: 'var(--text)' }}>{editingProject ? 'Edit invoice' : 'New invoice'}</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: 'var(--text-muted)', lineHeight: 1 }}>×</button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -257,7 +257,7 @@ export default function InvoicesPage() {
                 <label style={modalLbl}>CLIENT</label>
                 <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value, project_id: '' })}
                   disabled={!!editingProject}
-                  style={{ ...modalInp, color: form.client_id ? '#111' : '#9ca3af', opacity: editingProject ? 0.6 : 1 }}>
+                  style={{ ...modalInp, opacity: editingProject ? 0.6 : 1 }}>
                   <option value=''>Select client name</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -270,7 +270,7 @@ export default function InvoicesPage() {
                   const proj = projects.find(p => p.id === e.target.value)
                   setForm({ ...form, project_id: e.target.value, amount: proj?.amount?.toString() || '' })
                 }} disabled={!!editingProject}
-                  style={{ ...modalInp, color: form.project_id ? '#111' : '#9ca3af', opacity: editingProject ? 0.6 : 1 }}>
+                  style={{ ...modalInp, opacity: editingProject ? 0.6 : 1 }}>
                   <option value=''>Select project</option>
                   {clientProjects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                 </select>
@@ -288,12 +288,12 @@ export default function InvoicesPage() {
                 <div>
                   <label style={modalLbl}>INVOICE DATE</label>
                   <input type='date' value={form.invoice_date} onChange={e => setForm({ ...form, invoice_date: e.target.value })}
-                    style={{ ...modalInp, color: form.invoice_date ? '#111' : '#9ca3af' }} />
+                    style={modalInp} />
                 </div>
                 <div>
                   <label style={modalLbl}>DUE DATE</label>
                   <input type='date' value={form.due_date} onChange={e => setForm({ ...form, due_date: e.target.value })}
-                    style={{ ...modalInp, color: form.due_date ? '#111' : '#9ca3af' }} />
+                    style={modalInp} />
                 </div>
               </div>
 
@@ -316,12 +316,12 @@ export default function InvoicesPage() {
               {/* Buttons */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', paddingTop: '8px' }}>
                 <button onClick={() => { setShowModal(false); setEditingProject(null) }} style={{
-                  background: '#fff', color: '#374151', border: '1px solid #e5e7eb',
+                  background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border-input)',
                   borderRadius: '12px', padding: '14px', fontSize: '15px',
                   fontWeight: 500, cursor: 'pointer'
                 }}>Cancel</button>
                 <button onClick={saveInvoice} disabled={saving} style={{
-                  background: 'var(--bg-deep)', color: '#fff', border: 'none',
+                  background: 'var(--text)', color: 'var(--bg-page)', border: 'none',
                   borderRadius: '12px', padding: '14px', fontSize: '15px',
                   fontWeight: 600, cursor: saving ? 'default' : 'pointer'
                 }}>{saving ? 'Saving...' : editingProject ? 'Save changes' : 'Create invoice'}</button>
