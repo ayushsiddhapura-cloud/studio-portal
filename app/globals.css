@@ -52,4 +52,31 @@ body {
   .mobile-topbar-pad {
     padding-left: 56px !important;
   }
+
+  /* Settings: stack sub-nav above content */
+  .settings-layout {
+    flex-direction: column !important;
+  }
+  .settings-subnav {
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    padding: 12px 14px 12px 56px !important;
+  }
+  .settings-subnav-title {
+    display: none !important;
+  }
+  .settings-subnav-items {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 4px !important;
+  }
+  .settings-subnav-items button {
+    width: auto !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+  .settings-content {
+    padding: 16px !important;
+  }
 }

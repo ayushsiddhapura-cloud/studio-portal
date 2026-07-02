@@ -91,7 +91,7 @@ export default function ProjectsPage() {
         {/* Top bar */}
         <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Projects</h1>
-          <span style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '2px 9px', borderRadius: '20px' }}>{activeCount} active</span>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '2px 9px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>{activeCount} active</span>
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
             <div style={{ display: 'flex', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '10px', padding: '3px', gap: '3px' }}>

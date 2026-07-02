@@ -123,7 +123,7 @@ export default function BrandsPage() {
         {/* Top bar */}
         <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Brands</h1>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '2px 9px', borderRadius: '20px' }}>{brands.length} total</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '2px 9px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>{brands.length} total</span>
           <button onClick={openAdd} style={{
             marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px',
             background: 'var(--bg-hover)', border: '1px solid var(--border-input)',

@@ -95,7 +95,7 @@ export default function FilesPage() {
         {/* Top bar */}
         <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '10px' }} className='mobile-topbar-pad'>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Files</h1>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{totalFiles} files</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{totalFiles} files</span>
           <button onClick={() => setPanelOpen(true)} style={{
             marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',

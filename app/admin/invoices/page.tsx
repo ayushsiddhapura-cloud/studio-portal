@@ -124,7 +124,7 @@ export default function InvoicesPage() {
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Invoices</h1>
-              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{projects.length} total</span>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{projects.length} total</span>
             </div>
           </div>
           <button onClick={openAdd} style={{

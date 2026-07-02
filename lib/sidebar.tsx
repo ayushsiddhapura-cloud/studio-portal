@@ -8,7 +8,7 @@ import { useTheme } from '@/lib/theme-context'
 import {
   IconOverview, IconClients, IconBrands, IconProjects,
   IconInvoices, IconFiles, IconSettings,
-  IconSun, IconMoon, IconSignOut,
+  IconSun, IconMoon,
 } from '@/lib/icons'
 
 const navItems = [
@@ -23,7 +23,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { profile, signOut } = useAuth()
+  const { profile } = useAuth()
   const { theme, toggle } = useTheme()
   const [isMobile, setIsMobile] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -145,16 +145,6 @@ export function Sidebar() {
           {theme === 'dark' ? 'Light mode' : 'Dark mode'}
         </button>
 
-        {/* Sign out */}
-        <button onClick={signOut} style={{
-          width: '100%', background: 'transparent', border: 'none',
-          borderRadius: '8px', padding: '8px 10px', cursor: 'pointer',
-          color: '#ef4444', fontSize: '13px',
-          display: 'flex', alignItems: 'center', gap: '8px',
-        }}>
-          <IconSignOut size={15} />
-          Sign out
-        </button>
       </div>
     </div>
   )

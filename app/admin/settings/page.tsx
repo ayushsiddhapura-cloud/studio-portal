@@ -143,10 +143,12 @@ export default function SettingsPage() {
 
       <Sidebar />
 
+      <div className='settings-layout' style={{ display: 'flex', flex: 1, minWidth: 0 }}>
+
       {/* Settings sub-nav */}
-      <div style={{ width: '210px', background: 'var(--bg-deep)', borderRight: '1px solid var(--border)', padding: '24px 14px', flexShrink: 0 }}>
-        <h1 style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 20px', paddingLeft: '8px' }}>Settings</h1>
-        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
+      <div className='settings-subnav' style={{ width: '210px', background: 'var(--bg-deep)', borderRight: '1px solid var(--border)', padding: '24px 14px', flexShrink: 0 }}>
+        <h1 className='settings-subnav-title' style={{ fontSize: '15px', fontWeight: 700, margin: '0 0 20px', paddingLeft: '8px' }}>Settings</h1>
+        <div className='settings-subnav-items' style={{ display: 'flex', flexDirection: 'column' as const, gap: '2px' }}>
           {settingsSections.map(s => (
             <button key={s.key} onClick={() => setActiveSection(s.key)} style={{
               display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
@@ -154,14 +156,15 @@ export default function SettingsPage() {
               textAlign: 'left' as const,
               background: activeSection === s.key ? 'var(--bg-hover)' : 'transparent',
               color: activeSection === s.key ? 'var(--text)' : 'var(--text-muted)',
-              fontSize: '14px', fontWeight: activeSection === s.key ? 600 : 400
+              fontSize: '14px', fontWeight: activeSection === s.key ? 600 : 400,
+              whiteSpace: 'nowrap',
             }}><s.Icon /> {s.label}</button>
           ))}
         </div>
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
+      <div className='settings-content' style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
         {loading ? <p style={{ color: 'var(--text-muted)' }}>Loading...</p> : (
           <div style={{ maxWidth: '680px' }}>
 
@@ -383,6 +386,8 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      </div>{/* /settings-layout */}
     </div>
   )
 }
