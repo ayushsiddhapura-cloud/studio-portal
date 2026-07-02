@@ -46,3 +46,10 @@ html.light {
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Mobile: top bar needs left padding for hamburger button */
+@media (max-width: 767px) {
+  .mobile-topbar-pad {
+    padding-left: 56px !important;
+  }
+}

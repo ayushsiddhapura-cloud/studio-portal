@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
@@ -24,26 +25,58 @@ export function Sidebar() {
   const pathname = usePathname()
   const { profile, signOut } = useAuth()
   const { theme, toggle } = useTheme()
+  const [isMobile, setIsMobile] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    function check() { setIsMobile(window.innerWidth < 768) }
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Close drawer on route change
+  useEffect(() => { setDrawerOpen(false) }, [pathname])
 
   function initials(name: string) {
     return name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || '?'
   }
 
-  return (
+  const sidebarPanel = (
     <div style={{
-      width: '200px', minWidth: '200px',
+      width: '220px',
       background: 'var(--bg-surface)',
       borderRight: '1px solid var(--border)',
       padding: '20px 12px',
       display: 'flex',
       flexDirection: 'column',
       gap: '2px',
-      height: '100vh',
-      position: 'sticky',
-      top: 0,
-      flexShrink: 0,
       overflowY: 'auto',
+      ...(isMobile ? {
+        position: 'fixed' as const,
+        top: 0,
+        left: drawerOpen ? '0' : '-240px',
+        height: '100vh',
+        zIndex: 200,
+        transition: 'left 0.25s ease',
+        boxShadow: drawerOpen ? '4px 0 32px rgba(0,0,0,0.5)' : 'none',
+      } : {
+        position: 'sticky' as const,
+        top: 0,
+        height: '100vh',
+        flexShrink: 0,
+        minWidth: '200px',
+      }),
     }}>
+
+      {/* Mobile close button */}
+      {isMobile && (
+        <button onClick={() => setDrawerOpen(false)} style={{
+          position: 'absolute', top: '14px', right: '12px',
+          background: 'none', border: 'none', color: 'var(--text-muted)',
+          fontSize: '20px', cursor: 'pointer', lineHeight: 1, padding: '4px',
+        }}>✕</button>
+      )}
 
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', paddingLeft: '8px' }}>
@@ -63,12 +96,14 @@ export function Sidebar() {
       {navItems.map(item => {
         const isActive = pathname === item.href || (item.href !== '/admin/dashboard' && pathname.startsWith(item.href))
         return (
-          <Link key={item.href} href={item.href} style={{
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
-            borderRadius: '8px', textDecoration: 'none', fontSize: '14px',
-            color: isActive ? 'var(--text)' : 'var(--text-inactive)',
-            background: isActive ? 'var(--bg-hover)' : 'transparent',
-          }}>
+          <Link key={item.href} href={item.href}
+            onClick={() => isMobile && setDrawerOpen(false)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
+              borderRadius: '8px', textDecoration: 'none', fontSize: '14px',
+              color: isActive ? 'var(--text)' : 'var(--text-inactive)',
+              background: isActive ? 'var(--bg-hover)' : 'transparent',
+            }}>
             <item.Icon size={16} /> {item.label}
           </Link>
         )
@@ -122,5 +157,41 @@ export function Sidebar() {
         </button>
       </div>
     </div>
+  )
+
+  return (
+    <>
+      {/* Mobile: hamburger button + backdrop */}
+      {isMobile && (
+        <>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            style={{
+              position: 'fixed', top: '14px', left: '14px', zIndex: 150,
+              background: 'var(--bg-surface)', border: '1px solid var(--border)',
+              borderRadius: '8px', padding: '8px 10px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            }}
+          >
+            <svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M0 1h18M0 7h18M0 13h18" />
+            </svg>
+          </button>
+          {drawerOpen && (
+            <div
+              onClick={() => setDrawerOpen(false)}
+              style={{
+                position: 'fixed', inset: 0,
+                background: 'rgba(0,0,0,0.55)',
+                zIndex: 199,
+              }}
+            />
+          )}
+        </>
+      )}
+
+      {sidebarPanel}
+    </>
   )
 }

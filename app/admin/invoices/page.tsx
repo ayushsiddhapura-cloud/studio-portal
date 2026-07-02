@@ -120,7 +120,7 @@ export default function InvoicesPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Invoices</h1>
