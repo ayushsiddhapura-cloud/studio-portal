@@ -162,7 +162,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
         </div>
 
         {/* Cards Grid */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 24px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', alignContent: 'start' }}>
+        <div className='grid-2col mobile-content-pad' style={{ flex: 1, overflowY: 'auto', padding: '12px 24px 24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', alignContent: 'start' }}>
           {filtered.map(client => {
             const proj = clientProjects(client.id)
             const active = activeCount(client.id)
@@ -231,7 +231,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
 
       {/* Right Panel — always visible when open */}
       {panelOpen && (
-        <div style={{ width: '320px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '28px 20px', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0' }}>
+        <div className='side-panel' style={{ width: '320px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '28px 20px', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Add new client</h2>
             <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>

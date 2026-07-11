@@ -99,14 +99,14 @@ export default function FilesPage() {
           <button onClick={() => setPanelOpen(true)} style={{
             marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '6px'
+            display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap'
           }}><IconUpload size={14} /> Upload / Add link</button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }} className='mobile-content-pad'>
 
           {/* Stat cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
+          <div className='stat-grid-4' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '24px' }}>
             {[
               { label: 'Total files', value: totalFiles, color: 'var(--text)' },
               { label: 'Deliveries', value: deliveries, color: '#4ade80' },
@@ -121,8 +121,8 @@ export default function FilesPage() {
           </div>
 
           {/* Search + type filters */}
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
-            <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: 1, maxWidth: '360px', minWidth: '160px' }}>
               <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}><IconSearch size={15} /></span>
               <input value={search} onChange={e => setSearch(e.target.value)} placeholder='Search files...'
                 style={{ ...inp, paddingLeft: '34px' }} />
@@ -203,7 +203,7 @@ export default function FilesPage() {
 
       {/* Right Panel */}
       {panelOpen && (
-        <div style={{ width: '300px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '0', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+        <div className='side-panel' style={{ width: '300px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '0', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
 
           {/* Panel header */}
           <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

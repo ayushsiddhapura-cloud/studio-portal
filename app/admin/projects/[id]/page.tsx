@@ -4,24 +4,12 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { useTheme } from '@/lib/theme-context'
-import {
-  IconOverview, IconClients, IconProjects, IconInvoices, IconFiles, IconSettings, IconEdit, IconUpload, IconSun, IconMoon
-} from '@/lib/icons'
-
-const navItems = [
-  { label: 'Overview', href: '/admin/dashboard', Icon: IconOverview },
-  { label: 'Clients', href: '/admin/clients', Icon: IconClients },
-  { label: 'Projects', href: '/admin/projects', Icon: IconProjects },
-  { label: 'Invoices', href: '/admin/invoices', Icon: IconInvoices },
-  { label: 'Files', href: '/admin/files', Icon: IconFiles },
-  { label: 'Settings', href: '/admin/settings', Icon: IconSettings },
-]
+import { Sidebar } from '@/lib/sidebar'
+import { IconEdit, IconUpload } from '@/lib/icons'
 
 export default function ProjectDetailPage() {
   const { id } = useParams()
   const router = useRouter()
-  const { theme, toggle } = useTheme()
   const [project, setProject] = useState<any>(null)
   const [client, setClient] = useState<any>(null)
   const [files, setFiles] = useState<any[]>([])
@@ -40,7 +28,7 @@ export default function ProjectDetailPage() {
   useEffect(() => { fetchAll() }, [id])
 
   async function fetchAll() {
-    const { data: p } = await supabase.from('projects').select('*, clients(*)').eq('id', id).single()
+    const { data: p } = await supabase.from('projects').select('*, clients(*), invoices(*)').eq('id', id).single()
     if (!p) { setLoading(false); return }
     setProject(p)
     setClient(p.clients)
@@ -133,53 +121,17 @@ export default function ProjectDetailPage() {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-page)', color: 'var(--text)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
 
-      {/* Sidebar */}
-      <div style={{ width: '220px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', padding: '24px 14px', display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px', paddingLeft: '6px' }}>
-          <div style={{ width: '30px', height: '30px', background: 'var(--text)', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="1" y="5" width="14" height="10" rx="1.5" />
-              <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '13px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Admin panel</div>
-          </div>
-        </div>
-
-        {navItems.map(({ label, href, Icon }) => (
-          <Link key={href} href={href} style={{
-            display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px',
-            borderRadius: '8px', textDecoration: 'none',
-            color: href === '/admin/projects' ? 'var(--text)' : 'var(--text-inactive)',
-            background: href === '/admin/projects' ? 'var(--bg-hover)' : 'transparent',
-            fontSize: '14px', fontWeight: href === '/admin/projects' ? 600 : 400
-          }}>
-            <Icon size={16} /> {label}
-          </Link>
-        ))}
-
-        <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
-          <button onClick={toggle} style={{
-            width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border)',
-            borderRadius: '8px', padding: '9px 10px', cursor: 'pointer',
-            color: 'var(--text-sec)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px'
-          }}>
-            {theme === 'dark' ? <IconSun size={15} /> : <IconMoon size={15} />} {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </button>
-        </div>
-      </div>
+      <Sidebar />
 
       {/* Content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <Link href='/admin/projects' style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'none' }}>Projects</Link>
           <span style={{ color: 'var(--border-input)' }}>›</span>
-          <span style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{project.title}</span>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '160px' }}>{project.title}</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button onClick={() => setEditMode(true)} style={{ background: 'transparent', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-sec)', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <IconEdit size={13} /> Edit
             </button>
@@ -193,7 +145,7 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '16px', alignItems: 'start' }}>
+        <div className='grid-2col mobile-content-pad' style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'grid', gridTemplateColumns: '1fr 300px', gap: '16px', alignItems: 'start' }}>
 
           {/* LEFT COLUMN */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -341,21 +293,31 @@ export default function ProjectDetailPage() {
                   )}
                 </div>
               ))}
-              <a
-                href={project.invoice_pdf_url || '#'}
-                target='_blank'
-                rel='noreferrer'
-                onClick={e => { if (!project.invoice_pdf_url) e.preventDefault() }}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                  width: '100%', marginTop: '14px',
-                  background: project.invoice_pdf_url ? 'var(--bg-input)' : 'transparent',
-                  color: project.invoice_pdf_url ? 'var(--text)' : 'var(--text-muted)',
-                  border: '1px solid var(--border-input)', borderRadius: '8px', padding: '11px',
-                  fontSize: '13px', fontWeight: 600, textDecoration: 'none', boxSizing: 'border-box' as const
-                }}>
-                {project.invoice_pdf_url ? 'View Invoice PDF ↗' : 'No invoice URL set'}
-              </a>
+              {(() => {
+                const pdfUrl = project.invoices?.pdf_url || project.invoice_pdf_url
+                const m = project.invoices?.month
+                const monthText = m ? new Date(Number(m.split('-')[0]), Number(m.split('-')[1]) - 1).toLocaleString('default', { month: 'long', year: 'numeric' }) : ''
+                const label = project.invoices
+                  ? `Monthly invoice — ${monthText}`
+                  : pdfUrl ? 'View Invoice PDF ↗' : 'Not invoiced yet'
+                return (
+                  <a
+                    href={pdfUrl || '#'}
+                    target='_blank'
+                    rel='noreferrer'
+                    onClick={e => { if (!pdfUrl) e.preventDefault() }}
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                      width: '100%', marginTop: '14px',
+                      background: pdfUrl ? 'var(--bg-input)' : 'transparent',
+                      color: pdfUrl ? 'var(--text)' : 'var(--text-muted)',
+                      border: '1px solid var(--border-input)', borderRadius: '8px', padding: '11px',
+                      fontSize: '13px', fontWeight: 600, textDecoration: 'none', boxSizing: 'border-box' as const
+                    }}>
+                    {label}
+                  </a>
+                )
+              })()}
             </div>
 
             {/* Admin notes */}
@@ -407,7 +369,7 @@ export default function ProjectDetailPage() {
       {editMode && (
         <>
           <div onClick={() => setEditMode(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 40 }} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '460px', background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '14px', padding: '28px', zIndex: 50 }}>
+          <div className='mobile-modal' style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '460px', maxWidth: 'calc(100vw - 24px)', maxHeight: '90vh', overflowY: 'auto', background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '14px', padding: '28px', zIndex: 50, boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Edit project</h2>
               <button onClick={() => setEditMode(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>

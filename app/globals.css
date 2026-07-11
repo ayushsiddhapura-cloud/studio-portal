@@ -2,21 +2,21 @@
 
 /* Dark mode (default) */
 :root {
-  --bg-page: #0f0f0f;
-  --bg-surface: #161616;
-  --bg-surface-alt: #1a1a1a;
-  --bg-card: #1c1c1c;
-  --bg-input: #2a2a2a;
-  --bg-hover: #222222;
-  --bg-deep: #111111;
-  --border: #222222;
-  --border-card: #2a2a2a;
-  --border-input: #333333;
-  --text: #ffffff;
-  --text-sec: #aaaaaa;
-  --text-muted: #555555;
-  --text-dim: #444444;
-  --text-inactive: #666666;
+  --bg-page: #111118;
+  --bg-surface: #17171f;
+  --bg-surface-alt: #1c1c26;
+  --bg-card: #20202c;
+  --bg-input: #27273380;
+  --bg-hover: #24242e;
+  --bg-deep: #0d0d14;
+  --border: #2a2a38;
+  --border-card: #2e2e3e;
+  --border-input: #363648;
+  --text: #eeeef5;
+  --text-sec: #9898b4;
+  --text-muted: #55556e;
+  --text-dim: #44445c;
+  --text-inactive: #66667c;
 }
 
 /* Light mode */
@@ -49,8 +49,71 @@ body {
 
 /* Mobile: top bar needs left padding for hamburger button */
 @media (max-width: 767px) {
+  html, body {
+    overflow-x: hidden;
+  }
+
   .mobile-topbar-pad {
     padding-left: 56px !important;
+  }
+
+  .mobile-content-pad {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  /* Stat card grids collapse */
+  .stat-grid-3, .stat-grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .form-grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Kanban: swipe inside the board, never the page */
+  .kanban-board {
+    grid-template-columns: repeat(4, 240px) !important;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  /* Table-style grids become stacked cards */
+  .table-head {
+    display: none !important;
+  }
+  .table-row {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 8px 12px !important;
+    padding: 14px 16px !important;
+  }
+  .table-row > div:first-child {
+    flex-basis: 100%;
+  }
+
+  /* Side panels become overlays */
+  .side-panel {
+    position: fixed !important;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: min(320px, 88vw) !important;
+    z-index: 300;
+    box-shadow: -4px 0 32px rgba(0,0,0,0.5);
+    box-sizing: border-box;
+  }
+
+  /* Modals fit the screen */
+  .mobile-modal {
+    padding: 20px !important;
+  }
+
+  /* Client portal */
+  .portal-hero-title {
+    font-size: 26px !important;
   }
 
   /* Settings: stack sub-nav above content */

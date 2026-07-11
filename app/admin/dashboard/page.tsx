@@ -68,27 +68,27 @@ export default function DashboardPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '16px 24px', display: 'flex', alignItems: 'center' }}>
+        <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '16px 24px', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Overview</h1>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
             <button onClick={() => router.push('/admin/projects')} style={{
               background: 'transparent', border: '1px solid var(--border-input)', borderRadius: '8px',
               color: 'var(--text-sec)', padding: '8px 16px', fontSize: '13px', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500
+              display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500, whiteSpace: 'nowrap'
             }}><IconPlus size={13} /> New project</button>
             <button onClick={() => router.push('/admin/clients')} style={{
               background: 'transparent', border: '1px solid var(--border-input)', borderRadius: '8px',
               color: 'var(--text-sec)', padding: '8px 16px', fontSize: '13px', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500
+              display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500, whiteSpace: 'nowrap'
             }}><IconPlus size={13} /> Add client</button>
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }} className='mobile-content-pad'>
           {loading ? <p style={{ color: 'var(--text-muted)' }}>Loading...</p> : (
             <>
               {/* Row 1 — 3 cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '14px' }}>
+              <div className='stat-grid-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '14px' }}>
                 <div style={card}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>Total clients</div>
                   <div style={{ fontSize: '36px', fontWeight: 800, color: 'var(--text)', marginBottom: '6px', lineHeight: 1 }}>{totalClients}</div>
@@ -107,7 +107,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Row 2 — 3 cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '24px' }}>
+              <div className='stat-grid-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '14px', marginBottom: '24px' }}>
                 {/* Pending payments */}
                 <div style={card}>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>Pending payments</div>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                 </div>
 
                 {/* Table header */}
-                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 90px 110px 100px', gap: '12px', padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
+                <div className='table-head' style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 90px 110px 100px', gap: '12px', padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
                   {['Project', 'Client', 'Deadline', 'Revisions', 'Status', 'Payment'].map(h => (
                     <div key={h} style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>{h}</div>
                   ))}
@@ -154,7 +154,7 @@ export default function DashboardPage() {
                   const overdue = isOverdue(p.deadline)
                   return (
                     <Link key={p.id} href={`/admin/projects/${p.id}`} style={{ textDecoration: 'none' }}>
-                      <div
+                      <div className='table-row'
                         style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 100px 90px 110px 100px', gap: '12px', padding: '12px', borderRadius: '8px', alignItems: 'center', cursor: 'pointer' }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
                         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -193,7 +193,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Bottom two cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className='grid-2col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
 
                 {/* Upcoming deadlines */}
                 <div style={card}>

@@ -29,6 +29,9 @@ export default function ProjectsPage() {
 
   useEffect(() => { fetchAll() }, [])
 
+  // Mobile defaults to list view; kanban stays available via the toggle
+  useEffect(() => { if (window.innerWidth < 768) setView('list') }, [])
+
   async function fetchAll() {
     const { data: p } = await supabase.from('projects').select('*, clients(name)').order('created_at', { ascending: false })
     const { data: c } = await supabase.from('clients').select('id, name')
@@ -89,11 +92,11 @@ export default function ProjectsPage() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Projects</h1>
           <span style={{ fontSize: '13px', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '2px 9px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>{activeCount} active</span>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', background: 'var(--bg-hover)', border: '1px solid var(--border)', borderRadius: '10px', padding: '3px', gap: '3px' }}>
               {(['kanban', 'list'] as const).map(v => (
                 <button key={v} onClick={() => setView(v)} style={{
@@ -122,8 +125,8 @@ export default function ProjectsPage() {
         </div>
 
         {/* Search + filters */}
-        <div style={{ padding: '12px 24px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <div style={{ position: 'relative', flex: 1, maxWidth: '360px' }}>
+        <div style={{ padding: '12px 24px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, maxWidth: '360px', minWidth: '160px' }}>
             <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', display: 'flex' }}>
               <IconSearch size={15} />
             </span>
@@ -143,12 +146,12 @@ export default function ProjectsPage() {
         </div>
 
         {/* Board */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }} className='mobile-content-pad'>
           {loading ? (
             <p style={{ color: 'var(--text-muted)' }}>Loading...</p>
           ) : view === 'kanban' ? (
             /* ── KANBAN ── */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'start' }}>
+            <div className='kanban-board' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', alignItems: 'start' }}>
               {COLUMNS.map(col => {
                 const cards = filtered.filter(p => p.status === col.key)
                 return (
@@ -217,7 +220,7 @@ export default function ProjectsPage() {
           ) : (
             /* ── LIST ── */
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', overflow: 'hidden' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 120px 100px 120px 110px', gap: '12px', padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
+              <div className='table-head' style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 120px 100px 120px 110px', gap: '12px', padding: '12px 20px', borderBottom: '1px solid var(--border)' }}>
                 {['Project', 'Client', 'Deadline', 'Revisions', 'Status', 'Payment'].map(h => (
                   <div key={h} style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>{h}</div>
                 ))}
@@ -237,7 +240,7 @@ export default function ProjectsPage() {
                 const sc = statusColors[p.status] || { bg: 'var(--bg-input)', color: 'var(--text-muted)' }
                 return (
                   <Link key={p.id} href={`/admin/projects/${p.id}`} style={{ textDecoration: 'none' }}>
-                    <div
+                    <div className='table-row'
                       style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 120px 100px 120px 110px', gap: '12px', padding: '14px 20px', borderBottom: '1px solid var(--border-card)', alignItems: 'center' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-hover)')}
                       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -278,10 +281,11 @@ export default function ProjectsPage() {
       {showForm && (
         <>
           <div onClick={() => setShowForm(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 40 }} />
-          <div style={{
+          <div className='mobile-modal' style={{
             position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-            width: '480px', background: 'var(--bg-card)', border: '1px solid var(--border-card)',
-            borderRadius: '16px', padding: '28px', zIndex: 50
+            width: '480px', maxWidth: 'calc(100vw - 24px)', maxHeight: '90vh', overflowY: 'auto',
+            background: 'var(--bg-card)', border: '1px solid var(--border-card)',
+            borderRadius: '16px', padding: '28px', zIndex: 50, boxSizing: 'border-box'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '22px' }}>
               <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>New project</h2>

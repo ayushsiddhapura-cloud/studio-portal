@@ -5,11 +5,17 @@ import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { IconLock, IconSearch, IconMail, IconPhone, IconChecklist, IconFolderOpen, IconChat, IconFolder, IconVideo, IconFileText, IconInvoices } from '@/lib/icons'
 
+function monthLabel(m: string) {
+  if (!m) return '—'
+  const [y, mo] = m.split('-')
+  return new Date(Number(y), Number(mo) - 1).toLocaleString('default', { month: 'long' }) + ' ' + y
+}
 
 export default function ClientPortalPage() {
   const { token } = useParams()
   const [client, setClient] = useState<any>(null)
   const [projects, setProjects] = useState<any[]>([])
+  const [invoices, setInvoices] = useState<any[]>([])
   const [files, setFiles] = useState<any[]>([])
   const [revisions, setRevisions] = useState<any[]>([])
   const [versions, setVersions] = useState<any[]>([])
@@ -42,6 +48,9 @@ export default function ClientPortalPage() {
   }
 
   async function loadPortalData(clientData: any) {
+    const { data: invoiceData } = await supabase
+      .from('invoices').select('*').eq('client_id', clientData.id).order('month', { ascending: false })
+    if (invoiceData) setInvoices(invoiceData)
     const { data: projectData } = await supabase
       .from('projects').select('*').eq('client_id', clientData.id)
     if (projectData) {
@@ -156,7 +165,7 @@ export default function ClientPortalPage() {
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#222', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: '#aaa', letterSpacing: '1px', marginBottom: '16px' }}>
             <IconVideo size={12} /> VIDEO EDITING CLIENT
           </div>
-          <h1 style={{ fontSize: '36px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
+          <h1 className='portal-hero-title' style={{ fontSize: '36px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
             <span style={{ color: '#fff' }}>{client.name}'s</span>{' '}
             <span style={{ color: '#555', fontWeight: 400 }}>Project Dashboard</span>
           </h1>
@@ -171,7 +180,7 @@ export default function ClientPortalPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+        <div className='stat-grid-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
           {[
             { label: 'TOTAL PROJECTS', value: projects.length, sub: `${projects.filter(p => p.status === 'In Progress').length} active · ${projects.filter(p => p.status === 'Review').length} in review`, color: '#fff' },
             { label: 'VERSIONS SENT', value: totalVersions, sub: 'Across all projects', color: '#60a5fa' },
@@ -189,7 +198,7 @@ export default function ClientPortalPage() {
         {projects.length > 0 && (
           <div style={{ marginBottom: '16px' }}>
             <div style={{ fontSize: '10px', fontWeight: 600, color: '#555', letterSpacing: '1px', marginBottom: '10px' }}>YOUR PROJECTS</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {projects.map(p => (
                 <button key={p.id} onClick={() => setActiveProject(p)} style={{
                   padding: '8px 18px', borderRadius: '8px', border: '1px solid',
@@ -269,7 +278,7 @@ export default function ClientPortalPage() {
             )}
 
             {/* Revisions & Files */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #222', paddingTop: '20px' }}>
+            <div className='grid-2col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #222', paddingTop: '20px' }}>
               <div>
                 <div style={s.label}><IconChat size={13} /> REVISION HISTORY</div>
                 {activeRevisions.length === 0 ? (
@@ -320,7 +329,7 @@ export default function ClientPortalPage() {
         {activeProject && (
           <div style={s.card}>
             <div style={s.label}><IconInvoices size={13} /> INVOICE & PAYMENT</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+            <div className='stat-grid-4' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
               {[
                 { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: '#fff' },
                 { label: 'AMOUNT PAID', value: `₹${activeProject.payment_status === 'Paid' ? Number(activeProject.amount).toLocaleString() : '0'}`, color: '#4ade80' },
@@ -347,20 +356,67 @@ export default function ClientPortalPage() {
                 Due date: <span style={{ color: '#fff', fontWeight: 600 }}>{activeProject.deadline}</span>
               </div>
             )}
-            {activeProject.invoice_pdf_url && (
-              <a
-                href={activeProject.invoice_pdf_url}
-                target='_blank'
-                rel='noopener noreferrer'
-                style={{
-                  width: '100%', background: '#fff', border: 'none',
-                  borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
-                  fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  textDecoration: 'none', boxSizing: 'border-box'
-                }}>
-                <IconInvoices size={15} /> View Invoice PDF
-              </a>
-            )}
+            {(() => {
+              const linked = invoices.find(inv => inv.id === activeProject.invoice_id)
+              if (linked) return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#161616', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: '#aaa' }}>
+                  <IconInvoices size={14} /> Included in the monthly invoice — {monthLabel(linked.month)}
+                </div>
+              )
+              if (activeProject.invoice_pdf_url) return (
+                <a href={activeProject.invoice_pdf_url} target='_blank' rel='noopener noreferrer'
+                  style={{
+                    width: '100%', background: '#fff', border: 'none',
+                    borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
+                    fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    textDecoration: 'none', boxSizing: 'border-box'
+                  }}>
+                  <IconInvoices size={15} /> View Invoice PDF
+                </a>
+              )
+              return null
+            })()}
+          </div>
+        )}
+
+        {/* Monthly invoices */}
+        {invoices.length > 0 && (
+          <div style={s.card}>
+            <div style={s.label}><IconInvoices size={13} /> INVOICES</div>
+            {invoices.map(inv => {
+              const covered = projects.filter(p => p.invoice_id === inv.id)
+              const paid = inv.status === 'Paid'
+              return (
+                <div key={inv.id} style={{ background: '#161616', borderRadius: '10px', padding: '16px', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '14px', fontWeight: 700 }}>{monthLabel(inv.month)}</span>
+                    <span style={{
+                      fontSize: '12px', padding: '3px 12px', borderRadius: '20px', fontWeight: 600, border: '1px solid',
+                      background: paid ? '#052e16' : '#1c0a0a',
+                      color: paid ? '#4ade80' : '#f87171',
+                      borderColor: paid ? '#166534' : '#7f1d1d'
+                    }}>{paid ? 'Paid' : 'Unpaid'}</span>
+                    <span style={{ marginLeft: 'auto', fontSize: '16px', fontWeight: 800 }}>₹{Number(inv.amount).toLocaleString()}</span>
+                  </div>
+                  {covered.length > 0 && (
+                    <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
+                      Covers {covered.length} project{covered.length > 1 ? 's' : ''}: {covered.map(p => p.title).join(', ')}
+                    </div>
+                  )}
+                  {inv.pdf_url && (
+                    <a href={inv.pdf_url} target='_blank' rel='noopener noreferrer'
+                      style={{
+                        width: '100%', background: '#fff', borderRadius: '8px', padding: '11px',
+                        color: '#000', fontSize: '13px', fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                        textDecoration: 'none', boxSizing: 'border-box', marginTop: '12px'
+                      }}>
+                      <IconInvoices size={14} /> View Invoice PDF
+                    </a>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
 

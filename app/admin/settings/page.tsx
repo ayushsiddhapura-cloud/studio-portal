@@ -196,7 +196,7 @@ export default function SettingsPage() {
                   Your name and photo come from your Google account. To change them, update your Google profile at myaccount.google.com.
                 </p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                <div className='form-grid-2' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                   <div>
                     <label style={lbl}>STUDIO / BUSINESS NAME</label>
                     <input value={form.studio_name} onChange={e => setForm({ ...form, studio_name: e.target.value })} placeholder='Ayush Siddhapura' style={inp} />
@@ -241,7 +241,7 @@ export default function SettingsPage() {
                   <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 24px', lineHeight: 1.6 }}>
                     Enter their Google email address. They'll sign in with that Google account and get access based on their role.
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '10px', alignItems: 'end' }}>
+                  <div className='form-grid-2' style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '10px', alignItems: 'end' }}>
                     <div>
                       <label style={lbl}>GOOGLE EMAIL ADDRESS</label>
                       <input
@@ -367,7 +367,7 @@ export default function SettingsPage() {
               <div style={card}>
                 <h2 style={{ fontSize: '18px', fontWeight: 700, margin: '0 0 4px' }}>Invoice & payment</h2>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '0 0 28px' }}>Payment details shown on invoices sent to clients</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+                <div className='form-grid-2' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
                   <div><label style={lbl}>UPI ID</label><input value={invoiceForm.upi_id} onChange={e => setInvoiceForm({ ...invoiceForm, upi_id: e.target.value })} placeholder='yourname@upi' style={inp} /></div>
                   <div><label style={lbl}>BANK NAME</label><input value={invoiceForm.bank_name} onChange={e => setInvoiceForm({ ...invoiceForm, bank_name: e.target.value })} placeholder='HDFC Bank' style={inp} /></div>
                   <div><label style={lbl}>ACCOUNT NUMBER</label><input value={invoiceForm.account_number} onChange={e => setInvoiceForm({ ...invoiceForm, account_number: e.target.value })} placeholder='XXXXXXXXXXXX' style={inp} /></div>

@@ -146,7 +146,7 @@ export default function BrandsPage() {
         </div>
 
         {/* Cards */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '8px 24px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div className='mobile-content-pad' style={{ flex: 1, overflowY: 'auto', padding: '8px 24px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {filtered.length === 0 ? (
             <div style={{ padding: '60px 0', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
               {search ? 'No brands match your search.' : 'No brands yet. Click "Add brand" to get started.'}
@@ -213,7 +213,7 @@ export default function BrandsPage() {
 
       {/* Side panel */}
       {panelOpen && (
-        <div style={{ width: '340px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '24px 20px', overflowY: 'auto', flexShrink: 0 }}>
+        <div className='side-panel' style={{ width: '340px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '24px 20px', overflowY: 'auto', flexShrink: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <h2 style={{ fontSize: '15px', fontWeight: 700, margin: 0 }}>{editBrand ? 'Edit brand' : 'Add brand'}</h2>
             <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer', lineHeight: 1 }}>✕</button>
