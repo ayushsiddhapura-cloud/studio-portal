@@ -158,7 +158,7 @@ export default function InvoicesPage() {
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Invoices</h1>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{invoices.length} total</span>
           <button onClick={openAdd} style={{
-            marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
+            marginLeft: 'auto', background: 'var(--border)', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap'
           }}><IconPlus size={14} /> New invoice</button>
@@ -193,7 +193,7 @@ export default function InvoicesPage() {
             {['All', 'Unpaid', 'Paid'].map(f => (
               <button key={f} onClick={() => setFilter(f)} style={{
                 padding: '8px 16px', borderRadius: '20px', border: '1px solid',
-                borderColor: filter === f ? '#444' : 'var(--border-card)',
+                borderColor: filter === f ? 'var(--text-dim)' : 'var(--border-card)',
                 background: filter === f ? 'var(--bg-input)' : 'transparent',
                 color: filter === f ? 'var(--text)' : 'var(--text-muted)',
                 fontSize: '13px', cursor: 'pointer', fontWeight: filter === f ? 600 : 400

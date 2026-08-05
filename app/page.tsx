@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   return (
     <div style={{
-      minHeight: '100vh', background: '#0a0a0a',
+      minHeight: '100vh', background: 'var(--bg-page)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
       padding: '24px',
@@ -29,7 +29,7 @@ export default function LoginPage() {
       {/* Background grid */}
       <div style={{
         position: 'fixed', inset: 0, zIndex: 0,
-        backgroundImage: 'radial-gradient(circle at 1px 1px, #ffffff08 1px, transparent 0)',
+        backgroundImage: 'radial-gradient(circle at 1px 1px, var(--border-card) 1px, transparent 0)',
         backgroundSize: '32px 32px',
       }} />
 
@@ -37,7 +37,7 @@ export default function LoginPage() {
       <div style={{
         position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)',
         width: '600px', height: '300px', borderRadius: '50%',
-        background: 'radial-gradient(ellipse, #3b82f620 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse, #ffffff0a 0%, transparent 70%)',
         zIndex: 0, pointerEvents: 'none',
       }} />
 
@@ -46,31 +46,31 @@ export default function LoginPage() {
         {/* Brand */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <div style={{
-            width: '56px', height: '56px', background: '#fff', borderRadius: '14px',
+            width: '56px', height: '56px', background: 'var(--text)', borderRadius: '14px',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 16px', boxShadow: '0 0 0 1px #ffffff15, 0 8px 32px #0006',
           }}>
-            <svg width="28" height="28" viewBox="0 0 16 16" fill="none" stroke="#0a0a0a" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="28" height="28" viewBox="0 0 16 16" fill="none" stroke="var(--bg-page)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <rect x="1" y="5" width="14" height="10" rx="1.5" />
               <path d="M1 8h14M4.5 5L6 1.5M8 5l1.5-3.5M11.5 5L13 1.5" />
             </svg>
           </div>
-          <h1 style={{ color: '#fff', fontSize: '22px', fontWeight: 700, margin: '0 0 6px' }}>
+          <h1 style={{ color: 'var(--text)', fontSize: '22px', fontWeight: 700, margin: '0 0 6px' }}>
             Ayush Siddhapura
           </h1>
-          <p style={{ color: '#52525b', fontSize: '14px', margin: 0 }}>Agency Operating System</p>
+          <p style={{ color: 'var(--text-sec)', fontSize: '14px', margin: 0 }}>Agency Operating System</p>
         </div>
 
         {/* Card */}
         <div style={{
-          background: '#111111', borderRadius: '20px',
-          border: '1px solid #1f1f1f', padding: '32px',
+          background: 'var(--bg-card)', borderRadius: '20px',
+          border: '1px solid var(--border-card)', padding: '32px',
           boxShadow: '0 24px 64px #00000060',
         }}>
-          <h2 style={{ color: '#fff', fontSize: '17px', fontWeight: 600, margin: '0 0 6px' }}>
+          <h2 style={{ color: 'var(--text)', fontSize: '17px', fontWeight: 600, margin: '0 0 6px' }}>
             Welcome back
           </h2>
-          <p style={{ color: '#52525b', fontSize: '13px', margin: '0 0 28px', lineHeight: 1.5 }}>
+          <p style={{ color: 'var(--text-sec)', fontSize: '13px', margin: '0 0 28px', lineHeight: 1.5 }}>
             Sign in with your Google account.<br />
             Access is by invitation only.
           </p>
@@ -87,8 +87,8 @@ export default function LoginPage() {
             onClick={signInWithGoogle}
             disabled={loading}
             style={{
-              width: '100%', background: loading ? '#1a1a1a' : '#fff',
-              color: '#111', border: 'none', borderRadius: '12px',
+              width: '100%', background: loading ? 'var(--bg-input)' : 'var(--text)',
+              color: 'var(--bg-page)', border: 'none', borderRadius: '12px',
               padding: '14px', cursor: loading ? 'not-allowed' : 'pointer',
               fontSize: '15px', fontWeight: 600, display: 'flex',
               alignItems: 'center', justifyContent: 'center', gap: '10px',
@@ -108,7 +108,7 @@ export default function LoginPage() {
           </button>
         </div>
 
-        <p style={{ color: '#3f3f46', fontSize: '12px', textAlign: 'center', marginTop: '24px' }}>
+        <p style={{ color: 'var(--text-dim)', fontSize: '12px', textAlign: 'center', marginTop: '24px' }}>
           Don't have access? Contact your workspace admin.
         </p>
       </div>

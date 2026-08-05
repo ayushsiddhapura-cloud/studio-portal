@@ -156,7 +156,7 @@ export default function ProjectDetailPage() {
                 <div>
                   <h2 style={{ fontSize: '22px', fontWeight: 700, margin: '0 0 8px' }}>{project.title}</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: '#fff' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, color: 'var(--text)' }}>
                       {client?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                     </div>
                     <span style={{ fontSize: '14px', color: 'var(--text-sec)' }}>{client?.name} · {client?.channel_name || client?.email || ''}</span>
@@ -185,7 +185,7 @@ export default function ProjectDetailPage() {
 
               <div>
                 <div style={{ height: '6px', background: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden', marginBottom: '6px' }}>
-                  <div style={{ height: '100%', width: `${progressPct}%`, background: '#3b82f6', borderRadius: '3px', transition: 'width 0.5s' }} />
+                  <div style={{ height: '100%', width: `${progressPct}%`, background: 'var(--text)', borderRadius: '3px', transition: 'width 0.5s' }} />
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Project progress — {progressPct}%</div>
               </div>

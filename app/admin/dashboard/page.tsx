@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
+import { av } from '@/lib/avatar'
 import { IconPlus, IconCalendar } from '@/lib/icons'
 
 export default function DashboardPage() {
@@ -50,12 +51,6 @@ export default function DashboardPage() {
   }
   function isOverdue(d: string) { return d && new Date(d) < new Date() }
   function initials(name: string) { return name?.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || '?' }
-  const avatarPalette = [
-    { bg: '#dbeafe', color: '#1d4ed8' }, { bg: '#dcfce7', color: '#15803d' },
-    { bg: '#fce7f3', color: '#be185d' }, { bg: '#fef3c7', color: '#b45309' },
-    { bg: '#ede9fe', color: '#6d28d9' }, { bg: '#ffedd5', color: '#c2410c' },
-  ]
-  function av(name: string) { return avatarPalette[(name?.charCodeAt(0) || 0) % avatarPalette.length] }
 
   const card: any = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '20px' }
 
@@ -168,7 +163,7 @@ export default function DashboardPage() {
                             {clientName.split(' ')[0]} {clientName.split(' ')[1]?.[0] ? clientName.split(' ')[1][0] + '.' : ''}
                           </span>
                         </div>
-                        <div style={{ fontSize: '13px', color: overdue ? '#ef4444' : '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <div style={{ fontSize: '13px', color: overdue ? '#ef4444' : 'var(--text-sec)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <IconCalendar size={12} /> {formatDeadline(p.deadline)}
                         </div>
                         <div style={{ fontSize: '13px', color: 'var(--text-sec)' }}>0 / 3</div>
@@ -210,7 +205,7 @@ export default function DashboardPage() {
                         onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                       >
                         <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>{p.title}</div>
-                        <div style={{ fontSize: '13px', color: isOverdue(p.deadline) ? '#ef4444' : '#aaa', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: '13px', color: isOverdue(p.deadline) ? '#ef4444' : 'var(--text-sec)', whiteSpace: 'nowrap' }}>
                           {formatDeadline(p.deadline)}
                         </div>
                       </div>
@@ -235,7 +230,7 @@ export default function DashboardPage() {
                           onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
                           onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                         >
-                          <div style={{ fontSize: '13px', color: '#fff', fontWeight: 500 }}>
+                          <div style={{ fontSize: '13px', color: 'var(--text)', fontWeight: 500 }}>
                             {clientName.split(' ')[0]} {clientName.split(' ')[1]?.[0] ? clientName.split(' ')[1][0] + '.' : ''}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

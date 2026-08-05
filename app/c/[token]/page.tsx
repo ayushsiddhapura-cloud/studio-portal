@@ -87,11 +87,11 @@ export default function ClientPortalPage() {
 
   // ── PIN SCREEN ──
   if (pinRequired && !pinUnlocked) return (
-    <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
-      <div style={{ background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '40px 36px', width: '360px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: '#fff' }}><IconLock size={36} /></div>
-        <h2 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Portal Protected</h2>
-        <p style={{ color: '#666', fontSize: '14px', margin: '0 0 28px' }}>Enter your PIN to access your project portal</p>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '16px', padding: '40px 36px', width: '360px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: 'var(--text)' }}><IconLock size={36} /></div>
+        <h2 style={{ color: 'var(--text)', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Portal Protected</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '0 0 28px' }}>Enter your PIN to access your project portal</p>
         <input
           type="password"
           value={pinInput}
@@ -99,25 +99,25 @@ export default function ClientPortalPage() {
           onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
           placeholder="Enter PIN"
           maxLength={6}
-          style={{ width: '100%', background: '#111', border: '1px solid #333', borderRadius: '10px', padding: '14px', color: '#fff', fontSize: '20px', textAlign: 'center', letterSpacing: '8px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' }}
+          style={{ width: '100%', background: 'var(--bg-page)', border: '1px solid var(--border-input)', borderRadius: '10px', padding: '14px', color: 'var(--text)', fontSize: '20px', textAlign: 'center', letterSpacing: '8px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' }}
         />
         {pinError && <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 12px' }}>{pinError}</p>}
-        <button onClick={handlePinSubmit} style={{ width: '100%', background: '#fff', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={handlePinSubmit} style={{ width: '100%', background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '14px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
           Unlock Portal →
         </button>
-        <p style={{ color: '#444', fontSize: '12px', marginTop: '20px' }}>Contact your studio if you forgot your PIN</p>
+        <p style={{ color: 'var(--text-dim)', fontSize: '12px', marginTop: '20px' }}>Contact your studio if you forgot your PIN</p>
       </div>
     </div>
   )
 
   if (loading) return (
-    <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: 'sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)', fontFamily: 'sans-serif' }}>
       Loading your portal...
     </div>
   )
 
   if (notFound) return (
-    <div style={{ minHeight: '100vh', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#888', fontFamily: 'sans-serif', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)', fontFamily: 'sans-serif', flexDirection: 'column', gap: '16px' }}>
       <div style={{ opacity: 0.5 }}><IconSearch size={40} /></div>
       <p>Portal not found. Please check your link.</p>
     </div>
@@ -139,23 +139,23 @@ export default function ClientPortalPage() {
   const currentStep = activeProject ? getStepIndex(activeProject.status) : 0
 
   const s = {
-    card: { background: '#1c1c1c', border: '1px solid #2a2a2a', borderRadius: '12px', padding: '24px', marginBottom: '16px' } as any,
-    label: { fontSize: '11px', fontWeight: 600, color: '#666', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' } as any,
+    card: { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '24px', marginBottom: '16px' } as any,
+    label: { fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' } as any,
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#111', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: '#fff' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: 'var(--text)' }}>
 
       {/* Top Nav */}
-      <div style={{ background: '#161616', borderBottom: '1px solid #222', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '32px', height: '32px', background: '#fff', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#111' }}><IconVideo size={17} /></div>
+          <div style={{ width: '32px', height: '32px', background: 'var(--text)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--bg-page)' }}><IconVideo size={17} /></div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '14px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: '#666' }}>Your private project dashboard</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Your private project dashboard</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#888' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-sec)' }}>
           <IconLock size={14} /> Private & secure
         </div>
       </div>
@@ -164,19 +164,19 @@ export default function ClientPortalPage() {
 
         {/* Hero */}
         <div style={s.card}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#222', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: '#aaa', letterSpacing: '1px', marginBottom: '16px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--border)', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-sec)', letterSpacing: '1px', marginBottom: '16px' }}>
             <IconVideo size={12} /> VIDEO EDITING CLIENT
           </div>
           <h1 className='portal-hero-title' style={{ fontSize: '36px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
-            <span style={{ color: '#fff' }}>{client.name}'s</span>{' '}
-            <span style={{ color: '#555', fontWeight: 400 }}>Project Dashboard</span>
+            <span style={{ color: 'var(--text)' }}>{client.name}'s</span>{' '}
+            <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Project Dashboard</span>
           </h1>
-          <p style={{ color: '#666', fontSize: '15px', margin: '0 0 20px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '15px', margin: '0 0 20px' }}>
             {client.channel_name || 'Your Studio'} — all your projects and updates in one place
           </p>
-          <div style={{ borderTop: '1px solid #222', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-            {client.email && <span style={{ fontSize: '13px', color: '#888', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconMail size={13} /> {client.email}</span>}
-            {client.phone && <span style={{ fontSize: '13px', color: '#888', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconPhone size={13} /> {client.phone_code ? `${client.phone_code} ` : ''}{client.phone}</span>}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+            {client.email && <span style={{ fontSize: '13px', color: 'var(--text-sec)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconMail size={13} /> {client.email}</span>}
+            {client.phone && <span style={{ fontSize: '13px', color: 'var(--text-sec)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconPhone size={13} /> {client.phone_code ? `${client.phone_code} ` : ''}{client.phone}</span>}
             <span style={{ fontSize: '13px', color: '#4ade80' }}>● Active client</span>
           </div>
         </div>
@@ -184,14 +184,14 @@ export default function ClientPortalPage() {
         {/* Stats */}
         <div className='stat-grid-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
           {[
-            { label: 'TOTAL PROJECTS', value: projects.length, sub: `${projects.filter(p => p.status === 'In Progress').length} active · ${projects.filter(p => p.status === 'Review').length} in review`, color: '#fff' },
+            { label: 'TOTAL PROJECTS', value: projects.length, sub: `${projects.filter(p => p.status === 'In Progress').length} active · ${projects.filter(p => p.status === 'Review').length} in review`, color: 'var(--text)' },
             { label: 'VERSIONS SENT', value: totalVersions, sub: 'Across all projects', color: '#60a5fa' },
             { label: 'AMOUNT DUE', value: `₹${totalPending.toLocaleString()}`, sub: `${projects.filter(p => p.payment_status !== 'Paid').length} invoices pending`, color: '#f87171' },
           ].map(card => (
             <div key={card.label} style={{ ...s.card, marginBottom: 0 }}>
-              <div style={{ fontSize: '10px', fontWeight: 600, color: '#555', letterSpacing: '1px', marginBottom: '10px' }}>{card.label}</div>
+              <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>{card.label}</div>
               <div style={{ fontSize: '32px', fontWeight: 800, color: card.color, marginBottom: '4px' }}>{card.value}</div>
-              <div style={{ fontSize: '12px', color: '#666' }}>{card.sub}</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{card.sub}</div>
             </div>
           ))}
         </div>
@@ -199,14 +199,14 @@ export default function ClientPortalPage() {
         {/* Project Tabs */}
         {projects.length > 0 && (
           <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: '#555', letterSpacing: '1px', marginBottom: '10px' }}>YOUR PROJECTS</div>
+            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>YOUR PROJECTS</div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {projects.map(p => (
                 <button key={p.id} onClick={() => setActiveProject(p)} style={{
                   padding: '8px 18px', borderRadius: '8px', border: '1px solid',
-                  borderColor: activeProject?.id === p.id ? '#444' : '#2a2a2a',
-                  background: activeProject?.id === p.id ? '#222' : 'transparent',
-                  color: activeProject?.id === p.id ? '#fff' : '#666',
+                  borderColor: activeProject?.id === p.id ? 'var(--text-dim)' : 'var(--border-card)',
+                  background: activeProject?.id === p.id ? 'var(--border)' : 'transparent',
+                  color: activeProject?.id === p.id ? 'var(--text)' : 'var(--text-muted)',
                   fontSize: '13px', fontWeight: 500, cursor: 'pointer'
                 }}>{p.title}</button>
               ))}
@@ -227,28 +227,28 @@ export default function ClientPortalPage() {
               }}>{activeProject.status}</span>
             </div>
             {activeProject.deadline && (
-              <div style={{ fontSize: '13px', color: '#666', marginBottom: '24px' }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
                 Due <span style={{ color: '#f87171' }}>{activeProject.deadline}</span>
               </div>
             )}
 
             {/* Progress */}
-            <div style={{ marginBottom: '28px', borderTop: '1px solid #222', paddingTop: '20px' }}>
+            <div style={{ marginBottom: '28px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
               <div style={s.label}><IconChecklist size={13} /> PROJECT PROGRESS</div>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '2px', background: '#2a2a2a' }} />
-                <div style={{ position: 'absolute', top: '10px', left: 0, height: '2px', background: '#fff', width: `${((currentStep + 0.5) / progressSteps.length) * 100}%`, transition: 'width 0.4s' }} />
+                <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '2px', background: 'var(--border-card)' }} />
+                <div style={{ position: 'absolute', top: '10px', left: 0, height: '2px', background: 'var(--text)', width: `${((currentStep + 0.5) / progressSteps.length) * 100}%`, transition: 'width 0.4s' }} />
                 {progressSteps.map((step, i) => (
                   <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 2, flex: 1 }}>
                     <div style={{
                       width: '20px', height: '20px', borderRadius: '50%', border: '2px solid',
-                      borderColor: i <= currentStep ? '#fff' : '#333',
-                      background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      borderColor: i <= currentStep ? 'var(--text)' : 'var(--border-input)',
+                      background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                      {i < currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />}
-                      {i === currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fff' }} />}
+                      {i < currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text)' }} />}
+                      {i === currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text)' }} />}
                     </div>
-                    <span style={{ fontSize: '11px', color: i <= currentStep ? '#fff' : '#555', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>{step}</span>
+                    <span style={{ fontSize: '11px', color: i <= currentStep ? 'var(--text)' : 'var(--text-muted)', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>{step}</span>
                   </div>
                 ))}
               </div>
@@ -256,22 +256,22 @@ export default function ClientPortalPage() {
 
             {/* Version History */}
             {activeVersions.length > 0 && (
-              <div style={{ marginBottom: '24px', borderTop: '1px solid #222', paddingTop: '20px' }}>
+              <div style={{ marginBottom: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
                 <div style={s.label}><IconFolder size={13} /> VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
-                  <div style={{ position: 'absolute', top: '16px', left: 0, right: 0, height: '1px', background: '#2a2a2a' }} />
+                  <div style={{ position: 'absolute', top: '16px', left: 0, right: 0, height: '1px', background: 'var(--border-card)' }} />
                   {[...Array(3)].map((_, i) => {
                     const ver = activeVersions[i]
                     return (
                       <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 2 }}>
                         <div style={{
                           width: '32px', height: '32px', borderRadius: '50%',
-                          background: ver ? '#fff' : '#1c1c1c',
-                          border: `2px solid ${ver ? '#fff' : '#333'}`,
+                          background: ver ? 'var(--text)' : 'var(--bg-card)',
+                          border: `2px solid ${ver ? 'var(--text)' : 'var(--border-input)'}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '11px', fontWeight: 700, color: ver ? '#111' : '#555'
+                          fontSize: '11px', fontWeight: 700, color: ver ? 'var(--bg-page)' : 'var(--text-muted)'
                         }}>v{i + 1}</div>
-                        <span style={{ fontSize: '11px', color: ver ? '#aaa' : '#444' }}>{ver ? ver.sent_date || '—' : '—'}</span>
+                        <span style={{ fontSize: '11px', color: ver ? 'var(--text-sec)' : 'var(--text-dim)' }}>{ver ? ver.sent_date || '—' : '—'}</span>
                       </div>
                     )
                   })}
@@ -280,34 +280,34 @@ export default function ClientPortalPage() {
             )}
 
             {/* Revisions & Files */}
-            <div className='grid-2col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid #222', paddingTop: '20px' }}>
+            <div className='grid-2col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
               <div>
                 <div style={s.label}><IconChat size={13} /> REVISION HISTORY</div>
                 {activeRevisions.length === 0 ? (
-                  <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
+                  <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
                     No revisions yet — your feedback will appear here.
                   </div>
                 ) : activeRevisions.map((r, idx) => (
-                  <div key={r.id} style={{ background: '#161616', borderRadius: '8px', padding: '14px', marginBottom: '8px' }}>
+                  <div key={r.id} style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '14px', marginBottom: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: idx === 0 ? '#2563eb' : '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700 }}>{activeRevisions.length - idx}</div>
+                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: idx === 0 ? '#2563eb' : '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff' }}>{activeRevisions.length - idx}</div>
                       <span style={{ fontSize: '13px', fontWeight: 600 }}>Round {activeRevisions.length - idx}</span>
                     </div>
-                    <p style={{ fontSize: '13px', color: '#aaa', margin: '0 0 6px', paddingLeft: '30px' }}>{r.note}</p>
-                    <div style={{ fontSize: '11px', color: '#555', paddingLeft: '30px' }}>{r.created_date} · {r.status || 'Pending'}</div>
+                    <p style={{ fontSize: '13px', color: 'var(--text-sec)', margin: '0 0 6px', paddingLeft: '30px' }}>{r.note}</p>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', paddingLeft: '30px' }}>{r.created_date} · {r.status || 'Pending'}</div>
                   </div>
                 ))}
               </div>
               <div>
                 <div style={s.label}><IconFolderOpen size={13} /> FILES & DRAFTS</div>
                 {activeFiles.length === 0 ? (
-                  <div style={{ background: '#161616', borderRadius: '8px', padding: '16px', fontSize: '13px', color: '#555' }}>
+                  <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
                     Your first draft will appear here once it's ready.
                   </div>
                 ) : activeFiles.map(f => (
                   <a key={f.id} href={f.url} target='_blank' rel='noreferrer' style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: '#161616', borderRadius: '8px', padding: '12px 14px',
+                    background: 'var(--bg-surface)', borderRadius: '8px', padding: '12px 14px',
                     textDecoration: 'none', marginBottom: '8px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -315,11 +315,11 @@ export default function ClientPortalPage() {
                         {f.type === 'Delivery' ? <IconVideo size={15} /> : f.type === 'Draft' ? <IconFileText size={15} /> : <IconFolder size={15} />}
                       </div>
                       <div>
-                        <div style={{ fontSize: '13px', fontWeight: 500, color: '#fff' }}>{f.name}</div>
-                        <div style={{ fontSize: '11px', color: '#555' }}>{f.type}</div>
+                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text)' }}>{f.name}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{f.type}</div>
                       </div>
                     </div>
-                    <span style={{ color: '#555', fontSize: '18px' }}>↗</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '18px' }}>↗</span>
                   </a>
                 ))}
               </div>
@@ -333,13 +333,13 @@ export default function ClientPortalPage() {
             <div style={s.label}><IconInvoices size={13} /> INVOICE & PAYMENT</div>
             <div className='stat-grid-4' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
               {[
-                { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: '#fff' },
+                { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: 'var(--text)' },
                 { label: 'AMOUNT PAID', value: `₹${activeProject.payment_status === 'Paid' ? Number(activeProject.amount).toLocaleString() : '0'}`, color: '#4ade80' },
                 { label: 'BALANCE DUE', value: `₹${activeProject.payment_status === 'Paid' ? '0' : Number(activeProject.amount).toLocaleString()}`, color: '#f87171' },
                 { label: 'PAYMENT STATUS', value: activeProject.payment_status, status: true },
               ].map(item => (
                 <div key={item.label}>
-                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#555', letterSpacing: '1px', marginBottom: '8px' }}>{item.label}</div>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '8px' }}>{item.label}</div>
                   {item.status ? (
                     <span style={{
                       fontSize: '13px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600,
@@ -354,22 +354,22 @@ export default function ClientPortalPage() {
               ))}
             </div>
             {activeProject.deadline && (
-              <div style={{ fontSize: '13px', color: '#555', marginBottom: '20px' }}>
-                Due date: <span style={{ color: '#fff', fontWeight: 600 }}>{activeProject.deadline}</span>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+                Due date: <span style={{ color: 'var(--text)', fontWeight: 600 }}>{activeProject.deadline}</span>
               </div>
             )}
             {(() => {
               const linked = invoices.find(inv => inv.id === activeProject.invoice_id)
               if (linked) return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#161616', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: '#aaa' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: 'var(--text-sec)' }}>
                   <IconInvoices size={14} /> Included in the monthly invoice — {monthLabel(linked.month)}
                 </div>
               )
               if (activeProject.invoice_pdf_url) return (
                 <button onClick={() => setPreviewPdf(activeProject.invoice_pdf_url)}
                   style={{
-                    width: '100%', background: '#fff', border: 'none',
-                    borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
+                    width: '100%', background: 'var(--text)', border: 'none',
+                    borderRadius: '10px', padding: '14px', color: 'var(--bg-page)', fontSize: '14px',
                     fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                     boxSizing: 'border-box', fontFamily: 'inherit'
                   }}>
@@ -389,7 +389,7 @@ export default function ClientPortalPage() {
               const covered = projects.filter(p => p.invoice_id === inv.id)
               const paid = inv.status === 'Paid'
               return (
-                <div key={inv.id} style={{ background: '#161616', borderRadius: '10px', padding: '16px', marginBottom: '10px' }}>
+                <div key={inv.id} style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '16px', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700 }}>{monthLabel(inv.month)}</span>
                     <span style={{
@@ -401,15 +401,15 @@ export default function ClientPortalPage() {
                     <span style={{ marginLeft: 'auto', fontSize: '16px', fontWeight: 800 }}>₹{Number(inv.amount).toLocaleString()}</span>
                   </div>
                   {covered.length > 0 && (
-                    <div style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
                       Covers {covered.length} project{covered.length > 1 ? 's' : ''}: {covered.map(p => p.title).join(', ')}
                     </div>
                   )}
                   {inv.pdf_url && (
                     <button onClick={() => setPreviewPdf(inv.pdf_url)}
                       style={{
-                        width: '100%', background: '#fff', border: 'none', borderRadius: '8px', padding: '11px',
-                        color: '#000', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+                        width: '100%', background: 'var(--text)', border: 'none', borderRadius: '8px', padding: '11px',
+                        color: 'var(--bg-page)', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                         boxSizing: 'border-box', marginTop: '12px', fontFamily: 'inherit'
                       }}>
@@ -427,7 +427,7 @@ export default function ClientPortalPage() {
           <div
             onClick={() => setPreviewPdf(null)}
             style={{
-              position: 'fixed', inset: 0, background: '#111', zIndex: 100,
+              position: 'fixed', inset: 0, background: 'var(--bg-page)', zIndex: 100,
               display: 'flex', flexDirection: 'column', padding: '12px', boxSizing: 'border-box'
             }}>
             <div
@@ -436,16 +436,16 @@ export default function ClientPortalPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 4px 10px' }}>
                 <a href={driveDownload(previewPdf)} target='_blank' rel='noopener noreferrer'
-                  style={{ fontSize: '12px', fontWeight: 600, color: '#000', background: '#fff', textDecoration: 'none', borderRadius: '20px', padding: '6px 14px', whiteSpace: 'nowrap' }}>
+                  style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bg-page)', background: 'var(--text)', textDecoration: 'none', borderRadius: '20px', padding: '6px 14px', whiteSpace: 'nowrap' }}>
                   ↓ Download
                 </a>
                 <a href={previewPdf} target='_blank' rel='noopener noreferrer'
-                  style={{ fontSize: '12px', color: '#aaa', textDecoration: 'none', border: '1px solid #333', borderRadius: '20px', padding: '6px 12px', whiteSpace: 'nowrap' }}>
+                  style={{ fontSize: '12px', color: 'var(--text-sec)', textDecoration: 'none', border: '1px solid var(--border-input)', borderRadius: '20px', padding: '6px 12px', whiteSpace: 'nowrap' }}>
                   Open in Drive ↗
                 </a>
                 <button onClick={() => setPreviewPdf(null)}
                   style={{
-                    marginLeft: 'auto', background: '#222', border: '1px solid #333', color: '#fff',
+                    marginLeft: 'auto', background: 'var(--border)', border: '1px solid var(--border-input)', color: 'var(--text)',
                     borderRadius: '50%', width: '32px', height: '32px', fontSize: '16px',
                     cursor: 'pointer', lineHeight: 1, flexShrink: 0
                   }}>✕</button>
@@ -454,14 +454,14 @@ export default function ClientPortalPage() {
               <iframe
                 src={drivePreview(previewPdf)}
                 title='Invoice PDF'
-                style={{ flex: 1, width: '100%', border: 'none', borderRadius: '10px', background: '#fff', minHeight: 0 }}
+                style={{ flex: 1, width: '100%', border: 'none', borderRadius: '10px', background: 'var(--text)', minHeight: 0 }}
               />
             </div>
           </div>
         )}
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', color: '#444', fontSize: '12px', marginTop: '24px', padding: '16px', borderTop: '1px solid #1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '12px', marginTop: '24px', padding: '16px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
           <IconLock size={12} /> This is your private portal — only you can see this page · Studio Portal by Ayush Siddhapura
         </div>
       </div>

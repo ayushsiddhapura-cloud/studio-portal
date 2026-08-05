@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
+import { av } from '@/lib/avatar'
 import { IconSearch, IconPlus, IconCopy, IconFilter } from '@/lib/icons'
 import { COUNTRY_CODES } from '@/lib/countryCodes'
 
@@ -116,12 +117,6 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
   }
 
   function initials(name: string) { return name?.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || '?' }
-  const avatarPalette = [
-    { bg: '#1e3a5f', color: '#60a5fa' }, { bg: '#14532d', color: '#4ade80' },
-    { bg: '#4a1942', color: '#e879f9' }, { bg: '#3b2f00', color: '#fbbf24' },
-    { bg: '#2e1a5e', color: '#a78bfa' }, { bg: '#3b1a00', color: '#fb923c' },
-  ]
-  function av(name: string) { return avatarPalette[(name?.charCodeAt(0) || 0) % avatarPalette.length] }
 
   const inp: any = { width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '11px 14px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }
   const lbl: any = { fontSize: '13px', color: 'var(--text-sec)', display: 'block', marginBottom: '6px', fontWeight: 500 }
@@ -141,7 +136,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
         {/* Top bar */}
         <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Clients</h1>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: '#222', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>{clients.length} total</span>
+          <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--border)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>{clients.length} total</span>
           <button onClick={() => { setPanelOpen(true); setNewClientToken(null); setNewClientPin(null) }} style={{
             marginLeft: 'auto', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
@@ -216,7 +211,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
                   </div>
                   {client.token && (
                     <button onClick={() => copyLink(client.token)} style={{
-                      background: 'transparent', border: 'none', color: copied === client.token ? '#4ade80' : '#555',
+                      background: 'transparent', border: 'none', color: copied === client.token ? '#4ade80' : 'var(--text-muted)',
                       fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
                     }}>
                       <IconCopy size={12} /> {copied === client.token ? 'Copied!' : 'Portal link'}
@@ -308,12 +303,12 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
             )}
             {newClientToken && newClientPin && (
               <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-sec)', textAlign: 'center' }}>
-                PIN for this client: <span style={{ fontFamily: 'monospace', fontWeight: 700, color: '#fff', letterSpacing: '2px' }}>{newClientPin}</span>
+                PIN for this client: <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text)', letterSpacing: '2px' }}>{newClientPin}</span>
               </div>
             )}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', fontSize: '13px', color: 'var(--text-sec)', cursor: 'pointer' }}>
               <input type='checkbox' checked={form.pin_enabled} onChange={e => togglePin(e.target.checked)}
-                style={{ width: '14px', height: '14px', accentColor: '#7c3aed' }} />
+                style={{ width: '14px', height: '14px', accentColor: 'var(--text)' }} />
               Enable PIN protection
             </label>
             {form.pin_enabled && (
@@ -326,7 +321,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
           </div>
 
           <button onClick={createClient} disabled={saving} style={{
-            width: '100%', background: saving ? '#333' : '#fff', color: saving ? '#aaa' : '#000',
+            width: '100%', background: saving ? 'var(--border-input)' : 'var(--text)', color: saving ? 'var(--text-sec)' : 'var(--bg-page)',
             border: 'none', borderRadius: '10px', padding: '13px', fontSize: '14px',
             fontWeight: 700, cursor: saving ? 'default' : 'pointer', marginBottom: '10px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
@@ -335,7 +330,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
           </button>
 
           <button onClick={() => newClientToken && copyLink(newClientToken)} style={{
-            width: '100%', background: 'transparent', color: newClientToken ? '#aaa' : '#444',
+            width: '100%', background: 'transparent', color: newClientToken ? 'var(--text-sec)' : 'var(--text-dim)',
             border: '1px solid var(--border-card)', borderRadius: '10px', padding: '13px', fontSize: '14px',
             fontWeight: 600, cursor: newClientToken ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'

@@ -126,8 +126,8 @@ export default function SettingsPage() {
   const card: any = { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '14px', padding: '28px' }
 
   const Toggle = ({ value, onChange }: { value: boolean; onChange: () => void }) => (
-    <div onClick={onChange} style={{ width: '44px', height: '24px', borderRadius: '12px', background: value ? '#3b82f6' : 'var(--bg-input)', position: 'relative' as const, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0, border: '1px solid var(--border-input)' }}>
-      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: '#fff', position: 'absolute' as const, top: '2px', left: value ? '22px' : '2px', transition: 'left 0.2s' }} />
+    <div onClick={onChange} style={{ width: '44px', height: '24px', borderRadius: '12px', background: value ? 'var(--text)' : 'var(--bg-input)', position: 'relative' as const, cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0, border: '1px solid var(--border-input)' }}>
+      <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: value ? 'var(--bg-page)' : 'var(--text-muted)', position: 'absolute' as const, top: '2px', left: value ? '22px' : '2px', transition: 'left 0.2s' }} />
     </div>
   )
 
@@ -179,7 +179,7 @@ export default function SettingsPage() {
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="" style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-card)' }} />
                   ) : (
-                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 700, color: '#fff' }}>
+                    <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: 700, color: 'var(--text)' }}>
                       {profile?.full_name?.charAt(0) || 'A'}
                     </div>
                   )}

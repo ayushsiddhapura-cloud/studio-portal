@@ -5,7 +5,7 @@ import Link from 'next/link'
 export default function AccessDeniedPage() {
   return (
     <div style={{
-      minHeight: '100vh', background: '#0a0a0a',
+      minHeight: '100vh', background: 'var(--bg-page)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
     }}>
@@ -20,14 +20,14 @@ export default function AccessDeniedPage() {
             <line x1="9" y1="9" x2="15" y2="15" />
           </svg>
         </div>
-        <h1 style={{ color: '#fff', fontSize: '20px', fontWeight: 700, margin: '0 0 10px' }}>Access Denied</h1>
-        <p style={{ color: '#52525b', fontSize: '14px', lineHeight: 1.6, margin: '0 0 28px' }}>
+        <h1 style={{ color: 'var(--text)', fontSize: '20px', fontWeight: 700, margin: '0 0 10px' }}>Access Denied</h1>
+        <p style={{ color: 'var(--text-sec)', fontSize: '14px', lineHeight: 1.6, margin: '0 0 28px' }}>
           Your Google account is not on the invite list for this workspace.
           Contact your admin to get access.
         </p>
         <Link href="/" style={{
           display: 'inline-flex', alignItems: 'center', gap: '6px',
-          background: '#1a1a1a', color: '#a1a1aa', border: '1px solid #2a2a2a',
+          background: 'var(--bg-input)', color: 'var(--text-sec)', border: '1px solid var(--border-card)',
           borderRadius: '10px', padding: '10px 20px', fontSize: '14px',
           textDecoration: 'none', fontWeight: 500,
         }}>

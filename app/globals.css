@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
-/* Dark mode (default) */
+/* Dark mode (default) — true black, neutral greys, no colour tint */
 :root {
-  --bg-page: #111118;
-  --bg-surface: #17171f;
-  --bg-surface-alt: #1c1c26;
-  --bg-card: #20202c;
-  --bg-input: #27273380;
-  --bg-hover: #24242e;
-  --bg-deep: #0d0d14;
-  --border: #2a2a38;
-  --border-card: #2e2e3e;
-  --border-input: #363648;
-  --text: #eeeef5;
-  --text-sec: #9898b4;
-  --text-muted: #55556e;
-  --text-dim: #44445c;
-  --text-inactive: #66667c;
+  --bg-page: #000000;
+  --bg-surface: #0a0a0a;
+  --bg-surface-alt: #0c0c0c;
+  --bg-card: #0e0e0e;
+  --bg-input: #1a1a1a;
+  --bg-hover: #161616;
+  --bg-deep: #050505;
+  --border: #1c1c1c;
+  --border-card: #232323;
+  --border-input: #2e2e2e;
+  --text: #ffffff;
+  --text-sec: #a3a3a3;
+  --text-muted: #6b6b6b;
+  --text-dim: #4a4a4a;
+  --text-inactive: #737373;
 }
 
 /* Light mode */

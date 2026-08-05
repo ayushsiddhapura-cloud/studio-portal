@@ -61,12 +61,8 @@ export default function FilesPage() {
 
   function isFrameio(url: string) { return url?.includes('frame.io') }
 
-  function getThumbnailBg(type: string) {
-    if (type === 'Delivery') return '#14532d'
-    if (type === 'Draft') return '#1e1a3f'
-    if (type === 'Brief') return '#3b2f00'
-    return '#1c1c2e'
-  }
+  // Decorative only — the type badge carries the meaning, so keep these neutral.
+  function getThumbnailBg(_type: string) { return 'var(--bg-input)' }
 
   const totalFiles = files.length
   const deliveries = files.filter(f => f.type === 'Delivery').length
@@ -97,7 +93,7 @@ export default function FilesPage() {
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Files</h1>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{totalFiles} files</span>
           <button onClick={() => setPanelOpen(true)} style={{
-            marginLeft: 'auto', background: '#222', border: '1px solid var(--border-input)', borderRadius: '10px',
+            marginLeft: 'auto', background: 'var(--border)', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap'
           }}><IconUpload size={14} /> Upload / Add link</button>
@@ -130,9 +126,9 @@ export default function FilesPage() {
             {['All', 'Delivery', 'Draft', 'Reference', 'Brief', 'Invoice'].map(t => (
               <button key={t} onClick={() => setFilterType(t)} style={{
                 padding: '7px 14px', borderRadius: '20px', border: '1px solid',
-                borderColor: filterType === t ? '#444' : '#2a2a2a',
-                background: filterType === t ? '#2a2a2a' : 'transparent',
-                color: filterType === t ? '#fff' : '#555',
+                borderColor: filterType === t ? 'var(--text-dim)' : 'var(--border-card)',
+                background: filterType === t ? 'var(--border-card)' : 'transparent',
+                color: filterType === t ? 'var(--text)' : 'var(--text-muted)',
                 fontSize: '12px', cursor: 'pointer', fontWeight: filterType === t ? 600 : 400, whiteSpace: 'nowrap' as const
               }}>{t}</button>
             ))}
@@ -153,7 +149,7 @@ export default function FilesPage() {
                     {isFrameio(f.url) ? (
                       <div style={{ width: '48px', height: '48px', background: '#5a3fc0', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: 800, color: '#fff' }}>F</div>
                     ) : (
-                      <div style={{ opacity: 0.6, color: '#fff' }}>
+                      <div style={{ opacity: 0.6, color: 'var(--text)' }}>
                         {f.type === 'Delivery' ? <IconVideo size={36} /> : f.type === 'Invoice' ? <IconInvoices size={36} /> : f.type === 'Brief' || f.type === 'Draft' || f.type === 'Reference' ? <IconFileText size={36} /> : <IconFolder size={36} />}
                       </div>
                     )}
@@ -161,8 +157,8 @@ export default function FilesPage() {
                     <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
                       <span style={{
                         fontSize: '10px', padding: '3px 8px', borderRadius: '20px', fontWeight: 700,
-                        background: typeConfig[f.type]?.bg || '#2a2a2a',
-                        color: typeConfig[f.type]?.color || '#aaa'
+                        background: typeConfig[f.type]?.bg || 'var(--border-card)',
+                        color: typeConfig[f.type]?.color || 'var(--text-sec)'
                       }}>{f.type}</span>
                     </div>
                   </div>
@@ -216,10 +212,10 @@ export default function FilesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               {(['link', 'upload'] as const).map(t => (
                 <button key={t} onClick={() => setTab(t)} style={{
-                  background: tab === t ? '#2a2a2a' : '#111',
-                  border: `1px solid ${tab === t ? '#444' : '#222'}`,
+                  background: tab === t ? 'var(--border-card)' : 'var(--bg-page)',
+                  border: `1px solid ${tab === t ? 'var(--text-dim)' : 'var(--border)'}`,
                   borderRadius: '10px', padding: '14px', cursor: 'pointer',
-                  color: tab === t ? '#fff' : '#555', fontSize: '14px', fontWeight: 600,
+                  color: tab === t ? 'var(--text)' : 'var(--text-muted)', fontSize: '14px', fontWeight: 600,
                   display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '6px'
                 }}>
                   <span style={{ display: 'flex' }}>{t === 'link' ? <IconLink size={20} /> : <IconCloud size={20} />}</span>
@@ -234,19 +230,19 @@ export default function FilesPage() {
             {tab === 'link' ? (
               <>
                 {/* Frame.io section */}
-                <div style={{ background: '#1a1830', border: '1px solid #2a2660', borderRadius: '10px', padding: '14px' }}>
+                <div style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '10px', padding: '14px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <div style={{ width: '24px', height: '24px', background: '#5a3fc0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 800, color: '#fff' }}>F</div>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>Frame.io link</div>
-                      <div style={{ fontSize: '11px', color: '#7c6fc0' }}>Paste your review link</div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text)' }}>Frame.io link</div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Paste your review link</div>
                     </div>
                   </div>
                   <input
                     value={form.url.includes('frame.io') ? form.url : ''}
                     onChange={e => setForm({ ...form, url: e.target.value })}
                     placeholder='https://frame.io/rev...'
-                    style={{ width: '100%', background: 'var(--bg-deep)', border: '1px solid #2a2660', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }}
+                    style={{ width: '100%', background: 'var(--bg-deep)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '10px 12px', color: 'var(--text)', fontSize: '13px', boxSizing: 'border-box' as const, outline: 'none' }}
                   />
                 </div>
 
@@ -291,8 +287,8 @@ export default function FilesPage() {
                 </div>
 
                 <button onClick={addFile} disabled={saving} style={{
-                  width: '100%', background: saving ? '#333' : '#2a2a2a', color: saving ? '#666' : '#fff',
-                  border: '1px solid #444', borderRadius: '10px', padding: '13px',
+                  width: '100%', background: saving ? 'var(--border-input)' : 'var(--border-card)', color: saving ? 'var(--text-muted)' : 'var(--text)',
+                  border: '1px solid var(--text-dim)', borderRadius: '10px', padding: '13px',
                   fontSize: '14px', fontWeight: 600, cursor: saving ? 'default' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
                 }}>
@@ -312,7 +308,7 @@ export default function FilesPage() {
           <div style={{ borderTop: '1px solid var(--border)', padding: '16px 20px', margin: '0' }}>
             <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px' }}>Storage</div>
             <div style={{ height: '6px', background: 'var(--bg-input)', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
-              <div style={{ height: '100%', width: `${Math.min((totalFiles / 50) * 100, 100)}%`, background: 'linear-gradient(90deg, #5a3fc0, #3b82f6)', borderRadius: '3px' }} />
+              <div style={{ height: '100%', width: `${Math.min((totalFiles / 50) * 100, 100)}%`, background: 'var(--text)', borderRadius: '3px' }} />
             </div>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '12px' }}>{totalFiles} links saved</div>
             <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '6px' }}>

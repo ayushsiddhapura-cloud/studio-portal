@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { IconKanban, IconList, IconPlus, IconSearch, IconCalendar, IconRevision } from '@/lib/icons'
 import { Sidebar } from '@/lib/sidebar'
+import { av } from '@/lib/avatar'
 
 const COLUMNS = [
   { key: 'In Progress', label: 'In progress', color: '#3b82f6' },
@@ -58,12 +59,6 @@ export default function ProjectsPage() {
     return `${dt.toLocaleString('default', { month: 'short' })} ${dt.getDate()}`
   }
   function initials(name: string) { return name?.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2) || '?' }
-  const avatarPalette = [
-    { bg: '#1e3a5f', color: '#60a5fa' }, { bg: '#14532d', color: '#4ade80' },
-    { bg: '#4a1942', color: '#e879f9' }, { bg: '#3b2f00', color: '#fbbf24' },
-    { bg: '#2e1a5e', color: '#a78bfa' }, { bg: '#3b1a00', color: '#fb923c' },
-  ]
-  function av(name: string) { return avatarPalette[(name?.charCodeAt(0) || 0) % avatarPalette.length] }
 
   const filtered = projects.filter(p => {
     const matchSearch = p.title?.toLowerCase().includes(search.toLowerCase()) ||

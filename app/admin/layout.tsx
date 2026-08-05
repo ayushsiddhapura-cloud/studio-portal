@@ -15,9 +15,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (loading) {
     return (
       <div style={{
-        minHeight: '100vh', background: '#0a0a0a',
+        minHeight: '100vh', background: 'var(--bg-page)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontFamily: 'sans-serif', color: '#52525b', fontSize: '14px',
+        fontFamily: 'sans-serif', color: 'var(--text-sec)', fontSize: '14px',
       }}>
         Loading...
       </div>
