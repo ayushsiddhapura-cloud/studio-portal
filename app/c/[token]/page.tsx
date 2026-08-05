@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { IconLock, IconSearch, IconMail, IconPhone, IconChecklist, IconFolderOpen, IconChat, IconFolder, IconVideo, IconFileText, IconInvoices } from '@/lib/icons'
-import { drivePreview } from '@/lib/drive'
+import { drivePreview, driveDownload } from '@/lib/drive'
 
 function monthLabel(m: string) {
   if (!m) return '—'
@@ -434,10 +434,13 @@ export default function ClientPortalPage() {
               onClick={e => e.stopPropagation()}
               style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 4px 10px' }}>
-                <span style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>Invoice</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 4px 10px' }}>
+                <a href={driveDownload(previewPdf)} target='_blank' rel='noopener noreferrer'
+                  style={{ fontSize: '12px', fontWeight: 600, color: '#000', background: '#fff', textDecoration: 'none', borderRadius: '20px', padding: '6px 14px', whiteSpace: 'nowrap' }}>
+                  ↓ Download
+                </a>
                 <a href={previewPdf} target='_blank' rel='noopener noreferrer'
-                  style={{ fontSize: '12px', color: '#aaa', textDecoration: 'none', border: '1px solid #333', borderRadius: '20px', padding: '4px 12px' }}>
+                  style={{ fontSize: '12px', color: '#aaa', textDecoration: 'none', border: '1px solid #333', borderRadius: '20px', padding: '6px 12px', whiteSpace: 'nowrap' }}>
                   Open in Drive ↗
                 </a>
                 <button onClick={() => setPreviewPdf(null)}
