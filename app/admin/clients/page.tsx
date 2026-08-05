@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Sidebar } from '@/lib/sidebar'
 import { av } from '@/lib/avatar'
-import { IconSearch, IconPlus, IconCopy, IconFilter } from '@/lib/icons'
+import { IconSearch, IconPlus, IconCopy, IconFilter, IconEdit } from '@/lib/icons'
 import { COUNTRY_CODES } from '@/lib/countryCodes'
 
 export default function ClientsPage() {
@@ -14,6 +14,7 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('')
   const [copied, setCopied] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
+  const [editing, setEditing] = useState<any>(null)
   const [form, setForm] = useState({ name: '', email: '', phone: '', phone_code: '+91', company: '', notes: '', pin_enabled: false, pin: '' })
   const [brandsList, setBrandsList] = useState<{ name: string; instagram: string }[]>([{ name: '', instagram: '' }])
   const [saving, setSaving] = useState(false)
@@ -29,21 +30,59 @@ export default function ClientsPage() {
     if (p) setProjects(p)
   }
 
- async function createClient() {
-  if (!form.name.trim()) return
-  setSaving(true)
-  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+ const EMPTY_FORM = { name: '', email: '', phone: '', phone_code: '+91', company: '', notes: '', pin_enabled: false, pin: '' }
 
-  const { data, error } = await supabase.from('clients').insert([{
+ function openAdd() {
+   setEditing(null)
+   setForm(EMPTY_FORM)
+   setBrandsList([{ name: '', instagram: '' }])
+   setNewClientToken(null)
+   setNewClientPin(null)
+   setPanelOpen(true)
+ }
+
+ function openEdit(c: any) {
+   setEditing(c)
+   setForm({
+     name: c.name || '', email: c.email || '', phone: c.phone || '',
+     phone_code: c.phone_code || '+91', company: c.channel_name || '',
+     notes: c.notes || '', pin_enabled: !!c.pin_enabled, pin: c.pin || '',
+   })
+   setNewClientToken(null)
+   setNewClientPin(null)
+   setPanelOpen(true)
+ }
+
+ async function saveClient() {
+  if (!form.name.trim()) return alert('Please enter a name')
+  setSaving(true)
+
+  const fields = {
     name: form.name,
     email: form.email,
     phone: form.phone,
     phone_code: form.phone_code,
     channel_name: form.company,
     notes: form.notes,
-    token,
     pin_enabled: form.pin_enabled,
     pin: form.pin_enabled ? form.pin : null,
+  }
+
+  if (editing) {
+    const { error } = await supabase.from('clients').update(fields).eq('id', editing.id)
+    setSaving(false)
+    if (error) return alert('Error: ' + error.message)
+    setPanelOpen(false)
+    setEditing(null)
+    fetchAll()
+    return
+  }
+
+  const token = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+
+  const { data, error } = await supabase.from('clients').insert([{
+    ...fields,
+    token,
     status: 'Active'
   }]).select()
 
@@ -63,7 +102,7 @@ export default function ClientsPage() {
 
   setNewClientToken(token)
   setNewClientPin(form.pin_enabled ? form.pin : null)
-  setForm({ name: '', email: '', phone: '', phone_code: '+91', company: '', notes: '', pin_enabled: false, pin: '' })
+  setForm(EMPTY_FORM)
   setBrandsList([{ name: '', instagram: '' }])
   setSaving(false)
   fetchAll()
@@ -121,6 +160,8 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
   const inp: any = { width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)', borderRadius: '8px', padding: '11px 14px', color: 'var(--text)', fontSize: '14px', boxSizing: 'border-box', outline: 'none' }
   const lbl: any = { fontSize: '13px', color: 'var(--text-sec)', display: 'block', marginBottom: '6px', fontWeight: 500 }
 
+  const shownToken = newClientToken || editing?.token || null
+
   const portalPreview = typeof window !== 'undefined'
     ? `${window.location.origin}/c/auto-generated...`
     : 'studio-portal.com/c/auto-generated...'
@@ -137,7 +178,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
         <div className='mobile-topbar-pad' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', alignItems: 'center', gap: '12px' }}>
           <h1 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>Clients</h1>
           <span style={{ fontSize: '12px', color: 'var(--text-muted)', background: 'var(--border)', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>{clients.length} total</span>
-          <button onClick={() => { setPanelOpen(true); setNewClientToken(null); setNewClientPin(null) }} style={{
+          <button onClick={openAdd} style={{
             marginLeft: 'auto', background: 'var(--bg-hover)', border: '1px solid var(--border-input)', borderRadius: '10px',
             color: 'var(--text)', padding: '9px 18px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: '6px'
@@ -174,7 +215,12 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
                     <div style={{ fontWeight: 700, fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.channel_name || client.email || '—'}</div>
                   </div>
-                  <button onClick={() => deleteClient(client.id)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '16px', padding: '2px', flexShrink: 0 }}>✕</button>
+                  <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                    <button onClick={() => openEdit(client)} title='Edit client' style={{ background: 'none', border: '1px solid var(--border-input)', borderRadius: '8px', color: 'var(--text-sec)', cursor: 'pointer', fontSize: '12px', padding: '5px 10px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <IconEdit size={12} /> Edit
+                    </button>
+                    <button onClick={() => deleteClient(client.id)} title='Delete client' style={{ background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer', fontSize: '16px', padding: '2px' }}>✕</button>
+                  </div>
                 </div>
 
                 {/* Stats */}
@@ -228,8 +274,8 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
       {panelOpen && (
         <div className='side-panel' style={{ width: '320px', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border)', padding: '28px 20px', overflowY: 'auto', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '0' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Add new client</h2>
-            <button onClick={() => setPanelOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+            <h2 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>{editing ? 'Edit client' : 'Add new client'}</h2>
+            <button onClick={() => { setPanelOpen(false); setEditing(null) }} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '18px', cursor: 'pointer' }}>✕</button>
           </div>
 
           <div style={{ marginBottom: '14px' }}>
@@ -261,7 +307,8 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
               style={{ ...inp, resize: 'vertical' }} />
           </div>
 
-          {/* Brands */}
+          {/* Brands — create only; editing brands lives on the Brands page */}
+          {!editing && (
           <div style={{ marginBottom: '20px' }}>
             <label style={lbl}>Brands (optional)</label>
             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '10px', lineHeight: 1.5 }}>
@@ -280,6 +327,7 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
               <IconPlus size={12} /> Add another brand
             </button>
           </div>
+          )}
 
           {/* Portal access */}
           <div style={{ background: 'var(--bg-deep)', border: '1px solid var(--border-card)', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
@@ -288,17 +336,17 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
               A unique private link is auto-generated. Share it with the client to give them access to their portal.
             </div>
             <div style={{ fontFamily: 'monospace', fontSize: '11px', background: 'var(--bg-surface-alt)', border: '1px solid var(--border-card)', borderRadius: '6px', padding: '8px 10px', color: 'var(--text-inactive)', wordBreak: 'break-all' }}>
-              {newClientToken
-                ? `${typeof window !== 'undefined' ? window.location.origin : 'studio-portal.com'}/c/${newClientToken}`
+              {shownToken
+                ? `${typeof window !== 'undefined' ? window.location.origin : 'studio-portal.com'}/c/${shownToken}`
                 : portalPreview}
             </div>
-            {newClientToken && (
-              <button onClick={() => copyLink(newClientToken)} style={{
+            {shownToken && (
+              <button onClick={() => copyLink(shownToken)} style={{
                 marginTop: '8px', width: '100%', background: '#14532d', color: '#4ade80',
                 border: '1px solid #166534', borderRadius: '6px', padding: '8px',
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer'
               }}>
-                {copied === newClientToken ? 'Copied!' : <><IconCopy size={12} /> Copy portal link</>}
+                {copied === shownToken ? 'Copied!' : <><IconCopy size={12} /> Copy portal link</>}
               </button>
             )}
             {newClientToken && newClientPin && (
@@ -320,19 +368,20 @@ function updateBrandRow(i: number, key: 'name' | 'instagram', value: string) {
             )}
           </div>
 
-          <button onClick={createClient} disabled={saving} style={{
+          <button onClick={saveClient} disabled={saving} style={{
             width: '100%', background: saving ? 'var(--border-input)' : 'var(--text)', color: saving ? 'var(--text-sec)' : 'var(--bg-page)',
             border: 'none', borderRadius: '10px', padding: '13px', fontSize: '14px',
             fontWeight: 700, cursor: saving ? 'default' : 'pointer', marginBottom: '10px',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
           }}>
-            <IconPlus size={14} /> {saving ? 'Creating...' : 'Create client'}
+            {editing ? <IconEdit size={14} /> : <IconPlus size={14} />}
+            {saving ? 'Saving...' : editing ? 'Save changes' : 'Create client'}
           </button>
 
-          <button onClick={() => newClientToken && copyLink(newClientToken)} style={{
-            width: '100%', background: 'transparent', color: newClientToken ? 'var(--text-sec)' : 'var(--text-dim)',
+          <button onClick={() => shownToken && copyLink(shownToken)} style={{
+            width: '100%', background: 'transparent', color: shownToken ? 'var(--text-sec)' : 'var(--text-dim)',
             border: '1px solid var(--border-card)', borderRadius: '10px', padding: '13px', fontSize: '14px',
-            fontWeight: 600, cursor: newClientToken ? 'pointer' : 'default',
+            fontWeight: 600, cursor: shownToken ? 'pointer' : 'default',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
           }}>
             <IconCopy size={14} /> Copy portal link
