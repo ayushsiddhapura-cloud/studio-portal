@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { IconLock, IconSearch, IconMail, IconPhone, IconChecklist, IconFolderOpen, IconChat, IconFolder, IconVideo, IconFileText, IconInvoices } from '@/lib/icons'
+import { drivePreview } from '@/lib/drive'
 
 function monthLabel(m: string) {
   if (!m) return '—'
@@ -20,6 +21,7 @@ export default function ClientPortalPage() {
   const [revisions, setRevisions] = useState<any[]>([])
   const [versions, setVersions] = useState<any[]>([])
   const [activeProject, setActiveProject] = useState<any>(null)
+  const [previewPdf, setPreviewPdf] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
@@ -364,15 +366,15 @@ export default function ClientPortalPage() {
                 </div>
               )
               if (activeProject.invoice_pdf_url) return (
-                <a href={activeProject.invoice_pdf_url} target='_blank' rel='noopener noreferrer'
+                <button onClick={() => setPreviewPdf(activeProject.invoice_pdf_url)}
                   style={{
                     width: '100%', background: '#fff', border: 'none',
                     borderRadius: '10px', padding: '14px', color: '#000', fontSize: '14px',
                     fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    textDecoration: 'none', boxSizing: 'border-box'
+                    boxSizing: 'border-box', fontFamily: 'inherit'
                   }}>
                   <IconInvoices size={15} /> View Invoice PDF
-                </a>
+                </button>
               )
               return null
             })()}
@@ -404,19 +406,54 @@ export default function ClientPortalPage() {
                     </div>
                   )}
                   {inv.pdf_url && (
-                    <a href={inv.pdf_url} target='_blank' rel='noopener noreferrer'
+                    <button onClick={() => setPreviewPdf(inv.pdf_url)}
                       style={{
-                        width: '100%', background: '#fff', borderRadius: '8px', padding: '11px',
-                        color: '#000', fontSize: '13px', fontWeight: 700,
+                        width: '100%', background: '#fff', border: 'none', borderRadius: '8px', padding: '11px',
+                        color: '#000', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                        textDecoration: 'none', boxSizing: 'border-box', marginTop: '12px'
+                        boxSizing: 'border-box', marginTop: '12px', fontFamily: 'inherit'
                       }}>
                       <IconInvoices size={14} /> View Invoice PDF
-                    </a>
+                    </button>
                   )}
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* PDF preview overlay */}
+        {previewPdf && (
+          <div
+            onClick={() => setPreviewPdf(null)}
+            style={{
+              position: 'fixed', inset: 0, background: '#111', zIndex: 100,
+              display: 'flex', flexDirection: 'column', padding: '12px', boxSizing: 'border-box'
+            }}>
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 4px 10px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>Invoice</span>
+                <a href={previewPdf} target='_blank' rel='noopener noreferrer'
+                  style={{ fontSize: '12px', color: '#aaa', textDecoration: 'none', border: '1px solid #333', borderRadius: '20px', padding: '4px 12px' }}>
+                  Open in Drive ↗
+                </a>
+                <button onClick={() => setPreviewPdf(null)}
+                  style={{
+                    marginLeft: 'auto', background: '#222', border: '1px solid #333', color: '#fff',
+                    borderRadius: '50%', width: '32px', height: '32px', fontSize: '16px',
+                    cursor: 'pointer', lineHeight: 1, flexShrink: 0
+                  }}>✕</button>
+              </div>
+
+              <iframe
+                src={drivePreview(previewPdf)}
+                title='Invoice PDF'
+                style={{ flex: 1, width: '100%', border: 'none', borderRadius: '10px', background: '#fff', minHeight: 0 }}
+              />
+            </div>
           </div>
         )}
 
