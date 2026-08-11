@@ -182,16 +182,16 @@ export default function ClientPortalPage() {
         </div>
 
         {/* Stats */}
-        <div className='stat-grid-3' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
+        <div className='portal-stats' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
           {[
             { label: 'TOTAL PROJECTS', value: projects.length, sub: `${projects.filter(p => p.status === 'In Progress').length} active · ${projects.filter(p => p.status === 'Review').length} in review`, color: 'var(--text)' },
             { label: 'VERSIONS SENT', value: totalVersions, sub: 'Across all projects', color: '#60a5fa' },
             { label: 'AMOUNT DUE', value: `₹${totalPending.toLocaleString()}`, sub: `${projects.filter(p => p.payment_status !== 'Paid').length} invoices pending`, color: '#f87171' },
           ].map(card => (
             <div key={card.label} className='portal-card' style={{ ...s.card, marginBottom: 0 }}>
-              <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>{card.label}</div>
+              <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>{card.label}</div>
               <div className='portal-stat' style={{ fontSize: '32px', fontWeight: 800, color: card.color, marginBottom: '4px' }}>{card.value}</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{card.sub}</div>
+              <div className='portal-stat-sub' style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{card.sub}</div>
             </div>
           ))}
         </div>
@@ -202,7 +202,7 @@ export default function ClientPortalPage() {
             <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>YOUR PROJECTS</div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               {projects.map(p => (
-                <button key={p.id} onClick={() => setActiveProject(p)} style={{
+                <button key={p.id} onClick={() => setActiveProject(p)} className='portal-tab' style={{
                   padding: '8px 18px', borderRadius: '8px', border: '1px solid',
                   borderColor: activeProject?.id === p.id ? 'var(--text-dim)' : 'var(--border-card)',
                   background: activeProject?.id === p.id ? 'var(--border)' : 'transparent',
@@ -248,7 +248,7 @@ export default function ClientPortalPage() {
                       {i < currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text)' }} />}
                       {i === currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text)' }} />}
                     </div>
-                    <span style={{ fontSize: '11px', color: i <= currentStep ? 'var(--text)' : 'var(--text-muted)', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>{step}</span>
+                    <span className='portal-step' style={{ fontSize: '11px', color: i <= currentStep ? 'var(--text)' : 'var(--text-muted)', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>{step}</span>
                   </div>
                 ))}
               </div>
@@ -284,7 +284,7 @@ export default function ClientPortalPage() {
               <div>
                 <div className='portal-label' style={s.label}><IconChat size={13} /> REVISION HISTORY</div>
                 {activeRevisions.length === 0 ? (
-                  <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                  <div className='portal-empty' style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
                     No revisions yet — your feedback will appear here.
                   </div>
                 ) : activeRevisions.map((r, idx) => (
@@ -301,7 +301,7 @@ export default function ClientPortalPage() {
               <div>
                 <div className='portal-label' style={s.label}><IconFolderOpen size={13} /> FILES & DRAFTS</div>
                 {activeFiles.length === 0 ? (
-                  <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
+                  <div className='portal-empty' style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
                     Your first draft will appear here once it's ready.
                   </div>
                 ) : activeFiles.map(f => (
@@ -331,7 +331,7 @@ export default function ClientPortalPage() {
         {activeProject && (
           <div className='portal-card' style={s.card}>
             <div className='portal-label' style={s.label}><IconInvoices size={13} /> INVOICE & PAYMENT</div>
-            <div className='stat-grid-4' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
+            <div className='portal-pay-grid stat-grid-4' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
               {[
                 { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: 'var(--text)' },
                 { label: 'AMOUNT PAID', value: `₹${activeProject.payment_status === 'Paid' ? Number(activeProject.amount).toLocaleString() : '0'}`, color: '#4ade80' },
