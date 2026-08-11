@@ -111,9 +111,51 @@ body {
     padding: 20px !important;
   }
 
-  /* Client portal */
+  /* Client portal — tighter so more fits on one phone screen */
   .portal-hero-title {
-    font-size: 26px !important;
+    font-size: 22px !important;
+  }
+  .portal-nav {
+    padding: 10px 14px !important;
+  }
+  .portal-container {
+    padding: 12px !important;
+  }
+  .portal-card {
+    padding: 14px !important;
+    margin-bottom: 10px !important;
+    border-radius: 10px !important;
+  }
+  .portal-label {
+    margin-bottom: 10px !important;
+    font-size: 10px !important;
+    letter-spacing: 0.5px !important;
+  }
+  .portal-stat {
+    font-size: 21px !important;
+  }
+  .portal-project-title {
+    font-size: 17px !important;
+  }
+  .portal-nav-sub {
+    font-size: 10px !important;
+  }
+  .portal-nav-badge {
+    font-size: 11px !important;
+    gap: 5px !important;
+  }
+  .portal-hero-badge {
+    margin-bottom: 10px !important;
+    font-size: 10px !important;
+    padding: 3px 9px !important;
+  }
+  .portal-hero-sub {
+    font-size: 13px !important;
+    margin: 0 0 12px !important;
+  }
+  .portal-hero-meta {
+    gap: 6px 14px !important;
+    padding-top: 12px !important;
   }
 
   /* Settings: stack sub-nav above content */

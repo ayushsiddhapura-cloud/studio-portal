@@ -147,34 +147,34 @@ export default function ClientPortalPage() {
     <div style={{ minHeight: '100vh', background: 'var(--bg-page)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: 'var(--text)' }}>
 
       {/* Top Nav */}
-      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className='portal-nav' style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '32px', height: '32px', background: 'var(--text)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--bg-page)' }}><IconVideo size={17} /></div>
           <div>
             <div style={{ fontWeight: 700, fontSize: '14px' }}>Studio Portal</div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Your private project dashboard</div>
+            <div className='portal-nav-sub' style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Your private project dashboard</div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-sec)' }}>
+        <div className='portal-nav-badge' style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-sec)', whiteSpace: 'nowrap' }}>
           <IconLock size={14} /> Private & secure
         </div>
       </div>
 
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px' }}>
+      <div className='portal-container' style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px' }}>
 
         {/* Hero */}
-        <div style={s.card}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--border)', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-sec)', letterSpacing: '1px', marginBottom: '16px' }}>
+        <div className='portal-card' style={s.card}>
+          <div className='portal-hero-badge' style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--border)', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-sec)', letterSpacing: '1px', marginBottom: '16px' }}>
             <IconVideo size={12} /> VIDEO EDITING CLIENT
           </div>
           <h1 className='portal-hero-title' style={{ fontSize: '36px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
             <span style={{ color: 'var(--text)' }}>{client.name}'s</span>{' '}
             <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Project Dashboard</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '15px', margin: '0 0 20px' }}>
+          <p className='portal-hero-sub' style={{ color: 'var(--text-muted)', fontSize: '15px', margin: '0 0 20px' }}>
             {client.channel_name || 'Your Studio'} — all your projects and updates in one place
           </p>
-          <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+          <div className='portal-hero-meta' style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             {client.email && <span style={{ fontSize: '13px', color: 'var(--text-sec)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconMail size={13} /> {client.email}</span>}
             {client.phone && <span style={{ fontSize: '13px', color: 'var(--text-sec)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconPhone size={13} /> {client.phone_code ? `${client.phone_code} ` : ''}{client.phone}</span>}
             <span style={{ fontSize: '13px', color: '#4ade80' }}>● Active client</span>
@@ -188,9 +188,9 @@ export default function ClientPortalPage() {
             { label: 'VERSIONS SENT', value: totalVersions, sub: 'Across all projects', color: '#60a5fa' },
             { label: 'AMOUNT DUE', value: `₹${totalPending.toLocaleString()}`, sub: `${projects.filter(p => p.payment_status !== 'Paid').length} invoices pending`, color: '#f87171' },
           ].map(card => (
-            <div key={card.label} style={{ ...s.card, marginBottom: 0 }}>
+            <div key={card.label} className='portal-card' style={{ ...s.card, marginBottom: 0 }}>
               <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>{card.label}</div>
-              <div style={{ fontSize: '32px', fontWeight: 800, color: card.color, marginBottom: '4px' }}>{card.value}</div>
+              <div className='portal-stat' style={{ fontSize: '32px', fontWeight: 800, color: card.color, marginBottom: '4px' }}>{card.value}</div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{card.sub}</div>
             </div>
           ))}
@@ -216,9 +216,9 @@ export default function ClientPortalPage() {
 
         {/* Active Project */}
         {activeProject && (
-          <div style={s.card}>
+          <div className='portal-card' style={s.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-              <h2 style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{activeProject.title}</h2>
+              <h2 className='portal-project-title' style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{activeProject.title}</h2>
               <span style={{
                 fontSize: '12px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600, border: '1px solid',
                 borderColor: activeProject.status === 'Review' ? '#854d0e' : activeProject.status === 'Completed' ? '#166534' : '#1e3a5f',
@@ -234,7 +234,7 @@ export default function ClientPortalPage() {
 
             {/* Progress */}
             <div style={{ marginBottom: '28px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <div style={s.label}><IconChecklist size={13} /> PROJECT PROGRESS</div>
+              <div className='portal-label' style={s.label}><IconChecklist size={13} /> PROJECT PROGRESS</div>
               <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                 <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '2px', background: 'var(--border-card)' }} />
                 <div style={{ position: 'absolute', top: '10px', left: 0, height: '2px', background: 'var(--text)', width: `${((currentStep + 0.5) / progressSteps.length) * 100}%`, transition: 'width 0.4s' }} />
@@ -257,7 +257,7 @@ export default function ClientPortalPage() {
             {/* Version History */}
             {activeVersions.length > 0 && (
               <div style={{ marginBottom: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-                <div style={s.label}><IconFolder size={13} /> VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
+                <div className='portal-label' style={s.label}><IconFolder size={13} /> VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
                   <div style={{ position: 'absolute', top: '16px', left: 0, right: 0, height: '1px', background: 'var(--border-card)' }} />
                   {[...Array(3)].map((_, i) => {
@@ -282,7 +282,7 @@ export default function ClientPortalPage() {
             {/* Revisions & Files */}
             <div className='grid-2col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
               <div>
-                <div style={s.label}><IconChat size={13} /> REVISION HISTORY</div>
+                <div className='portal-label' style={s.label}><IconChat size={13} /> REVISION HISTORY</div>
                 {activeRevisions.length === 0 ? (
                   <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
                     No revisions yet — your feedback will appear here.
@@ -299,7 +299,7 @@ export default function ClientPortalPage() {
                 ))}
               </div>
               <div>
-                <div style={s.label}><IconFolderOpen size={13} /> FILES & DRAFTS</div>
+                <div className='portal-label' style={s.label}><IconFolderOpen size={13} /> FILES & DRAFTS</div>
                 {activeFiles.length === 0 ? (
                   <div style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
                     Your first draft will appear here once it's ready.
@@ -329,8 +329,8 @@ export default function ClientPortalPage() {
 
         {/* Invoice */}
         {activeProject && (
-          <div style={s.card}>
-            <div style={s.label}><IconInvoices size={13} /> INVOICE & PAYMENT</div>
+          <div className='portal-card' style={s.card}>
+            <div className='portal-label' style={s.label}><IconInvoices size={13} /> INVOICE & PAYMENT</div>
             <div className='stat-grid-4' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
               {[
                 { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: 'var(--text)' },
@@ -348,7 +348,7 @@ export default function ClientPortalPage() {
                       border: '1px solid', borderColor: activeProject.payment_status === 'Paid' ? '#166534' : activeProject.payment_status === 'Partial' ? '#854d0e' : '#7f1d1d'
                     }}>{item.value}</span>
                   ) : (
-                    <div style={{ fontSize: '24px', fontWeight: 800, color: item.color }}>{item.value}</div>
+                    <div className='portal-stat' style={{ fontSize: '24px', fontWeight: 800, color: item.color }}>{item.value}</div>
                   )}
                 </div>
               ))}
@@ -383,8 +383,8 @@ export default function ClientPortalPage() {
 
         {/* Monthly invoices */}
         {invoices.length > 0 && (
-          <div style={s.card}>
-            <div style={s.label}><IconInvoices size={13} /> INVOICES</div>
+          <div className='portal-card' style={s.card}>
+            <div className='portal-label' style={s.label}><IconInvoices size={13} /> INVOICES</div>
             {invoices.map(inv => {
               const covered = projects.filter(p => p.invoice_id === inv.id)
               const paid = inv.status === 'Paid'
