@@ -17,16 +17,18 @@ const COLUMNS = [
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([])
   const [clients, setClients] = useState<any[]>([])
+  const [brands, setBrands] = useState<any[]>([])
   const [revisions, setRevisions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState<'kanban' | 'list'>('kanban')
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [showForm, setShowForm] = useState(false)
-  const [form, setForm] = useState({
-    client_id: '', title: '', status: 'In Progress',
+  const EMPTY_FORM = {
+    client_id: '', brand_id: '', title: '', status: 'In Progress',
     deadline: '', amount: '', payment_status: 'Pending', invoice_pdf_url: ''
-  })
+  }
+  const [form, setForm] = useState(EMPTY_FORM)
 
   useEffect(() => { fetchAll() }, [])
 
@@ -36,17 +38,29 @@ export default function ProjectsPage() {
   async function fetchAll() {
     const { data: p } = await supabase.from('projects').select('*, clients(name)').order('created_at', { ascending: false })
     const { data: c } = await supabase.from('clients').select('id, name')
+    const { data: b } = await supabase.from('brands').select('id, name, client_id').order('name')
     const { data: r } = await supabase.from('revisions').select('project_id')
     if (p) setProjects(p)
     if (c) setClients(c)
+    if (b) setBrands(b)
     if (r) setRevisions(r)
     setLoading(false)
   }
 
+  // Brands belonging to the selected client — drives the Brand dropdown.
+  const clientBrands = brands.filter(b => b.client_id === form.client_id)
+
   async function addProject() {
     if (!form.title || !form.client_id) return alert('Please fill in client and project title')
-    await supabase.from('projects').insert([{ ...form, amount: parseFloat(form.amount) || 0 }])
-    setForm({ client_id: '', title: '', status: 'In Progress', deadline: '', amount: '', payment_status: 'Pending', invoice_pdf_url: '' })
+    // Empty strings are invalid for uuid/date columns, so send null instead.
+    const { error } = await supabase.from('projects').insert([{
+      ...form,
+      brand_id: form.brand_id || null,
+      deadline: form.deadline || null,
+      amount: parseFloat(form.amount) || 0,
+    }])
+    if (error) return alert('Error: ' + error.message)
+    setForm(EMPTY_FORM)
     setShowForm(false)
     fetchAll()
   }
@@ -289,9 +303,19 @@ export default function ProjectsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={lbl}>CLIENT</label>
-                <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value })} style={inp}>
+                <select value={form.client_id} onChange={e => setForm({ ...form, client_id: e.target.value, brand_id: '' })} style={inp}>
                   <option value=''>Select client...</option>
                   {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <label style={lbl}>BRAND</label>
+                <select value={form.brand_id} onChange={e => setForm({ ...form, brand_id: e.target.value })}
+                  disabled={!form.client_id} style={{ ...inp, opacity: form.client_id ? 1 : 0.5 }}>
+                  <option value=''>
+                    {!form.client_id ? 'Select a client first' : clientBrands.length ? 'Select brand...' : 'No brands for this client'}
+                  </option>
+                  {clientBrands.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
