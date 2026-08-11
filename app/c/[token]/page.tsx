@@ -219,7 +219,7 @@ export default function ClientPortalPage() {
           <div className='portal-card' style={s.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
               <h2 className='portal-project-title' style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{activeProject.title}</h2>
-              <span style={{
+              <span className='portal-status' style={{
                 fontSize: '12px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600, border: '1px solid',
                 borderColor: activeProject.status === 'Review' ? '#854d0e' : activeProject.status === 'Completed' ? '#166534' : '#1e3a5f',
                 background: activeProject.status === 'Review' ? '#1c1200' : activeProject.status === 'Completed' ? '#052e16' : '#0c1a2e',
@@ -227,7 +227,7 @@ export default function ClientPortalPage() {
               }}>{activeProject.status}</span>
             </div>
             {activeProject.deadline && (
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
+              <div className='portal-meta' style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
                 Due <span style={{ color: '#f87171' }}>{activeProject.deadline}</span>
               </div>
             )}
@@ -341,7 +341,7 @@ export default function ClientPortalPage() {
                 <div key={item.label}>
                   <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '8px' }}>{item.label}</div>
                   {item.status ? (
-                    <span style={{
+                    <span className='portal-status' style={{
                       fontSize: '13px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600,
                       background: activeProject.payment_status === 'Paid' ? '#052e16' : activeProject.payment_status === 'Partial' ? '#1c1200' : '#1c0a0a',
                       color: activeProject.payment_status === 'Paid' ? '#4ade80' : activeProject.payment_status === 'Partial' ? '#fbbf24' : '#f87171',
@@ -354,14 +354,14 @@ export default function ClientPortalPage() {
               ))}
             </div>
             {activeProject.deadline && (
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
+              <div className='portal-meta' style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
                 Due date: <span style={{ color: 'var(--text)', fontWeight: 600 }}>{activeProject.deadline}</span>
               </div>
             )}
             {(() => {
               const linked = invoices.find(inv => inv.id === activeProject.invoice_id)
               if (linked) return (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: 'var(--text-sec)' }}>
+                <div className='portal-note' style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: 'var(--text-sec)' }}>
                   <IconInvoices size={14} /> Included in the monthly invoice — {monthLabel(linked.month)}
                 </div>
               )
@@ -392,7 +392,7 @@ export default function ClientPortalPage() {
                 <div key={inv.id} style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '16px', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '14px', fontWeight: 700 }}>{monthLabel(inv.month)}</span>
-                    <span style={{
+                    <span className='portal-status' style={{
                       fontSize: '12px', padding: '3px 12px', borderRadius: '20px', fontWeight: 600, border: '1px solid',
                       background: paid ? '#052e16' : '#1c0a0a',
                       color: paid ? '#4ade80' : '#f87171',
@@ -461,7 +461,7 @@ export default function ClientPortalPage() {
         )}
 
         {/* Footer */}
-        <div style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '12px', marginTop: '24px', padding: '16px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+        <div className='portal-footer' style={{ textAlign: 'center', color: 'var(--text-dim)', fontSize: '12px', marginTop: '24px', padding: '16px', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
           <IconLock size={12} /> This is your private portal — only you can see this page · Studio Portal by Ayush Siddhapura
         </div>
       </div>
