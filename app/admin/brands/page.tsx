@@ -23,25 +23,31 @@ const LINK_LABELS = ['Website', 'Drive', 'Assets', 'Design', 'Notion', 'Figma']
 
 export default function BrandsPage() {
   const [brands, setBrands] = useState<Brand[]>([])
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([])
   const [search, setSearch] = useState('')
   const [panelOpen, setPanelOpen] = useState(false)
   const [editBrand, setEditBrand] = useState<Brand | null>(null)
   const [saving, setSaving] = useState(false)
 
-  const emptyForm = (): Omit<Brand, 'id'> => ({
+  const emptyForm = (): Omit<Brand, 'id' | 'clients'> => ({
     name: '', category: '', status: 'Active', services: [],
-    instagram: '', links: [], notes: '',
+    instagram: '', links: [], notes: '', client_id: null,
   })
   const [form, setForm] = useState(emptyForm())
   const [serviceInput, setServiceInput] = useState('')
   const [linkLabel, setLinkLabel] = useState('')
   const [linkUrl, setLinkUrl] = useState('')
 
-  useEffect(() => { fetchBrands() }, [])
+  useEffect(() => { fetchBrands(); fetchClients() }, [])
 
   async function fetchBrands() {
     const { data } = await supabase.from('brands').select('*, clients(name)').order('created_at', { ascending: false })
     if (data) setBrands(data as Brand[])
+  }
+
+  async function fetchClients() {
+    const { data } = await supabase.from('clients').select('id, name').order('name')
+    if (data) setClients(data)
   }
 
   function openAdd() {
@@ -55,7 +61,7 @@ export default function BrandsPage() {
 
   function openEdit(b: Brand) {
     setEditBrand(b)
-    setForm({ name: b.name, category: b.category, status: b.status, services: [...(b.services || [])], instagram: b.instagram, links: [...(b.links || [])], notes: b.notes })
+    setForm({ name: b.name, category: b.category, status: b.status, services: [...(b.services || [])], instagram: b.instagram, links: [...(b.links || [])], notes: b.notes, client_id: b.client_id ?? null })
     setServiceInput('')
     setLinkLabel('')
     setLinkUrl('')
@@ -66,7 +72,7 @@ export default function BrandsPage() {
     if (!form.name.trim()) return
     setSaving(true)
     if (editBrand) {
-      await supabase.from('brands').update({ ...form, client_id: editBrand.client_id }).eq('id', editBrand.id)
+      await supabase.from('brands').update(form).eq('id', editBrand.id)
     } else {
       await supabase.from('brands').insert([form])
     }
@@ -224,6 +230,14 @@ export default function BrandsPage() {
             <div>
               <label style={lbl}>BRAND NAME</label>
               <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder='e.g. Litmus' style={inp} />
+            </div>
+
+            <div>
+              <label style={lbl}>CLIENT</label>
+              <select value={form.client_id ?? ''} onChange={e => setForm({ ...form, client_id: e.target.value || null })} style={inp}>
+                <option value=''>No client</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
 
             <div>
