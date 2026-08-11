@@ -3,13 +3,35 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
-import { IconLock, IconSearch, IconMail, IconPhone, IconChecklist, IconFolderOpen, IconChat, IconFolder, IconVideo, IconFileText, IconInvoices } from '@/lib/icons'
+import { IconLock, IconSearch, IconMail, IconPhone, IconVideo, IconInvoices, IconChat } from '@/lib/icons'
 import { drivePreview, driveDownload } from '@/lib/drive'
 
 function monthLabel(m: string) {
   if (!m) return '—'
   const [y, mo] = m.split('-')
   return new Date(Number(y), Number(mo) - 1).toLocaleString('default', { month: 'long' }) + ' ' + y
+}
+
+function dateLabel(d: string) {
+  if (!d) return ''
+  const dt = new Date(d)
+  return `${dt.getDate()} ${dt.toLocaleString('default', { month: 'short' })} ${dt.getFullYear()}`
+}
+
+function timeAgo(iso: string) {
+  if (!iso) return ''
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)
+  if (days <= 0) return 'today'
+  if (days === 1) return 'yesterday'
+  if (days < 30) return `${days} days ago`
+  return dateLabel(iso)
+}
+
+const STATUS_STYLE: any = {
+  'In Progress': { bg: '#0c1a2e', color: '#60a5fa', border: '#1e3a5f', label: 'In progress' },
+  'Review': { bg: '#1c1200', color: '#fbbf24', border: '#854d0e', label: 'In review' },
+  'Revision': { bg: '#1c0a0a', color: '#f87171', border: '#7f1d1d', label: 'Revision' },
+  'Completed': { bg: '#052e16', color: '#4ade80', border: '#166534', label: 'Delivered' },
 }
 
 export default function ClientPortalPage() {
@@ -19,11 +41,17 @@ export default function ClientPortalPage() {
   const [invoices, setInvoices] = useState<any[]>([])
   const [files, setFiles] = useState<any[]>([])
   const [revisions, setRevisions] = useState<any[]>([])
-  const [versions, setVersions] = useState<any[]>([])
-  const [activeProject, setActiveProject] = useState<any>(null)
-  const [previewPdf, setPreviewPdf] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+
+  // Draft review overlay
+  const [activeDraft, setActiveDraft] = useState<any>(null)
+  const [feedback, setFeedback] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  // Invoice PDF overlay
+  const [previewPdf, setPreviewPdf] = useState<string | null>(null)
 
   // PIN protection
   const [pinRequired, setPinRequired] = useState(false)
@@ -39,7 +67,6 @@ export default function ClientPortalPage() {
     if (!clientData) { setNotFound(true); setLoading(false); return }
     setClient(clientData)
 
-    // Check PIN
     if (clientData.pin_enabled && clientData.pin) {
       setPinRequired(true)
       setLoading(false)
@@ -53,22 +80,27 @@ export default function ClientPortalPage() {
     const { data: invoiceData } = await supabase
       .from('invoices').select('*').eq('client_id', clientData.id).order('month', { ascending: false })
     if (invoiceData) setInvoices(invoiceData)
+
     const { data: projectData } = await supabase
-      .from('projects').select('*').eq('client_id', clientData.id)
+      .from('projects').select('*').eq('client_id', clientData.id).order('created_at', { ascending: false })
     if (projectData) {
       setProjects(projectData)
-      setActiveProject(projectData[0] || null)
       const ids = projectData.map((p: any) => p.id)
       if (ids.length > 0) {
-        const { data: fileData } = await supabase.from('files').select('*').in('project_id', ids)
+        const { data: fileData } = await supabase.from('files').select('*').in('project_id', ids).order('created_at', { ascending: false })
         const { data: revData } = await supabase.from('revisions').select('*').in('project_id', ids).order('created_at', { ascending: false })
-        const { data: verData } = await supabase.from('versions').select('*').in('project_id', ids).order('version_number', { ascending: true })
         if (fileData) setFiles(fileData)
         if (revData) setRevisions(revData)
-        if (verData) setVersions(verData)
       }
     }
     setLoading(false)
+  }
+
+  async function refreshRevisions() {
+    const ids = projects.map(p => p.id)
+    if (!ids.length) return
+    const { data } = await supabase.from('revisions').select('*').in('project_id', ids).order('created_at', { ascending: false })
+    if (data) setRevisions(data)
   }
 
   async function handlePinSubmit() {
@@ -84,14 +116,37 @@ export default function ClientPortalPage() {
     }
   }
 
+  function openDraft(file: any, project: any) {
+    setActiveDraft({ file, project })
+    setFeedback('')
+    setSent(false)
+  }
+
+  async function sendFeedback() {
+    const note = feedback.trim()
+    if (!note || !activeDraft) return
+    setSending(true)
+    const round = revisions.filter(r => r.project_id === activeDraft.project.id).length + 1
+    const { error } = await supabase.from('revisions').insert([{
+      project_id: activeDraft.project.id,
+      note,
+      round_number: round,
+      status: 'Pending',
+    }])
+    setSending(false)
+    if (error) { alert('Could not send your feedback. Please try again.'); return }
+    setFeedback('')
+    setSent(true)
+    await refreshRevisions()
+  }
 
   // ── PIN SCREEN ──
   if (pinRequired && !pinUnlocked) return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif' }}>
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '16px', padding: '40px 36px', width: '360px', textAlign: 'center' }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px', color: 'var(--text)' }}><IconLock size={36} /></div>
-        <h2 style={{ color: 'var(--text)', fontSize: '20px', fontWeight: 700, margin: '0 0 8px' }}>Portal Protected</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: '0 0 28px' }}>Enter your PIN to access your project portal</p>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', padding: '16px' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '16px', padding: '36px 28px', width: '100%', maxWidth: '340px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px', color: 'var(--text)' }}><IconLock size={32} /></div>
+        <h2 style={{ color: 'var(--text)', fontSize: '18px', fontWeight: 700, margin: '0 0 6px' }}>Portal Protected</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '0 0 24px' }}>Enter your PIN to access your project portal</p>
         <input
           type="password"
           value={pinInput}
@@ -99,13 +154,13 @@ export default function ClientPortalPage() {
           onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
           placeholder="Enter PIN"
           maxLength={6}
-          style={{ width: '100%', background: 'var(--bg-page)', border: '1px solid var(--border-input)', borderRadius: '10px', padding: '14px', color: 'var(--text)', fontSize: '20px', textAlign: 'center', letterSpacing: '8px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' }}
+          style={{ width: '100%', background: 'var(--bg-page)', border: '1px solid var(--border-input)', borderRadius: '10px', padding: '13px', color: 'var(--text)', fontSize: '18px', textAlign: 'center', letterSpacing: '8px', outline: 'none', marginBottom: '12px', boxSizing: 'border-box' }}
         />
-        {pinError && <p style={{ color: '#f87171', fontSize: '13px', margin: '0 0 12px' }}>{pinError}</p>}
-        <button onClick={handlePinSubmit} style={{ width: '100%', background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '14px', fontSize: '15px', fontWeight: 700, cursor: 'pointer' }}>
+        {pinError && <p style={{ color: '#f87171', fontSize: '12px', margin: '0 0 12px' }}>{pinError}</p>}
+        <button onClick={handlePinSubmit} style={{ width: '100%', background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '13px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}>
           Unlock Portal →
         </button>
-        <p style={{ color: 'var(--text-dim)', fontSize: '12px', marginTop: '20px' }}>Contact your studio if you forgot your PIN</p>
+        <p style={{ color: 'var(--text-dim)', fontSize: '11px', marginTop: '18px' }}>Contact your studio if you forgot your PIN</p>
       </div>
     </div>
   )
@@ -123,25 +178,19 @@ export default function ClientPortalPage() {
     </div>
   )
 
-  const totalPending = projects.reduce((s, p) => p.payment_status !== 'Paid' ? s + Number(p.amount) : s, 0)
-  const activeFiles = activeProject ? files.filter(f => f.project_id === activeProject.id) : []
-  const activeRevisions = activeProject ? revisions.filter(r => r.project_id === activeProject.id) : []
-  const activeVersions = activeProject ? versions.filter(v => v.project_id === activeProject.id) : []
-  const totalVersions = versions.length
-
-  const progressSteps = ['Briefing', 'Editing', 'In review', 'Approved', 'Delivered']
-  const getStepIndex = (status: string) => {
-    if (status === 'Completed') return 4
-    if (status === 'Review') return 2
-    if (status === 'In Progress') return 1
-    return 0
-  }
-  const currentStep = activeProject ? getStepIndex(activeProject.status) : 0
+  const totalPending = projects.reduce((s, p) => p.payment_status !== 'Paid' ? s + Number(p.amount || 0) : s, 0)
+  const unpaidInvoices = invoices.filter(i => i.status !== 'Paid').length
+  const activeCount = projects.filter(p => p.status !== 'Completed').length
+  const draftsFor = (id: string) => files.filter(f => f.project_id === id)
+  const notesFor = (id: string) => revisions.filter(r => r.project_id === id)
 
   const s = {
     card: { background: 'var(--bg-card)', border: '1px solid var(--border-card)', borderRadius: '12px', padding: '24px', marginBottom: '16px' } as any,
     label: { fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' } as any,
+    sectionLabel: { fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', textTransform: 'uppercase' as const, margin: '4px 2px 10px' } as any,
   }
+
+  const draftNotes = activeDraft ? notesFor(activeDraft.project.id) : []
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-page)', fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif', color: 'var(--text)' }}>
@@ -156,19 +205,19 @@ export default function ClientPortalPage() {
           </div>
         </div>
         <div className='portal-nav-badge' style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-sec)', whiteSpace: 'nowrap' }}>
-          <IconLock size={14} /> Private & secure
+          <IconLock size={14} /> Private &amp; secure
         </div>
       </div>
 
-      <div className='portal-container' style={{ maxWidth: '860px', margin: '0 auto', padding: '32px 20px' }}>
+      <div className='portal-container' style={{ maxWidth: '720px', margin: '0 auto', padding: '24px 20px' }}>
 
-        {/* Hero */}
+        {/* Identity */}
         <div className='portal-card' style={s.card}>
           <div className='portal-hero-badge' style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'var(--border)', borderRadius: '20px', padding: '4px 12px', fontSize: '11px', fontWeight: 600, color: 'var(--text-sec)', letterSpacing: '1px', marginBottom: '16px' }}>
-            <IconVideo size={12} /> VIDEO EDITING CLIENT
+            <IconVideo size={12} /> VIDEO EDITING
           </div>
-          <h1 className='portal-hero-title' style={{ fontSize: '36px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
-            <span style={{ color: 'var(--text)' }}>{client.name}'s</span>{' '}
+          <h1 className='portal-hero-title' style={{ fontSize: '32px', fontWeight: 800, margin: '0 0 8px', lineHeight: 1.2 }}>
+            <span style={{ color: 'var(--text)' }}>{client.name}&apos;s</span>{' '}
             <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>Project Dashboard</span>
           </h1>
           <p className='portal-hero-sub' style={{ color: 'var(--text-muted)', fontSize: '15px', margin: '0 0 20px' }}>
@@ -177,263 +226,239 @@ export default function ClientPortalPage() {
           <div className='portal-hero-meta' style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
             {client.email && <span style={{ fontSize: '13px', color: 'var(--text-sec)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconMail size={13} /> {client.email}</span>}
             {client.phone && <span style={{ fontSize: '13px', color: 'var(--text-sec)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconPhone size={13} /> {client.phone_code ? `${client.phone_code} ` : ''}{client.phone}</span>}
-            <span style={{ fontSize: '13px', color: '#4ade80' }}>● Active client</span>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className='portal-stats' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px' }}>
-          {[
-            { label: 'TOTAL PROJECTS', value: projects.length, sub: `${projects.filter(p => p.status === 'In Progress').length} active · ${projects.filter(p => p.status === 'Review').length} in review`, color: 'var(--text)' },
-            { label: 'VERSIONS SENT', value: totalVersions, sub: 'Across all projects', color: '#60a5fa' },
-            { label: 'AMOUNT DUE', value: `₹${totalPending.toLocaleString()}`, sub: `${projects.filter(p => p.payment_status !== 'Paid').length} invoices pending`, color: '#f87171' },
-          ].map(card => (
-            <div key={card.label} className='portal-card' style={{ ...s.card, marginBottom: 0 }}>
-              <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>{card.label}</div>
-              <div className='portal-stat' style={{ fontSize: '32px', fontWeight: 800, color: card.color, marginBottom: '4px' }}>{card.value}</div>
-              <div className='portal-stat-sub' style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{card.sub}</div>
-            </div>
-          ))}
-        </div>
+        {/* Drafts — one card per project */}
+        {projects.length > 0 && <div className='portal-sec' style={s.sectionLabel}>Your drafts</div>}
 
-        {/* Project Tabs */}
-        {projects.length > 0 && (
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>YOUR PROJECTS</div>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {projects.map(p => (
-                <button key={p.id} onClick={() => setActiveProject(p)} className='portal-tab' style={{
-                  padding: '8px 18px', borderRadius: '8px', border: '1px solid',
-                  borderColor: activeProject?.id === p.id ? 'var(--text-dim)' : 'var(--border-card)',
-                  background: activeProject?.id === p.id ? 'var(--border)' : 'transparent',
-                  color: activeProject?.id === p.id ? 'var(--text)' : 'var(--text-muted)',
-                  fontSize: '13px', fontWeight: 500, cursor: 'pointer'
-                }}>{p.title}</button>
-              ))}
-            </div>
-          </div>
-        )}
+        {projects.map(p => {
+          const st = STATUS_STYLE[p.status] || { bg: 'var(--bg-input)', color: 'var(--text-sec)', border: 'var(--border-input)', label: p.status }
+          const drafts = draftsFor(p.id)
+          const notes = notesFor(p.id)
+          return (
+            <div key={p.id} className='portal-card' style={{ ...s.card, padding: '0', overflow: 'hidden' }}>
 
-        {/* Active Project */}
-        {activeProject && (
-          <div className='portal-card' style={s.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-              <h2 className='portal-project-title' style={{ fontSize: '20px', fontWeight: 700, margin: 0 }}>{activeProject.title}</h2>
-              <span className='portal-status' style={{
-                fontSize: '12px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600, border: '1px solid',
-                borderColor: activeProject.status === 'Review' ? '#854d0e' : activeProject.status === 'Completed' ? '#166534' : '#1e3a5f',
-                background: activeProject.status === 'Review' ? '#1c1200' : activeProject.status === 'Completed' ? '#052e16' : '#0c1a2e',
-                color: activeProject.status === 'Review' ? '#fbbf24' : activeProject.status === 'Completed' ? '#4ade80' : '#60a5fa'
-              }}>{activeProject.status}</span>
-            </div>
-            {activeProject.deadline && (
-              <div className='portal-meta' style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>
-                Due <span style={{ color: '#f87171' }}>{activeProject.deadline}</span>
+              <div className='portal-proj-head' style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '18px 18px 14px' }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h2 className='portal-project-title' style={{ fontSize: '17px', fontWeight: 700, margin: '0 0 4px', lineHeight: 1.3 }}>{p.title}</h2>
+                  {p.deadline && (
+                    <div className='portal-meta' style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                      Due <span style={{ color: '#f87171' }}>{dateLabel(p.deadline)}</span>
+                    </div>
+                  )}
+                </div>
+                <span className='portal-status' style={{
+                  flexShrink: 0, fontSize: '12px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px',
+                  border: '1px solid', background: st.bg, color: st.color, borderColor: st.border, whiteSpace: 'nowrap'
+                }}>{st.label}</span>
               </div>
-            )}
 
-            {/* Progress */}
-            <div style={{ marginBottom: '28px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <div className='portal-label' style={s.label}><IconChecklist size={13} /> PROJECT PROGRESS</div>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                <div style={{ position: 'absolute', top: '10px', left: 0, right: 0, height: '2px', background: 'var(--border-card)' }} />
-                <div style={{ position: 'absolute', top: '10px', left: 0, height: '2px', background: 'var(--text)', width: `${((currentStep + 0.5) / progressSteps.length) * 100}%`, transition: 'width 0.4s' }} />
-                {progressSteps.map((step, i) => (
-                  <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', position: 'relative', zIndex: 2, flex: 1 }}>
-                    <div style={{
-                      width: '20px', height: '20px', borderRadius: '50%', border: '2px solid',
-                      borderColor: i <= currentStep ? 'var(--text)' : 'var(--border-input)',
-                      background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              {drafts.length === 0 ? (
+                <div className='portal-nodraft' style={{ margin: '0 18px 18px', padding: '20px 14px', border: '1px dashed var(--border-card)', borderRadius: '12px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                  Your first draft will appear here once it&apos;s ready.
+                </div>
+              ) : drafts.map(f => (
+                <button key={f.id} onClick={() => openDraft(f, p)} className='portal-reel' style={{
+                  display: 'flex', gap: '14px', alignItems: 'stretch', textAlign: 'left',
+                  width: 'calc(100% - 36px)', margin: '0 18px 14px', padding: '14px',
+                  background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: '12px',
+                  cursor: 'pointer', color: 'inherit', font: 'inherit', boxSizing: 'border-box',
+                }}>
+                  <div className='portal-poster' style={{
+                    position: 'relative', width: '72px', height: '110px', borderRadius: '10px', flexShrink: 0,
+                    background: 'linear-gradient(150deg, #2b3a3f 0%, #16202a 55%, #0d1116 100%)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                  }}>
+                    <span style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <svg width="11" height="11" viewBox="0 0 12 12" fill="#000"><path d="M3 1.6l7 4.4-7 4.4z" /></svg>
+                    </span>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</div>
+                    <div className='portal-meta' style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'auto' }}>
+                      {f.type || 'Draft'}{f.created_at ? ` · Sent ${timeAgo(f.created_at)}` : ''}
+                    </div>
+                    <span className='portal-watch' style={{
+                      marginTop: '12px', background: 'var(--text)', color: 'var(--bg-page)', borderRadius: '8px',
+                      padding: '9px', fontSize: '13px', fontWeight: 700, display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', gap: '7px',
                     }}>
-                      {i < currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text)' }} />}
-                      {i === currentStep && <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--text)' }} />}
-                    </div>
-                    <span className='portal-step' style={{ fontSize: '11px', color: i <= currentStep ? 'var(--text)' : 'var(--text-muted)', fontWeight: i === currentStep ? 600 : 400, textAlign: 'center' }}>{step}</span>
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M3 1.6l7 4.4-7 4.4z" /></svg>
+                      Watch &amp; review
+                    </span>
                   </div>
-                ))}
-              </div>
-            </div>
+                </button>
+              ))}
 
-            {/* Version History */}
-            {activeVersions.length > 0 && (
-              <div style={{ marginBottom: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-                <div className='portal-label' style={s.label}><IconFolder size={13} /> VERSION HISTORY — {activeVersions.length} DRAFTS SENT</div>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
-                  <div style={{ position: 'absolute', top: '16px', left: 0, right: 0, height: '1px', background: 'var(--border-card)' }} />
-                  {[...Array(3)].map((_, i) => {
-                    const ver = activeVersions[i]
-                    return (
-                      <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', position: 'relative', zIndex: 2 }}>
-                        <div style={{
-                          width: '32px', height: '32px', borderRadius: '50%',
-                          background: ver ? 'var(--text)' : 'var(--bg-card)',
-                          border: `2px solid ${ver ? 'var(--text)' : 'var(--border-input)'}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '11px', fontWeight: 700, color: ver ? 'var(--bg-page)' : 'var(--text-muted)'
-                        }}>v{i + 1}</div>
-                        <span style={{ fontSize: '11px', color: ver ? 'var(--text-sec)' : 'var(--text-dim)' }}>{ver ? ver.sent_date || '—' : '—'}</span>
-                      </div>
-                    )
-                  })}
+              {drafts.length > 0 && (
+                <div className='portal-meta' style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 18px 16px', fontSize: '12px', color: 'var(--text-muted)' }}>
+                  <IconChat size={12} />
+                  {notes.length === 0
+                    ? 'No feedback yet — tap to watch and share your notes'
+                    : `${notes.length} note${notes.length > 1 ? 's' : ''} sent`}
                 </div>
-              </div>
-            )}
-
-            {/* Revisions & Files */}
-            <div className='grid-2col' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <div>
-                <div className='portal-label' style={s.label}><IconChat size={13} /> REVISION HISTORY</div>
-                {activeRevisions.length === 0 ? (
-                  <div className='portal-empty' style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                    No revisions yet — your feedback will appear here.
-                  </div>
-                ) : activeRevisions.map((r, idx) => (
-                  <div key={r.id} style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '14px', marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: idx === 0 ? '#2563eb' : '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: '#fff' }}>{activeRevisions.length - idx}</div>
-                      <span style={{ fontSize: '13px', fontWeight: 600 }}>Round {activeRevisions.length - idx}</span>
-                    </div>
-                    <p style={{ fontSize: '13px', color: 'var(--text-sec)', margin: '0 0 6px', paddingLeft: '30px' }}>{r.note}</p>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', paddingLeft: '30px' }}>{r.created_date} · {r.status || 'Pending'}</div>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className='portal-label' style={s.label}><IconFolderOpen size={13} /> FILES & DRAFTS</div>
-                {activeFiles.length === 0 ? (
-                  <div className='portal-empty' style={{ background: 'var(--bg-surface)', borderRadius: '8px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
-                    Your first draft will appear here once it's ready.
-                  </div>
-                ) : activeFiles.map(f => (
-                  <a key={f.id} href={f.url} target='_blank' rel='noreferrer' style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: 'var(--bg-surface)', borderRadius: '8px', padding: '12px 14px',
-                    textDecoration: 'none', marginBottom: '8px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
-                        {f.type === 'Delivery' ? <IconVideo size={15} /> : f.type === 'Draft' ? <IconFileText size={15} /> : <IconFolder size={15} />}
-                      </div>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text)' }}>{f.name}</div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{f.type}</div>
-                      </div>
-                    </div>
-                    <span style={{ color: 'var(--text-muted)', fontSize: '18px' }}>↗</span>
-                  </a>
-                ))}
-              </div>
+              )}
             </div>
-          </div>
-        )}
+          )
+        })}
 
-        {/* Invoice */}
-        {activeProject && (
-          <div className='portal-card' style={s.card}>
-            <div className='portal-label' style={s.label}><IconInvoices size={13} /> INVOICE & PAYMENT</div>
-            <div className='portal-pay-grid stat-grid-4' style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
-              {[
-                { label: 'PROJECT FEE', value: `₹${Number(activeProject.amount).toLocaleString()}`, color: 'var(--text)' },
-                { label: 'AMOUNT PAID', value: `₹${activeProject.payment_status === 'Paid' ? Number(activeProject.amount).toLocaleString() : '0'}`, color: '#4ade80' },
-                { label: 'BALANCE DUE', value: `₹${activeProject.payment_status === 'Paid' ? '0' : Number(activeProject.amount).toLocaleString()}`, color: '#f87171' },
-                { label: 'PAYMENT STATUS', value: activeProject.payment_status, status: true },
-              ].map(item => (
-                <div key={item.label}>
-                  <div style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '8px' }}>{item.label}</div>
-                  {item.status ? (
-                    <span className='portal-status' style={{
-                      fontSize: '13px', padding: '4px 14px', borderRadius: '20px', fontWeight: 600,
-                      background: activeProject.payment_status === 'Paid' ? '#052e16' : activeProject.payment_status === 'Partial' ? '#1c1200' : '#1c0a0a',
-                      color: activeProject.payment_status === 'Paid' ? '#4ade80' : activeProject.payment_status === 'Partial' ? '#fbbf24' : '#f87171',
-                      border: '1px solid', borderColor: activeProject.payment_status === 'Paid' ? '#166534' : activeProject.payment_status === 'Partial' ? '#854d0e' : '#7f1d1d'
-                    }}>{item.value}</span>
-                  ) : (
-                    <div className='portal-stat' style={{ fontSize: '24px', fontWeight: 800, color: item.color }}>{item.value}</div>
-                  )}
+        {/* Summary */}
+        <div className='portal-sec' style={s.sectionLabel}>Summary</div>
+        <div className='portal-stats' style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+          <div className='portal-card' style={{ ...s.card, marginBottom: 0 }}>
+            <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>TOTAL PROJECTS</div>
+            <div className='portal-stat' style={{ fontSize: '28px', fontWeight: 800, marginBottom: '4px' }}>{projects.length}</div>
+            <div className='portal-stat-sub' style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{activeCount} active</div>
+          </div>
+          <div className='portal-card' style={{ ...s.card, marginBottom: 0 }}>
+            <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '10px' }}>AMOUNT DUE</div>
+            <div className='portal-stat' style={{ fontSize: '28px', fontWeight: 800, color: '#f87171', marginBottom: '4px' }}>₹{totalPending.toLocaleString()}</div>
+            <div className='portal-stat-sub' style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{unpaidInvoices} invoice{unpaidInvoices === 1 ? '' : 's'} pending</div>
+          </div>
+        </div>
+
+        {/* Billing */}
+        {(projects.length > 0 || invoices.length > 0) && (
+          <>
+            <div className='portal-sec' style={s.sectionLabel}>Billing</div>
+            <div className='portal-card' style={s.card}>
+              {projects.map(p => (
+                <div key={p.id} className='portal-bill-row' style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 0', borderBottom: '1px solid var(--border)', fontSize: '13px' }}>
+                  <span style={{ flex: 1, minWidth: 0, color: 'var(--text-sec)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</span>
+                  <span className='portal-status' style={{
+                    fontSize: '11px', fontWeight: 600, padding: '2px 9px', borderRadius: '20px', whiteSpace: 'nowrap',
+                    background: p.payment_status === 'Paid' ? '#052e16' : '#1c0a0a',
+                    color: p.payment_status === 'Paid' ? '#4ade80' : '#f87171',
+                  }}>{p.payment_status === 'Paid' ? 'Paid' : 'Due'}</span>
+                  <b style={{ fontWeight: 700 }}>₹{Number(p.amount || 0).toLocaleString()}</b>
                 </div>
               ))}
-            </div>
-            {activeProject.deadline && (
-              <div className='portal-meta' style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px' }}>
-                Due date: <span style={{ color: 'var(--text)', fontWeight: 600 }}>{activeProject.deadline}</span>
-              </div>
-            )}
-            {(() => {
-              const linked = invoices.find(inv => inv.id === activeProject.invoice_id)
-              if (linked) return (
-                <div className='portal-note' style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-surface)', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: 'var(--text-sec)' }}>
-                  <IconInvoices size={14} /> Included in the monthly invoice — {monthLabel(linked.month)}
-                </div>
-              )
-              if (activeProject.invoice_pdf_url) return (
-                <button onClick={() => setPreviewPdf(activeProject.invoice_pdf_url)}
-                  style={{
-                    width: '100%', background: 'var(--text)', border: 'none',
-                    borderRadius: '10px', padding: '14px', color: 'var(--bg-page)', fontSize: '14px',
-                    fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                    boxSizing: 'border-box', fontFamily: 'inherit'
-                  }}>
-                  <IconInvoices size={15} /> View Invoice PDF
-                </button>
-              )
-              return null
-            })()}
-          </div>
-        )}
 
-        {/* Monthly invoices */}
-        {invoices.length > 0 && (
-          <div className='portal-card' style={s.card}>
-            <div className='portal-label' style={s.label}><IconInvoices size={13} /> INVOICES</div>
-            {invoices.map(inv => {
-              const covered = projects.filter(p => p.invoice_id === inv.id)
-              const paid = inv.status === 'Paid'
-              return (
-                <div key={inv.id} style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '16px', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 700 }}>{monthLabel(inv.month)}</span>
-                    <span className='portal-status' style={{
-                      fontSize: '12px', padding: '3px 12px', borderRadius: '20px', fontWeight: 600, border: '1px solid',
-                      background: paid ? '#052e16' : '#1c0a0a',
-                      color: paid ? '#4ade80' : '#f87171',
-                      borderColor: paid ? '#166534' : '#7f1d1d'
-                    }}>{paid ? 'Paid' : 'Unpaid'}</span>
-                    <span style={{ marginLeft: 'auto', fontSize: '16px', fontWeight: 800 }}>₹{Number(inv.amount).toLocaleString()}</span>
-                  </div>
-                  {covered.length > 0 && (
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
-                      Covers {covered.length} project{covered.length > 1 ? 's' : ''}: {covered.map(p => p.title).join(', ')}
+              {invoices.map(inv => {
+                const covered = projects.filter(p => p.invoice_id === inv.id)
+                const paid = inv.status === 'Paid'
+                return (
+                  <div key={inv.id} style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '14px', marginTop: '14px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '14px', fontWeight: 700 }}>{monthLabel(inv.month)}</span>
+                      <span className='portal-status' style={{
+                        fontSize: '11px', fontWeight: 600, padding: '2px 10px', borderRadius: '20px', border: '1px solid',
+                        background: paid ? '#052e16' : '#1c0a0a', color: paid ? '#4ade80' : '#f87171',
+                        borderColor: paid ? '#166534' : '#7f1d1d',
+                      }}>{paid ? 'Paid' : 'Unpaid'}</span>
+                      <span style={{ marginLeft: 'auto', fontSize: '15px', fontWeight: 800 }}>₹{Number(inv.amount).toLocaleString()}</span>
                     </div>
-                  )}
-                  {inv.pdf_url && (
-                    <button onClick={() => setPreviewPdf(inv.pdf_url)}
-                      style={{
-                        width: '100%', background: 'var(--text)', border: 'none', borderRadius: '8px', padding: '11px',
-                        color: 'var(--bg-page)', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                        boxSizing: 'border-box', marginTop: '12px', fontFamily: 'inherit'
+                    {covered.length > 0 && (
+                      <div className='portal-meta' style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '6px' }}>
+                        Covers {covered.length} project{covered.length > 1 ? 's' : ''}: {covered.map(p => p.title).join(', ')}
+                      </div>
+                    )}
+                    {inv.pdf_url && (
+                      <button onClick={() => setPreviewPdf(inv.pdf_url)} style={{
+                        width: '100%', marginTop: '12px', background: 'var(--text)', color: 'var(--bg-page)',
+                        border: 'none', borderRadius: '8px', padding: '11px', fontSize: '13px', fontWeight: 700,
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontFamily: 'inherit',
                       }}>
-                      <IconInvoices size={14} /> View Invoice PDF
-                    </button>
-                  )}
+                        <IconInvoices size={14} /> View invoice PDF
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
+
+        {/* Draft review overlay — video + feedback */}
+        {activeDraft && (
+          <div style={{ position: 'fixed', inset: 0, background: 'var(--bg-page)', zIndex: 100, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 14px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+              <button onClick={() => setActiveDraft(null)} aria-label='Close' style={{
+                width: '30px', height: '30px', borderRadius: '50%', background: 'var(--bg-input)',
+                border: '1px solid var(--border-input)', color: 'var(--text)', cursor: 'pointer',
+                fontSize: '15px', lineHeight: 1, flexShrink: 0,
+              }}>✕</button>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '14px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeDraft.file.name}</div>
+                <div className='portal-meta' style={{ fontSize: '11px', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeDraft.project.title}</div>
+              </div>
+              <a href={driveDownload(activeDraft.file.url)} target='_blank' rel='noopener noreferrer' style={{
+                fontSize: '11px', fontWeight: 600, color: 'var(--text-sec)', textDecoration: 'none',
+                border: '1px solid var(--border-input)', borderRadius: '20px', padding: '6px 12px', whiteSpace: 'nowrap',
+              }}>Download</a>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className='portal-stage' style={{ width: '100%', maxWidth: '420px', margin: '0 auto', aspectRatio: '9 / 16', maxHeight: '52vh', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+                <iframe
+                  src={drivePreview(activeDraft.file.url)}
+                  title={activeDraft.file.name}
+                  allow='autoplay'
+                  allowFullScreen
+                  style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                />
+              </div>
+
+              <div>
+                <div style={s.label}><IconChat size={13} /> YOUR FEEDBACK</div>
+                <textarea
+                  value={feedback}
+                  onChange={e => { setFeedback(e.target.value); setSent(false) }}
+                  placeholder='Type your notes — e.g. “Trim the intro, and the logo at 0:12 feels rushed.”'
+                  rows={4}
+                  style={{
+                    width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)',
+                    borderRadius: '10px', padding: '12px', color: 'var(--text)', fontSize: '14px',
+                    fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+                <button onClick={sendFeedback} disabled={sending || !feedback.trim()} style={{
+                  width: '100%', marginTop: '10px', borderRadius: '10px', padding: '13px', fontSize: '14px', fontWeight: 700,
+                  border: 'none', fontFamily: 'inherit',
+                  background: feedback.trim() && !sending ? 'var(--text)' : 'var(--bg-input)',
+                  color: feedback.trim() && !sending ? 'var(--bg-page)' : 'var(--text-dim)',
+                  cursor: feedback.trim() && !sending ? 'pointer' : 'not-allowed',
+                }}>
+                  {sending ? 'Sending...' : 'Send feedback'}
+                </button>
+                <div className='portal-meta' style={{ fontSize: '11px', color: sent ? '#4ade80' : 'var(--text-muted)', marginTop: '8px', textAlign: 'center' }}>
+                  {sent ? 'Feedback sent — your editor has been notified.' : 'Your editor is notified the moment you send this.'}
                 </div>
-              )
-            })}
+              </div>
+
+              <div>
+                <div style={s.label}><IconChat size={13} /> NOTES ON THIS PROJECT</div>
+                {draftNotes.length === 0 ? (
+                  <div className='portal-empty' style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                    No notes yet — your feedback will appear here.
+                  </div>
+                ) : draftNotes.map(r => (
+                  <div key={r.id} style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600 }}>Round {r.round_number || '—'}</span>
+                      <span className='portal-status' style={{
+                        fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '20px',
+                        background: r.status === 'Done' ? '#052e16' : '#1c1200',
+                        color: r.status === 'Done' ? '#4ade80' : '#fbbf24',
+                      }}>{r.status || 'Pending'}</span>
+                      <span className='portal-meta' style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-dim)' }}>{timeAgo(r.created_at)}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-sec)', lineHeight: 1.55 }}>{r.note}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
-        {/* PDF preview overlay */}
+        {/* Invoice PDF overlay */}
         {previewPdf && (
-          <div
-            onClick={() => setPreviewPdf(null)}
-            style={{
-              position: 'fixed', inset: 0, background: 'var(--bg-page)', zIndex: 100,
-              display: 'flex', flexDirection: 'column', padding: '12px', boxSizing: 'border-box'
-            }}>
-            <div
-              onClick={e => e.stopPropagation()}
-              style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-
+          <div onClick={() => setPreviewPdf(null)} style={{
+            position: 'fixed', inset: 0, background: 'var(--bg-page)', zIndex: 100,
+            display: 'flex', flexDirection: 'column', padding: '12px', boxSizing: 'border-box',
+          }}>
+            <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 4px 10px' }}>
                 <a href={driveDownload(previewPdf)} target='_blank' rel='noopener noreferrer'
                   style={{ fontSize: '12px', fontWeight: 600, color: 'var(--bg-page)', background: 'var(--text)', textDecoration: 'none', borderRadius: '20px', padding: '6px 14px', whiteSpace: 'nowrap' }}>
@@ -443,19 +468,13 @@ export default function ClientPortalPage() {
                   style={{ fontSize: '12px', color: 'var(--text-sec)', textDecoration: 'none', border: '1px solid var(--border-input)', borderRadius: '20px', padding: '6px 12px', whiteSpace: 'nowrap' }}>
                   Open in Drive ↗
                 </a>
-                <button onClick={() => setPreviewPdf(null)}
-                  style={{
-                    marginLeft: 'auto', background: 'var(--border)', border: '1px solid var(--border-input)', color: 'var(--text)',
-                    borderRadius: '50%', width: '32px', height: '32px', fontSize: '16px',
-                    cursor: 'pointer', lineHeight: 1, flexShrink: 0
-                  }}>✕</button>
+                <button onClick={() => setPreviewPdf(null)} style={{
+                  marginLeft: 'auto', background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text)',
+                  borderRadius: '50%', width: '32px', height: '32px', fontSize: '16px', cursor: 'pointer', lineHeight: 1, flexShrink: 0,
+                }}>✕</button>
               </div>
-
-              <iframe
-                src={drivePreview(previewPdf)}
-                title='Invoice PDF'
-                style={{ flex: 1, width: '100%', border: 'none', borderRadius: '10px', background: 'var(--text)', minHeight: 0 }}
-              />
+              <iframe src={drivePreview(previewPdf)} title='Invoice PDF'
+                style={{ flex: 1, width: '100%', border: 'none', borderRadius: '10px', background: '#fff', minHeight: 0 }} />
             </div>
           </div>
         )}
