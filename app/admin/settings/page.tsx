@@ -71,6 +71,23 @@ export default function SettingsPage() {
     if (data) {
       setSettingsId(data.id)
       setForm({ studio_name: data.studio_name || '', business_type: data.business_type || '', email: data.email || '', phone: data.phone || '', website: data.website || '', location: data.location || '', bio: data.bio || '' })
+      setPortalForm({
+        portal_color: data.portal_color || '#3b82f6',
+        show_bio: data.show_bio ?? true,
+        show_files: data.show_files ?? true,
+        show_revisions: data.show_revisions ?? true,
+      })
+      setInvoiceForm({
+        upi_id: data.upi_id || '', bank_name: data.bank_name || '',
+        account_number: data.account_number || '', ifsc: data.ifsc || '',
+        payment_terms: data.payment_terms || 'Payment due within 7 days of delivery.',
+      })
+      setNotifForm({
+        new_client: data.notify_new_client ?? true,
+        payment_received: data.notify_payment_received ?? true,
+        project_due: data.notify_project_due ?? true,
+        revision_request: data.notify_revision_request ?? false,
+      })
     }
     setLoading(false)
   }
@@ -80,17 +97,33 @@ export default function SettingsPage() {
     if (data) setInvitedList(data)
   }
 
-  async function saveProfile() {
+  // Every Save button routes through here. Errors surface instead of failing
+  // silently, which is how the unwired buttons went unnoticed.
+  async function saveSettings(fields: any) {
     setSaving(true)
+    let error
     if (settingsId) {
-      await supabase.from('settings').update(form).eq('id', settingsId)
+      ({ error } = await supabase.from('settings').update(fields).eq('id', settingsId))
     } else {
-      const { data } = await supabase.from('settings').insert([form]).select().single()
-      if (data) setSettingsId(data.id)
+      const res = await supabase.from('settings').insert([fields]).select().single()
+      error = res.error
+      if (res.data) setSettingsId(res.data.id)
     }
-    setSaving(false); setSaved(true)
+    setSaving(false)
+    if (error) { alert('Could not save: ' + error.message); return }
+    setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
+
+  const saveProfile = () => saveSettings(form)
+  const savePortal = () => saveSettings(portalForm)
+  const saveInvoice = () => saveSettings(invoiceForm)
+  const saveNotifications = () => saveSettings({
+    notify_new_client: notifForm.new_client,
+    notify_payment_received: notifForm.payment_received,
+    notify_project_due: notifForm.project_due,
+    notify_revision_request: notifForm.revision_request,
+  })
 
   async function sendInvite() {
     if (!inviteEmail.trim()) return
@@ -324,8 +357,8 @@ export default function SettingsPage() {
                     <Toggle value={(notifForm as any)[item.key]} onChange={() => setNotifForm({ ...notifForm, [item.key]: !(notifForm as any)[item.key] })} />
                   </div>
                 ))}
-                <button style={{ marginTop: '24px', background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
-                  Save preferences
+                <button onClick={saveNotifications} disabled={saving} style={{ marginTop: '24px', background: saved ? '#14532d' : 'var(--text)', color: saved ? '#4ade80' : 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                  {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save preferences'}
                 </button>
               </div>
             )}
@@ -356,8 +389,8 @@ export default function SettingsPage() {
                     <Toggle value={(portalForm as any)[item.key]} onChange={() => setPortalForm({ ...portalForm, [item.key]: !(portalForm as any)[item.key] })} />
                   </div>
                 ))}
-                <button style={{ marginTop: '20px', background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
-                  Save portal settings
+                <button onClick={savePortal} disabled={saving} style={{ marginTop: '20px', background: saved ? '#14532d' : 'var(--text)', color: saved ? '#4ade80' : 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                  {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save portal settings'}
                 </button>
               </div>
             )}
@@ -377,8 +410,8 @@ export default function SettingsPage() {
                   <label style={lbl}>PAYMENT TERMS</label>
                   <textarea value={invoiceForm.payment_terms} onChange={e => setInvoiceForm({ ...invoiceForm, payment_terms: e.target.value })} rows={3} style={{ ...inp, resize: 'vertical' as const }} />
                 </div>
-                <button style={{ background: 'var(--text)', color: 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
-                  Save payment details
+                <button onClick={saveInvoice} disabled={saving} style={{ background: saved ? '#14532d' : 'var(--text)', color: saved ? '#4ade80' : 'var(--bg-page)', border: 'none', borderRadius: '10px', padding: '12px 28px', fontSize: '14px', fontWeight: 600, cursor: 'pointer' }}>
+                  {saving ? 'Saving...' : saved ? '✓ Saved!' : 'Save payment details'}
                 </button>
               </div>
             )}
