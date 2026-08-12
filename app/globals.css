@@ -230,13 +230,14 @@ body {
     width: 100% !important;
     max-width: 240px !important;
   }
-  /* Drive's player stops reflowing below ~400px and clips its own right edge,
-     so lay it out at 400px and scale the whole frame down to fit the box.
-     Controls shrink proportionally instead of overflowing. */
+  /* Drive serves touch-sized player chrome on phones; at ~400px logical width
+     those controls overlap each other. Lay the player out in a roomy 640px
+     viewport and scale the whole frame to the 240px box (640 x 0.375 = 240),
+     so the chrome has space and lands proportionally smaller. */
   .portal-stage iframe {
-    width: 400px !important;
-    height: 711px !important;
-    transform: scale(0.6);
+    width: 640px !important;
+    height: 1138px !important;
+    transform: scale(0.375);
     transform-origin: top left;
   }
   /* Mobile reads video -> feedback -> notes -> details */
