@@ -393,8 +393,8 @@ export default function ClientPortalPage() {
               <div className='portal-review-grid'>
 
                 {/* Video — the main event */}
-                <div style={{ gridColumn: '1', gridRow: '1', minWidth: 0 }}>
-                  <div className='portal-stage' style={{ aspectRatio: '9 / 16', height: 'min(64vh, 620px)', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+                <div className='portal-review-video' style={{ minWidth: 0 }}>
+                  <div className='portal-stage' style={{ aspectRatio: '9 / 16', height: 'min(78vh, 760px)', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
                     <iframe
                       src={drivePreview(activeDraft.file.url)}
                       title={activeDraft.file.name}
@@ -406,7 +406,9 @@ export default function ClientPortalPage() {
                 </div>
 
                 {/* Project information */}
-                <aside className='portal-review-info' style={{ gridColumn: '2', gridRow: '1 / span 2', minWidth: 0 }}>
+                <div className='portal-review-side' style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                <aside className='portal-review-info' style={{ minWidth: 0 }}>
                   <div className='portal-card' style={{ ...s.card, marginBottom: 0 }}>
                     <div style={s.label}>PROJECT</div>
                     <div className='portal-project-title' style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.3, marginBottom: '14px' }}>
@@ -453,7 +455,7 @@ export default function ClientPortalPage() {
                 </aside>
 
                 {/* Review — feedback + notes, under the video */}
-                <div style={{ gridColumn: '1', gridRow: '2', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
                     <div style={s.label}><IconChat size={13} /> YOUR FEEDBACK</div>
                     <textarea
@@ -502,6 +504,8 @@ export default function ClientPortalPage() {
                       </div>
                     ))}
                   </div>
+                </div>
+
                 </div>
 
               </div>
