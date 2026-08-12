@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { IconLock, IconSearch, IconMail, IconPhone, IconVideo, IconInvoices, IconChat } from '@/lib/icons'
@@ -59,7 +59,46 @@ export default function ClientPortalPage() {
   const [pinError, setPinError] = useState('')
   const [pinUnlocked, setPinUnlocked] = useState(false)
 
+  const refreshTimer = useRef<any>(null)
+
   useEffect(() => { fetchClient() }, [token])
+
+  // Live updates: Supabase pushes row changes over a websocket so a new draft
+  // or invoice appears without the client reloading. Subscriptions are scoped
+  // to this client's rows, so no other client's events reach this browser.
+  // ponytail: every event just refetches — payloads aren't needed and a refetch
+  // keeps derived state consistent. Debounced so a burst of edits is one fetch.
+  const projectIds = projects.map(p => p.id).join(',')
+  useEffect(() => {
+    if (!client?.id || pinRequired) return
+
+    function scheduleRefresh() {
+      clearTimeout(refreshTimer.current)
+      refreshTimer.current = setTimeout(() => loadPortalData(client), 400)
+    }
+
+    const channel = supabase.channel(`portal-${client.id}`)
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'projects', filter: `client_id=eq.${client.id}` }, scheduleRefresh)
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'invoices', filter: `client_id=eq.${client.id}` }, scheduleRefresh)
+    // files/revisions carry project_id, not client_id — one listener per project
+    projectIds.split(',').filter(Boolean).forEach(id => {
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'files', filter: `project_id=eq.${id}` }, scheduleRefresh)
+      channel.on('postgres_changes', { event: '*', schema: 'public', table: 'revisions', filter: `project_id=eq.${id}` }, scheduleRefresh)
+    })
+    channel.subscribe()
+
+    // Safety net: phones drop websockets on sleep, so resync on return.
+    function onVisible() { if (document.visibilityState === 'visible') scheduleRefresh() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('focus', onVisible)
+
+    return () => {
+      clearTimeout(refreshTimer.current)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('focus', onVisible)
+      supabase.removeChannel(channel)
+    }
+  }, [client?.id, pinRequired, projectIds])
 
   async function fetchClient() {
     const { data: clientData } = await supabase
