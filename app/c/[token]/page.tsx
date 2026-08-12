@@ -389,64 +389,121 @@ export default function ClientPortalPage() {
               }}>Download</a>
             </div>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: '14px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div className='portal-stage' style={{ width: '100%', maxWidth: '420px', margin: '0 auto', aspectRatio: '9 / 16', maxHeight: '52vh', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
-                <iframe
-                  src={drivePreview(activeDraft.file.url)}
-                  title={activeDraft.file.name}
-                  allow='autoplay'
-                  allowFullScreen
-                  style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-                />
-              </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+              <div className='portal-review-grid'>
 
-              <div>
-                <div style={s.label}><IconChat size={13} /> YOUR FEEDBACK</div>
-                <textarea
-                  value={feedback}
-                  onChange={e => { setFeedback(e.target.value); setSent(false) }}
-                  placeholder='Type your notes — e.g. “Trim the intro, and the logo at 0:12 feels rushed.”'
-                  rows={4}
-                  style={{
-                    width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)',
-                    borderRadius: '10px', padding: '12px', color: 'var(--text)', fontSize: '14px',
-                    fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box',
-                  }}
-                />
-                <button onClick={sendFeedback} disabled={sending || !feedback.trim()} style={{
-                  width: '100%', marginTop: '10px', borderRadius: '10px', padding: '13px', fontSize: '14px', fontWeight: 700,
-                  border: 'none', fontFamily: 'inherit',
-                  background: feedback.trim() && !sending ? 'var(--text)' : 'var(--bg-input)',
-                  color: feedback.trim() && !sending ? 'var(--bg-page)' : 'var(--text-dim)',
-                  cursor: feedback.trim() && !sending ? 'pointer' : 'not-allowed',
-                }}>
-                  {sending ? 'Sending...' : 'Send feedback'}
-                </button>
-                <div className='portal-meta' style={{ fontSize: '11px', color: sent ? '#4ade80' : 'var(--text-muted)', marginTop: '8px', textAlign: 'center' }}>
-                  {sent ? 'Feedback sent — your editor has been notified.' : 'Your editor is notified the moment you send this.'}
+                {/* Video — the main event */}
+                <div style={{ gridColumn: '1', gridRow: '1', minWidth: 0 }}>
+                  <div className='portal-stage' style={{ aspectRatio: '9 / 16', height: 'min(64vh, 620px)', margin: '0 auto', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+                    <iframe
+                      src={drivePreview(activeDraft.file.url)}
+                      title={activeDraft.file.name}
+                      allow='autoplay'
+                      allowFullScreen
+                      style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <div style={s.label}><IconChat size={13} /> NOTES ON THIS PROJECT</div>
-                {draftNotes.length === 0 ? (
-                  <div className='portal-empty' style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>
-                    No notes yet — your feedback will appear here.
-                  </div>
-                ) : draftNotes.map(r => (
-                  <div key={r.id} style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: 600 }}>Round {r.round_number || '—'}</span>
-                      <span className='portal-status' style={{
-                        fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '20px',
-                        background: r.status === 'Done' ? '#052e16' : '#1c1200',
-                        color: r.status === 'Done' ? '#4ade80' : '#fbbf24',
-                      }}>{r.status || 'Pending'}</span>
-                      <span className='portal-meta' style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-dim)' }}>{timeAgo(r.created_at)}</span>
+                {/* Project information */}
+                <aside className='portal-review-info' style={{ gridColumn: '2', gridRow: '1 / span 2', minWidth: 0 }}>
+                  <div className='portal-card' style={{ ...s.card, marginBottom: 0 }}>
+                    <div style={s.label}>PROJECT</div>
+                    <div className='portal-project-title' style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.3, marginBottom: '14px' }}>
+                      {activeDraft.project.title}
                     </div>
-                    <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-sec)', lineHeight: 1.55 }}>{r.note}</p>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div>
+                        <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '6px' }}>STATUS</div>
+                        {(() => {
+                          const st = STATUS_STYLE[activeDraft.project.status] || { bg: 'var(--bg-input)', color: 'var(--text-sec)', border: 'var(--border-input)', label: activeDraft.project.status }
+                          return (
+                            <span className='portal-status' style={{
+                              display: 'inline-block', fontSize: '12px', fontWeight: 600, padding: '4px 12px',
+                              borderRadius: '20px', border: '1px solid', background: st.bg, color: st.color, borderColor: st.border,
+                            }}>{st.label}</span>
+                          )
+                        })()}
+                      </div>
+
+                      {activeDraft.project.deadline && (
+                        <div>
+                          <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '6px' }}>DUE DATE</div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: '#f87171' }}>{dateLabel(activeDraft.project.deadline)}</div>
+                        </div>
+                      )}
+
+                      <div>
+                        <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '6px' }}>DRAFT</div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, marginBottom: '2px' }}>{activeDraft.file.name}</div>
+                        <div className='portal-meta' style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                          {activeDraft.file.type || 'Draft'}{activeDraft.file.created_at ? ` · sent ${timeAgo(activeDraft.file.created_at)}` : ''}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className='portal-stat-label' style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '6px' }}>FEEDBACK</div>
+                        <div style={{ fontSize: '13px', color: 'var(--text-sec)' }}>
+                          {draftNotes.length === 0 ? 'No notes sent yet' : `${draftNotes.length} note${draftNotes.length > 1 ? 's' : ''} sent`}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ))}
+                </aside>
+
+                {/* Review — feedback + notes, under the video */}
+                <div style={{ gridColumn: '1', gridRow: '2', minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div>
+                    <div style={s.label}><IconChat size={13} /> YOUR FEEDBACK</div>
+                    <textarea
+                      value={feedback}
+                      onChange={e => { setFeedback(e.target.value); setSent(false) }}
+                      placeholder='Type your notes — e.g. “Trim the intro, and the logo at 0:12 feels rushed.”'
+                      rows={4}
+                      style={{
+                        width: '100%', background: 'var(--bg-input)', border: '1px solid var(--border-input)',
+                        borderRadius: '10px', padding: '12px', color: 'var(--text)', fontSize: '14px',
+                        fontFamily: 'inherit', resize: 'vertical', outline: 'none', boxSizing: 'border-box',
+                      }}
+                    />
+                    <button onClick={sendFeedback} disabled={sending || !feedback.trim()} style={{
+                      width: '100%', marginTop: '10px', borderRadius: '10px', padding: '13px', fontSize: '14px', fontWeight: 700,
+                      border: 'none', fontFamily: 'inherit',
+                      background: feedback.trim() && !sending ? 'var(--text)' : 'var(--bg-input)',
+                      color: feedback.trim() && !sending ? 'var(--bg-page)' : 'var(--text-dim)',
+                      cursor: feedback.trim() && !sending ? 'pointer' : 'not-allowed',
+                    }}>
+                      {sending ? 'Sending...' : 'Send feedback'}
+                    </button>
+                    <div className='portal-meta' style={{ fontSize: '11px', color: sent ? '#4ade80' : 'var(--text-muted)', marginTop: '8px', textAlign: 'center' }}>
+                      {sent ? 'Feedback sent — your editor has been notified.' : 'Your editor is notified the moment you send this.'}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={s.label}><IconChat size={13} /> NOTES ON THIS PROJECT</div>
+                    {draftNotes.length === 0 ? (
+                      <div className='portal-empty' style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '16px', fontSize: '13px', color: 'var(--text-muted)', textAlign: 'center' }}>
+                        No notes yet — your feedback will appear here.
+                      </div>
+                    ) : draftNotes.map(r => (
+                      <div key={r.id} style={{ background: 'var(--bg-surface)', borderRadius: '10px', padding: '12px', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600 }}>Round {r.round_number || '—'}</span>
+                          <span className='portal-status' style={{
+                            fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '20px',
+                            background: r.status === 'Done' ? '#052e16' : '#1c1200',
+                            color: r.status === 'Done' ? '#4ade80' : '#fbbf24',
+                          }}>{r.status || 'Pending'}</span>
+                          <span className='portal-meta' style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--text-dim)' }}>{timeAgo(r.created_at)}</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-sec)', lineHeight: 1.55 }}>{r.note}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>

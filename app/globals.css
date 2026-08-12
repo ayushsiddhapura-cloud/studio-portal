@@ -47,6 +47,16 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Draft review: video left, project info right */
+.portal-review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
 /* Mobile: top bar needs left padding for hamburger button */
 @media (max-width: 767px) {
   html, body {
@@ -202,8 +212,18 @@ body {
     padding: 14px 10px !important;
     font-size: 12px !important;
   }
+  .portal-review-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .portal-review-grid > * {
+    grid-column: auto !important;
+    grid-row: auto !important;
+  }
   .portal-stage {
-    max-height: 44vh !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 300px !important;
   }
   .portal-bill-row {
     padding: 8px 0 !important;
