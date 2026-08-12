@@ -228,7 +228,14 @@ body {
   .portal-stage {
     height: auto !important;
     width: 100% !important;
-    max-width: 300px !important;
+    max-width: 240px !important;
+  }
+  /* Mobile reads video -> feedback -> notes -> details */
+  .portal-review-notes {
+    order: 1 !important;
+  }
+  .portal-review-info {
+    order: 2 !important;
   }
   .portal-bill-row {
     padding: 8px 0 !important;

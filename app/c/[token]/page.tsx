@@ -455,7 +455,7 @@ export default function ClientPortalPage() {
                 </aside>
 
                 {/* Review — feedback + notes, under the video */}
-                <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className='portal-review-notes' style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <div>
                     <div style={s.label}><IconChat size={13} /> YOUR FEEDBACK</div>
                     <textarea
