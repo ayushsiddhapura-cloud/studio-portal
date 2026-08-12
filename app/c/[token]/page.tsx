@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { IconLock, IconSearch, IconMail, IconPhone, IconVideo, IconInvoices, IconChat } from '@/lib/icons'
-import { drivePreview, driveDownload } from '@/lib/drive'
+import { drivePreview, driveDownload, driveThumbnail } from '@/lib/drive'
 
 function monthLabel(m: string) {
   if (!m) return '—'
@@ -270,6 +270,12 @@ export default function ClientPortalPage() {
                     background: 'linear-gradient(150deg, #2b3a3f 0%, #16202a 55%, #0d1116 100%)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                   }}>
+                    {driveThumbnail(f.url, 240) && (
+                      <img src={driveThumbnail(f.url, 240)} alt='' loading='lazy'
+                        referrerPolicy='no-referrer'
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
                     <span style={{ position: 'relative', width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(255,255,255,0.93)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <svg width="11" height="11" viewBox="0 0 12 12" fill="#000"><path d="M3 1.6l7 4.4-7 4.4z" /></svg>
                     </span>

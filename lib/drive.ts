@@ -21,3 +21,11 @@ export function driveDownload(url: string) {
   return id ? `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t` : url
 }
 
+// Drive-generated poster frame. Callers MUST render the <img> with
+// referrerPolicy="no-referrer" — Google rejects the request otherwise.
+// Empty string for non-Drive URLs so callers can fall back to a placeholder.
+export function driveThumbnail(url: string, width = 400) {
+  if (!url) return ''
+  const id = driveId(url)
+  return id ? `https://drive.google.com/thumbnail?id=${id}&sz=w${width}` : ''
+}

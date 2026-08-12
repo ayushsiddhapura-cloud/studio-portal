@@ -228,7 +228,16 @@ body {
   .portal-stage {
     height: auto !important;
     width: 100% !important;
-    max-width: 300px !important;
+    max-width: 240px !important;
+  }
+  /* Drive's player stops reflowing below ~400px and clips its own right edge,
+     so lay it out at 400px and scale the whole frame down to fit the box.
+     Controls shrink proportionally instead of overflowing. */
+  .portal-stage iframe {
+    width: 400px !important;
+    height: 711px !important;
+    transform: scale(0.6);
+    transform-origin: top left;
   }
   /* Mobile reads video -> feedback -> notes -> details */
   .portal-review-notes {
