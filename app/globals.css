@@ -228,7 +228,7 @@ body {
   .portal-stage {
     height: auto !important;
     width: 100% !important;
-    max-width: 240px !important;
+    max-width: 300px !important;
   }
   /* Mobile reads video -> feedback -> notes -> details */
   .portal-review-notes {
